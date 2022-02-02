@@ -44,10 +44,10 @@ Plecs {
   ExternalModeSettings ""
   AlgebraicLoopMethod "1"
   AlgebraicLoopTolerance "1e-6"
-  ScriptsDialogGeometry ""
-  ScriptsDialogSplitterPos "0"
+  ScriptsDialogGeometry "[982 556 623 267]"
+  ScriptsDialogSplitterPos "107"
   Schematic {
-    Location      [0, 23; 1366, 679]
+    Location      [265, 30; 1705, 866]
     ZoomFactor    1.33333
     SliderPosition [0, 0]
     ShowBrowser   off
@@ -161,7 +161,7 @@ Plecs {
       Type          IgbtWithDiode
       Name          "IGBTD4"
       Show          on
-      Position      [635, 80]
+      Position      [640, 80]
       Direction     up
       Flipped       off
       Parameter {
@@ -207,7 +207,7 @@ Plecs {
       Type          Inductor
       Name          "L2"
       Show          on
-      Position      [815, 160]
+      Position      [810, 155]
       Direction     left
       Flipped       off
       Parameter {
@@ -223,9 +223,9 @@ Plecs {
     }
     Component {
       Type          Voltmeter
-      Name          "Vm1"
+      Name          "Va"
       Show          on
-      Position      [695, 135]
+      Position      [700, 135]
       Direction     up
       Flipped       off
       ComponentAssertion {
@@ -239,9 +239,9 @@ Plecs {
     }
     Component {
       Type          Voltmeter
-      Name          "Vm2"
+      Name          "Vab"
       Show          on
-      Position      [745, 135]
+      Position      [765, 130]
       Direction     up
       Flipped       off
       ComponentAssertion {
@@ -255,9 +255,9 @@ Plecs {
     }
     Component {
       Type          Voltmeter
-      Name          "Vm3"
+      Name          "Vb"
       Show          on
-      Position      [745, 225]
+      Position      [735, 230]
       Direction     up
       Flipped       off
       ComponentAssertion {
@@ -273,7 +273,7 @@ Plecs {
       Type          Resistor
       Name          "R1"
       Show          on
-      Position      [875, 110]
+      Position      [885, 110]
       Direction     right
       Flipped       off
       Parameter {
@@ -281,12 +281,20 @@ Plecs {
         Value         "1"
         Show          off
       }
+      ComponentAssertion {
+        SignalName       "Resistor current"
+        TrSignalName     "Resistor current"
+        LowerLimit       "-inf"
+        UpperLimit       "inf"
+        IncludeLimits    off
+        Action           "2"
+      }
     }
     Component {
       Type          Resistor
       Name          "R2"
       Show          on
-      Position      [880, 155]
+      Position      [885, 155]
       Direction     right
       Flipped       off
       Parameter {
@@ -312,7 +320,7 @@ Plecs {
       Type          Inductor
       Name          "L3"
       Show          on
-      Position      [820, 195]
+      Position      [810, 195]
       Direction     left
       Flipped       off
       Parameter {
@@ -348,7 +356,7 @@ Plecs {
       Type          RelationalOperator
       Name          "Relational\nOperator"
       Show          on
-      Position      [255, 425]
+      Position      [370, 425]
       Direction     right
       Flipped       off
       Parameter {
@@ -361,7 +369,7 @@ Plecs {
       Type          TriangleGenerator
       Name          "Triangular Wave1"
       Show          on
-      Position      [135, 430]
+      Position      [215, 430]
       Direction     right
       Flipped       off
       Parameter {
@@ -394,7 +402,7 @@ Plecs {
       Type          LogicalOperator
       Name          "Logical\nOperator"
       Show          on
-      Position      [320, 455]
+      Position      [435, 425]
       Direction     up
       Flipped       off
       Parameter {
@@ -409,45 +417,79 @@ Plecs {
       }
     }
     Component {
-      Type          SignalMux
-      Name          "Mux"
-      Show          off
-      Position      [405, 435]
-      Direction     right
-      Flipped       off
-      Parameter {
-        Variable      "Width"
-        Value         "2"
-        Show          off
-      }
-    }
-    Component {
-      Type          SignalDemux
-      Name          "Demux"
-      Show          off
-      Position      [460, 375]
-      Direction     down
-      Flipped       off
-      Parameter {
-        Variable      "Width"
-        Value         "6"
-        Show          off
-      }
-    }
-    Component {
-      Type          PlecsProbe
-      Name          "Probe"
+      Type          SineGenerator
+      Name          "Sine Wave2"
       Show          on
-      Position      [640, 350]
+      Position      [215, 365]
       Direction     right
       Flipped       off
+      Parameter {
+        Variable      "Amplitude"
+        Value         "0.7"
+        Show          off
+      }
+      Parameter {
+        Variable      "Bias"
+        Value         "0"
+        Show          off
+      }
+      Parameter {
+        Variable      "Frequency"
+        Value         "50"
+        Show          off
+      }
+      Parameter {
+        Variable      "Phase"
+        Value         "[0, -120, 120]"
+        Show          off
+      }
+      Parameter {
+        Variable      "Units"
+        Value         "3"
+        Show          off
+      }
+    }
+    Component {
+      Type          Reference
+      SrcComponent  "Components/Control/Modulators/3-Phase\\nOvermodulation"
+      Name          "3-Phase\nOvermodulation"
+      Show          on
+      Position      [290, 365]
+      Direction     up
+      Flipped       off
+      Frame         [-20, -20; 20, 20]
+      LabelPosition [0, 23]
+      LabelAlign    up
+      Terminal {
+        Type          Output
+        Position      [24, 0]
+        Direction     right
+      }
+      Terminal {
+        Type          Input
+        Position      [-20, 0]
+        Direction     left
+      }
     }
     Component {
       Type          SignalDemux
-      Name          "Demux1"
+      Name          "Demux2"
       Show          off
-      Position      [705, 350]
-      Direction     right
+      Position      [405, 385]
+      Direction     up
+      Flipped       on
+      Parameter {
+        Variable      "Width"
+        Value         "3"
+        Show          off
+      }
+    }
+    Component {
+      Type          SignalDemux
+      Name          "Demux3"
+      Show          off
+      Position      [455, 385]
+      Direction     up
       Flipped       on
       Parameter {
         Variable      "Width"
@@ -459,23 +501,23 @@ Plecs {
       Type          Scope
       Name          "Scope"
       Show          on
-      Position      [815, 340]
+      Position      [870, 395]
       Direction     up
       Flipped       off
-      Location      [363, 124; 713, 351]
+      Location      [0, 26; 1707, 895]
       State         "AAAA/wAAAAD9AAAAAgAAAAEAAAAAAAAAAPwCAAAAA/sAAAAQAFoAbwBvA"
-"G0AQQByAGUAYQAAAAAA/////wAAAKwA////+wAAABQAUwBhAHYAZQBkAFYAaQBlAHcAcwAAAAAA//"
-"///wAAAGYA////+wAAAAwAVAByAGEAYwBlAHMAAAAAAP////8AAABmAP///wAAAAMAAAAAAAAAAPw"
-"BAAAAAfsAAAAUAEQAYQB0AGEAVwBpAGQAZwBlAHQAAAAAAP////8AAABQAP///wAAAV4AAADIAAAA"
+"G0AQQByAGUAYQAAAAAA/////wAAAPEA////+wAAABQAUwBhAHYAZQBkAFYAaQBlAHcAcwAAAAAA//"
+"///wAAAJcA////+wAAAAwAVAByAGEAYwBlAHMAAAAAAP////8AAACXAP///wAAAAMAAAAAAAAAAPw"
+"BAAAAAfsAAAAUAEQAYQB0AGEAVwBpAGQAZwBlAHQAAAAAAP////8AAABxAP///wAACgEAAAT1AAAA"
 "BAAAAAQAAAAIAAAACPwAAAABAAAAAgAAAAEAAAAOAFQAbwBvAGwAQgBhAHIBAAAAAP////8AAAAAA"
 "AAAAA=="
       SavedViews    "AAAAAgAAAAA="
       HeaderState   "AAAA/wAAAAAAAAABAAAAAQAAAAAAAAAAAAAAAAAAAAAL/gMAAAAJAAAAC"
-"QAAAGQAAAAIAAAAZAAAAAMAAABkAAAAAgAAAGQAAAABAAAAZAAAAAcAAABkAAAABgAAAGQAAAAFAA"
-"AAZAAAAAQAAABkAAAAZAAAAAsBAAABAAAAAAAAAAAAAAAAZP////8AAACBAAAAAAAAAAsAAABAAAA"
+"AAAAJYAAAAJAAAAlgAAAAIAAACWAAAAAwAAAJYAAAABAAAAlgAAAAYAAACWAAAABwAAAJYAAAAEAA"
+"AAlgAAAAUAAACWAAABKwAAAAsBAAABAAAAAAAAAAAAAAAAlv////8AAACBAAAAAAAAAAsAAAD2AAA"
 "AAQAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAQAAAAAAAAAA"
 "AAAAAQAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAQAAAAAAA"
-"AAkAAAAAQAAAAAAAAPoAAAAACQ="
+"AA1AAAAAQAAAAAAAAPoAAAAADU="
       PlotPalettes  "AAAAAQAAAAEAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAA"
 "AEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
 "AAAAEAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
@@ -581,114 +623,23 @@ Plecs {
       }
     }
     Component {
-      Type          SignalMux
-      Name          "Mux1"
-      Show          off
-      Position      [155, 175]
+      Type          PlecsProbe
+      Name          "Probe"
+      Show          on
+      Position      [705, 395]
       Direction     right
       Flipped       off
+    }
+    Component {
+      Type          SignalDemux
+      Name          "Demux"
+      Show          off
+      Position      [765, 395]
+      Direction     right
+      Flipped       on
       Parameter {
         Variable      "Width"
-        Value         "3"
-        Show          off
-      }
-    }
-    Component {
-      Type          SineGenerator
-      Name          "Sine Wave2"
-      Show          on
-      Position      [60, 105]
-      Direction     right
-      Flipped       off
-      Parameter {
-        Variable      "Amplitude"
-        Value         "0.7"
-        Show          off
-      }
-      Parameter {
-        Variable      "Bias"
-        Value         "0"
-        Show          off
-      }
-      Parameter {
-        Variable      "Frequency"
-        Value         "50"
-        Show          off
-      }
-      Parameter {
-        Variable      "Phase"
-        Value         "0"
-        Show          off
-      }
-      Parameter {
-        Variable      "Units"
-        Value         "1"
-        Show          off
-      }
-    }
-    Component {
-      Type          SineGenerator
-      Name          "Sine Wave3"
-      Show          on
-      Position      [60, 180]
-      Direction     right
-      Flipped       off
-      Parameter {
-        Variable      "Amplitude"
-        Value         "0.7"
-        Show          off
-      }
-      Parameter {
-        Variable      "Bias"
-        Value         "0"
-        Show          off
-      }
-      Parameter {
-        Variable      "Frequency"
-        Value         "50"
-        Show          off
-      }
-      Parameter {
-        Variable      "Phase"
-        Value         "0"
-        Show          off
-      }
-      Parameter {
-        Variable      "Units"
-        Value         "3"
-        Show          off
-      }
-    }
-    Component {
-      Type          SineGenerator
-      Name          "Sine Wave4"
-      Show          on
-      Position      [55, 235]
-      Direction     right
-      Flipped       off
-      Parameter {
-        Variable      "Amplitude"
-        Value         "0.7"
-        Show          off
-      }
-      Parameter {
-        Variable      "Bias"
-        Value         "0"
-        Show          off
-      }
-      Parameter {
-        Variable      "Frequency"
-        Value         "50"
-        Show          off
-      }
-      Parameter {
-        Variable      "Phase"
-        Value         "120"
-        Show          off
-      }
-      Parameter {
-        Variable      "Units"
-        Value         "3"
+        Value         "4"
         Show          off
       }
     }
@@ -708,7 +659,7 @@ Plecs {
           DstTerminal   1
         }
         Branch {
-          Points        [635, 30]
+          Points        [640, 30]
           DstComponent  "IGBTD4"
           DstTerminal   1
         }
@@ -732,14 +683,14 @@ Plecs {
             DstTerminal   2
           }
           Branch {
-            Points        [695, 295]
+            Points        [700, 295]
             Branch {
-              DstComponent  "Vm1"
+              Points        [735, 295]
+              DstComponent  "Vb"
               DstTerminal   2
             }
             Branch {
-              Points        [745, 295]
-              DstComponent  "Vm3"
+              DstComponent  "Va"
               DstTerminal   2
             }
           }
@@ -760,20 +711,20 @@ Plecs {
         DstTerminal   2
       }
       Branch {
-        Points        [695, 110]
+        Points        [700, 110]
         Branch {
-          Points        [745, 110]
+          Points        [765, 110]
           Branch {
             DstComponent  "L4"
             DstTerminal   1
           }
           Branch {
-            DstComponent  "Vm2"
+            DstComponent  "Vab"
             DstTerminal   1
           }
         }
         Branch {
-          DstComponent  "Vm1"
+          DstComponent  "Va"
           DstTerminal   1
         }
       }
@@ -782,7 +733,7 @@ Plecs {
       Type          Wire
       SrcComponent  "IGBTD4"
       SrcTerminal   2
-      Points        [635, 160; 640, 160; 640, 195]
+      Points        [640, 195]
       Branch {
         DstComponent  "IGBTD5"
         DstTerminal   1
@@ -794,38 +745,6 @@ Plecs {
     }
     Connection {
       Type          Wire
-      SrcComponent  "IGBTD3"
-      SrcTerminal   1
-      Points        [495, 160]
-      Branch {
-        DstComponent  "IGBTD2"
-        DstTerminal   2
-      }
-      Branch {
-        Points        [745, 160]
-        Branch {
-          DstComponent  "L2"
-          DstTerminal   1
-        }
-        Branch {
-          DstComponent  "Vm2"
-          DstTerminal   2
-        }
-        Branch {
-          DstComponent  "Vm3"
-          DstTerminal   1
-        }
-      }
-    }
-    Connection {
-      Type          Wire
-      SrcComponent  "L4"
-      SrcTerminal   2
-      DstComponent  "R1"
-      DstTerminal   2
-    }
-    Connection {
-      Type          Wire
       SrcComponent  "R3"
       SrcTerminal   2
       DstComponent  "L3"
@@ -833,24 +752,8 @@ Plecs {
     }
     Connection {
       Type          Wire
-      SrcComponent  "R1"
-      SrcTerminal   1
-      Points        [930, 110; 930, 155]
-      Branch {
-        Points        [930, 200; 920, 200; 920, 195]
-        DstComponent  "R3"
-        DstTerminal   1
-      }
-      Branch {
-        DstComponent  "R2"
-        DstTerminal   1
-      }
-    }
-    Connection {
-      Type          Wire
       SrcComponent  "L2"
       SrcTerminal   2
-      Points        [850, 160; 850, 155]
       DstComponent  "R2"
       DstTerminal   2
     }
@@ -863,147 +766,197 @@ Plecs {
     }
     Connection {
       Type          Signal
-      SrcComponent  "Logical\nOperator"
+      SrcComponent  "Sine Wave2"
       SrcTerminal   1
-      Points        [360, 455; 360, 440]
-      DstComponent  "Mux"
-      DstTerminal   3
+      DstComponent  "3-Phase\nOvermodulation"
+      DstTerminal   2
     }
     Connection {
       Type          Signal
-      SrcComponent  "Mux"
+      SrcComponent  "3-Phase\nOvermodulation"
       SrcTerminal   1
-      Points        [460, 435]
-      DstComponent  "Demux"
+      Points        [335, 365; 335, 420]
+      DstComponent  "Relational\nOperator"
       DstTerminal   1
     }
     Connection {
       Type          Signal
-      SrcComponent  "Demux"
-      SrcTerminal   7
-      Points        [435, 145; 600, 145]
+      SrcComponent  "Logical\nOperator"
+      SrcTerminal   1
+      DstComponent  "Demux3"
+      DstTerminal   1
+    }
+    Connection {
+      Type          Signal
+      SrcComponent  "Demux2"
+      SrcTerminal   2
+      Points        [395, 360; 595, 360; 595, 80]
       DstComponent  "IGBTD4"
       DstTerminal   3
     }
     Connection {
       Type          Signal
-      SrcComponent  "Demux"
-      SrcTerminal   6
-      Points        [445, 235]
+      SrcComponent  "Demux2"
+      SrcTerminal   3
+      Points        [405, 310; 445, 310; 445, 235]
       DstComponent  "IGBTD3"
+      DstTerminal   3
+    }
+    Connection {
+      Type          Signal
+      SrcComponent  "Demux3"
+      SrcTerminal   2
+      Points        [445, 370; 605, 370]
+      DstComponent  "IGBTD5"
+      DstTerminal   3
+    }
+    Connection {
+      Type          Signal
+      SrcComponent  "Demux3"
+      SrcTerminal   3
+      Points        [455, 80]
+      DstComponent  "IGBTD2"
+      DstTerminal   3
+    }
+    Connection {
+      Type          Signal
+      SrcComponent  "Demux3"
+      SrcTerminal   4
+      Points        [465, 320; 320, 320]
+      DstComponent  "IGBTD"
+      DstTerminal   3
+    }
+    Connection {
+      Type          Wire
+      SrcComponent  "L4"
+      SrcTerminal   2
+      DstComponent  "R1"
+      DstTerminal   2
+    }
+    Connection {
+      Type          Wire
+      SrcComponent  "R2"
+      SrcTerminal   1
+      Points        [920, 155]
+      Branch {
+        Points        [920, 195]
+        DstComponent  "R3"
+        DstTerminal   1
+      }
+      Branch {
+        Points        [920, 110]
+        DstComponent  "R1"
+        DstTerminal   1
+      }
+    }
+    Connection {
+      Type          Wire
+      SrcComponent  "IGBTD2"
+      SrcTerminal   2
+      Points        [495, 155]
+      Branch {
+        DstComponent  "IGBTD3"
+        DstTerminal   1
+      }
+      Branch {
+        Points        [735, 155]
+        Branch {
+          Points        [765, 155]
+          Branch {
+            DstComponent  "L2"
+            DstTerminal   1
+          }
+          Branch {
+            DstComponent  "Vab"
+            DstTerminal   2
+          }
+        }
+        Branch {
+          DstComponent  "Vb"
+          DstTerminal   1
+        }
+      }
+    }
+    Connection {
+      Type          Signal
+      SrcComponent  "Relational\nOperator"
+      SrcTerminal   3
+      Points        [405, 425]
+      Branch {
+        DstComponent  "Demux2"
+        DstTerminal   1
+      }
+      Branch {
+        DstComponent  "Logical\nOperator"
+        DstTerminal   2
+      }
+    }
+    Connection {
+      Type          Signal
+      SrcComponent  "Demux"
+      SrcTerminal   2
+      DstComponent  "Scope"
+      DstTerminal   1
+    }
+    Connection {
+      Type          Signal
+      SrcComponent  "Demux"
+      SrcTerminal   3
+      DstComponent  "Scope"
+      DstTerminal   2
+    }
+    Connection {
+      Type          Signal
+      SrcComponent  "Demux"
+      SrcTerminal   4
+      DstComponent  "Scope"
       DstTerminal   3
     }
     Connection {
       Type          Signal
       SrcComponent  "Demux"
       SrcTerminal   5
-      Points        [455, 305; 320, 305]
-      DstComponent  "IGBTD1"
-      DstTerminal   3
-    }
-    Connection {
-      Type          Signal
-      SrcComponent  "Demux"
-      SrcTerminal   4
-      Points        [465, 275; 605, 275]
-      DstComponent  "IGBTD5"
-      DstTerminal   3
-    }
-    Connection {
-      Type          Signal
-      SrcComponent  "Demux"
-      SrcTerminal   2
-      Points        [485, 300; 315, 300; 315, 80]
-      DstComponent  "IGBTD"
-      DstTerminal   3
-    }
-    Connection {
-      Type          Signal
-      SrcComponent  "Demux"
-      SrcTerminal   3
-      Points        [475, 100; 460, 100]
-      DstComponent  "IGBTD2"
-      DstTerminal   3
+      DstComponent  "Scope"
+      DstTerminal   4
     }
     Connection {
       Type          Signal
       SrcComponent  "Probe"
       SrcTerminal   1
-      DstComponent  "Demux1"
+      DstComponent  "Demux"
       DstTerminal   1
     }
     Connection {
       Type          Signal
-      SrcComponent  "Demux1"
-      SrcTerminal   2
-      Points        [720, 340; 720, 330; 765, 330; 765, 325]
-      DstComponent  "Scope"
-      DstTerminal   1
-    }
-    Connection {
-      Type          Signal
-      SrcComponent  "Demux1"
-      SrcTerminal   3
-      Points        [725, 350; 725, 335]
-      DstComponent  "Scope"
-      DstTerminal   2
-    }
-    Connection {
-      Type          Signal
-      SrcComponent  "Demux1"
+      SrcComponent  "Demux2"
       SrcTerminal   4
-      Points        [730, 360; 730, 345]
-      DstComponent  "Scope"
+      Points        [415, 330; 310, 330; 310, 235]
+      DstComponent  "IGBTD1"
       DstTerminal   3
     }
-    Connection {
-      Type          Signal
-      SrcComponent  "Relational\nOperator"
-      SrcTerminal   3
-      Points        [285, 425]
-      Branch {
-        Points        [285, 455]
-        DstComponent  "Logical\nOperator"
-        DstTerminal   2
-      }
-      Branch {
-        Points        [340, 425; 340, 430]
-        DstComponent  "Mux"
-        DstTerminal   2
-      }
+  }
+  ProbeBlock {
+    Tag           "trefasPLECS/Probe"
+    Probe {
+      Component     "L4"
+      Path          ""
+      Signals       {"Inductor current"}
     }
-    Connection {
-      Type          Signal
-      SrcComponent  "Sine Wave2"
-      SrcTerminal   1
-      Points        [110, 105; 110, 165]
-      DstComponent  "Mux1"
-      DstTerminal   2
+    Probe {
+      Component     "Va"
+      Path          ""
+      Signals       {"Measured voltage"}
     }
-    Connection {
-      Type          Signal
-      SrcComponent  "Sine Wave3"
-      SrcTerminal   1
-      Points        [110, 180; 110, 175]
-      DstComponent  "Mux1"
-      DstTerminal   3
+    Probe {
+      Component     "Vab"
+      Path          ""
+      Signals       {"Measured voltage"}
     }
-    Connection {
-      Type          Signal
-      SrcComponent  "Sine Wave4"
-      SrcTerminal   1
-      Points        [115, 235; 115, 185]
-      DstComponent  "Mux1"
-      DstTerminal   4
-    }
-    Connection {
-      Type          Signal
-      SrcComponent  "Mux1"
-      SrcTerminal   1
-      Points        [195, 175; 195, 420]
-      DstComponent  "Relational\nOperator"
-      DstTerminal   1
+    Probe {
+      Component     "Vb"
+      Path          ""
+      Signals       {"Measured voltage"}
     }
   }
 }
-DemoSignature "xi2i1eas2kMu2h5PyXI/Ir3gO0fDeOtnLwL0VH4SdrE="
+DemoSignature "vox2937wacxTj0YFHV9THAnUSAKJkFSPAYv5+g72mNI="
