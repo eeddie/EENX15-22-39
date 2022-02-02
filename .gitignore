@@ -1,5 +1,12 @@
 # Egna tillägg
+
+# Ignorera PLECS autosave (och eventuellt andra)
 .autosave
+
+# Ignorera alla filer i KiCad utom schematics
+# Lägg till fler undantag om simulering/export inte fungerar
+KiCad/*
+!KiCad/*.kicad_sch
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
