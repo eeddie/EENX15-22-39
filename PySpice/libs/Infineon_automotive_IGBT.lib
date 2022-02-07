@@ -40,6 +40,7 @@
 *								*
 * SUPPORTemail:	simulate@infineon.com		
 *****************************************************************
+.func arctan(a) 'atan(a)'
 .SUBCKT IKW40N65H5A_L2 anol gate katl PARAMS: TJ = 27
 * 
 LANO anol ano 3n
