@@ -19,13 +19,13 @@ logger = Logging.setup_logging()
 #   Kretsschema
 #
 #    (Vbat)
-#   ┌───┬───┬───┐
-#   │   Q   Q   Q
-#  +│   ├(a)──────────L─(aa)─R─┐
-#   O   │   ├(b)──────L─(bb)─R─┤(abc)
-#  -│   │   │   ├(c)──L─(cc)─R─┘
-#   │   Q   Q   Q
-#   └───┴───┴───┘
+#   ┌──────┬───────┬───────┐
+#   │   [sw_a+] [sw_b+] [sw_c+]
+#  +│      ├(a)──────────────────L─(aa)─R─┐
+#   O      │       ├(b)──────────L─(bb)─R─┤(abc)
+#  -│      │       │       ├(c)──L─(cc)─R─┘
+#   │   [sw_a-] [sw_b-] [sw_c-]
+#   └──────┴───────┴───────┘
 #    (circuit.gnd)
 
 # VARIABLER
@@ -48,8 +48,10 @@ triangleAmplitude = 1
 # Sinussignalernas amplitud
 sinAmplitude = 700 @ u_mV
 
-# Batterispänning
-batteryVoltage = 1400 @ u_V
+# Batterispänning Vbat = batteryVoltage * tanh(batteryGain * time)
+# Enheter (ex. @ u_V) fungerar inte när man insertar i ett expression
+batteryVoltage = 1400       
+batteryGain = 100
 
 # Fasfilter "motor"
 phaseResistance = 1 @ u_Ohm
@@ -93,7 +95,7 @@ if __name__ == '__main__':
     circuit = Circuit('Tre-fas inverter')
 
     # Spänningskälla batteri
-    circuit.V(1, 'Vbat', circuit.gnd, batteryVoltage)
+    circuit.BehavioralSource(1, 'Vbat', circuit.gnd, v= f'{batteryVoltage} * tanh({batteryGain} * time)')
 
     # Triangelvåg
     triangle_wave_pulse(circuit, 'triangle_wave', 'check', circuit.gnd, frequency=triangleFreq,
@@ -144,13 +146,13 @@ if __name__ == '__main__':
     # PLOTTING
     #
     #    (Vbat)
-    #   ┌───┬───┬───┐
-    #   │   Q   Q   Q
-    #  +│   ├(a)──────────L─(aa)─R─┐
-    #   O   │   ├(b)──────L─(bb)─R─┤(abc)
-    #  -│   │   │   ├(c)──L─(cc)─R─┘
-    #   │   Q   Q   Q
-    #   └───┴───┴───┘
+    #   ┌──────┬───────┬───────┐
+    #   │   [sw_a+] [sw_b+] [sw_c+]
+    #  +│      ├(a)──────────────────L─(aa)─R─┐
+    #   O      │       ├(b)──────────L─(bb)─R─┤(abc)
+    #  -│      │       │       ├(c)──L─(cc)─R─┘
+    #   │   [sw_a-] [sw_b-] [sw_c-]
+    #   └──────┴───────┴───────┘
     #    (circuit.gnd)
     #
     #   Ex.
