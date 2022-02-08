@@ -40,7 +40,10 @@
 *								*
 * SUPPORTemail:	simulate@infineon.com		
 *****************************************************************
+* Funktioner för kompatibilitet med LTSpice etc.
+.func if(a,b,c) 'ternary_fcn( a , b , c )'
 .func arctan(a) 'atan(a)'
+
 .SUBCKT IKW40N65H5A_L2 anol gate katl PARAMS: TJ = 27
 * 
 LANO anol ano 3n
