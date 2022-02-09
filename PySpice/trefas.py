@@ -13,6 +13,8 @@ from PySpice.Spice.Library import SpiceLibrary
 from PySpice.Spice.Netlist import Circuit, SubCircuit, SubCircuitFactory
 from PySpice.Unit import *
 
+from components import *
+
 logger = Logging.setup_logging()
 #####################################################################
 #
@@ -51,55 +53,21 @@ sinAmplitude = 700 @ u_mV
 # Batterispänning Vbat = batteryVoltage * tanh(batteryGain * time)
 # Enheter (ex. @ u_V) fungerar inte när man insertar i ett expression
 batteryVoltage = 1400       
-batteryGain = 100
 
 # Fasfilter "motor"
 phaseResistance = 1 @ u_Ohm
 phaseInductance = 1 @ u_mH
 
 
-# Subkrets med en diod och switch i parallell koppling
-class SwitchSubCircuit(SubCircuit):
-    __nodes__ = ('t_in', 't_out', 't_c+', 't_c-')
-
-    def __init__(self, name):
-        SubCircuit.__init__(self, name, *self.__nodes__)
-        self.raw_spice = '.Model DMOD D' + os.linesep
-        self.model('switch', 'SW', Ron=1 @ u_mOhm, Roff=1 @ u_GOhm)
-
-        self.D(1, 't_out', 't_in', model='DMOD')
-        self.S(1, 't_in', 't_out', 't_c+', 't_c-', model='switch')
-
-
-# if (a > b) {out = 1 V} else {out = -1 V}
-class GreaterThanSubCircuit(SubCircuit):
-    __nodes__ = ('a', 'b', 'out', 'gnd')
-
-    def __init__(self, name):
-        SubCircuit.__init__(self, name, *self.__nodes__)
-        self.NonLinearVoltageSource('comparator', 'out', 'gnd',
-                                    expression='V(a, b)',
-                                    table=((-1 @ u_nV, -1 @ u_V),
-                                           (1 @ u_nV, 1 @ u_V)))
-        self.R('parallel_R', 'out', 'gnd', 1 @ u_kOhm)
-
-
-def triangle_wave_pulse(circ, name, in_node, out_node, frequency, amplitude):
-    period = int(1 / frequency * 10 ** 9) @ u_ns
-    circ.PulseVoltageSource(name, in_node, out_node, initial_value=-amplitude, pulsed_value=amplitude,
-                            pulse_width=1 @ u_ns,
-                            period=period, delay_time=0 @ u_ms, rise_time=period / 2, fall_time=period / 2)
-
 
 if __name__ == '__main__':
     circuit = Circuit('Tre-fas inverter')
 
     # Spänningskälla batteri
-    circuit.BehavioralSource(1, 'Vbat', circuit.gnd, v= f'{batteryVoltage} * tanh({batteryGain} * time)')
+    contStepSource(circuit, "1", 'Vbat', circuit.gnd, batteryVoltage)
 
     # Triangelvåg
-    triangle_wave_pulse(circuit, 'triangle_wave', 'check', circuit.gnd, frequency=triangleFreq,
-                        amplitude=triangleAmplitude)
+    contTriangleSource(circuit, 'triangle_wave', 'check', circuit.gnd, frequency=triangleFreq, amplitude=triangleAmplitude)
     circuit.R('R', 'check', circuit.gnd, 1 @ u_kOhm)
 
     # Sinussignaler för faser
