@@ -63,12 +63,12 @@ if __name__ == '__main__':
     # Switch PWM
     contPWMSource(circuit, 'pwm', 'pwm', circuit.gnd, pwmFreq, amplitude=pwmAmplitude, dutyCycle=pwmDutyCycle, offset=-pwmAmplitude/2)
     
-    #circuit.subcircuit(SwitchSubCircuit('sub_switch'))
-    #circuit.X('sw', 'sub_switch', 'Vin', 'a', 'pwm', circuit.gnd)
+    circuit.subcircuit(SwitchSubCircuit('sub_switch'))
+    circuit.X('sw', 'sub_switch', 'Vin', 'a', 'pwm', circuit.gnd)
 
     # Denna ger upphov till "Timestep too small"
-    circuit.include(spice_library["IKW40N65H5A_L2"])
-    circuit.X('sw', 'IKW40N65H5A_L2', 'Vin', 'pwm', 'a')
+    #circuit.include(spice_library["IKW40N65H5A_L2"])
+    #circuit.X('sw', 'IKW40N65H5A_L2', 'Vin', 'pwm', 'a')
 
     circuit.R(1, 'a', 'b', indR)
     circuit.L(1, 'b', circuit.gnd, inL)
