@@ -52,17 +52,14 @@ def contPWMSource(circuit, name, in_node, out_node, frequency, amplitude, dutyCy
     circuit.BehavioralSource(name, in_node, out_node, v=f"{offset} + {amplitude} / 4 * ((1 + {factor} * atan( sin({pi} * time / {period}) / {delta*pi})) - (1 + {factor} * atan( sin({pi} * ((time/{period}) - {dutyCycle}) ) / {delta*pi})))**2")
 
 
-# if (a > b) {out = 1 V} else {out = -1 V}
-class GreaterThanSubCircuit(SubCircuit):
+# Kontinuerlig greater than subcircuit  a>b => out=+amplitude, a<b => out=-amplitude
+class ContGreaterThanSubCircuit(SubCircuit):
     __nodes__ = ('a', 'b', 'out', 'gnd')
 
-    def __init__(self, name):
+    def __init__(self, name, amplitude, delta = 0.001):
         SubCircuit.__init__(self, name, *self.__nodes__)
-        self.NonLinearVoltageSource('comparator', 'out', 'gnd',
-                                    expression='V(a, b)',
-                                    table=((-1 @ u_nV, -1 @ u_V),
-                                           (1 @ u_nV, 1 @ u_V)))
-        self.R('parallel_R', 'out', 'gnd', 1 @ u_kOhm)
+        
+        self.BehavioralSource(name, 'out', 'gnd', v=f"{amplitude} * tanh({1/delta} * V(a,b))")
 
 # Subkrets med en diod och switch i parallell koppling
 class SwitchSubCircuit(SubCircuit):
