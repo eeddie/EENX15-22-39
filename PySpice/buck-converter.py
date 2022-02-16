@@ -20,94 +20,104 @@ logger = Logging.setup_logging()
 #
 #   Kretsschema
 #   (nät) [komponent]
-#    
-#   (Vin)┌─[Lin]─(a)─[Rin]─┬(b)─→[D1]→──┬──(out)─┐
-#       +│               [Rsw]       [Rout]      │
-#        O               (sw)          (c)    [Rload]
-#       -│         (pwm)─[sw]        [Cout]      │
-#        └─────────────────┴────────────┴────────┘
-#         (circuit.gnd)
+#                
+#   (nVin)┌─[Xa]──┬─(n1)──[L1]─┬(nout)─┐
+#        +│       │            │       │
+#         O      [Xb]        [Cout] [Rload]
+#        -│       │            │       │
+#         └───────┴────────────┴───────┘
+#          (circuit.gnd)
 
 
 def buckConverter(
     inV     = 12,
-    inL     = 10    @u_mH,
-    inR     = 1     @u_Ohm,
-    outC    = 220   @u_uF,
-    outR    = 1     @u_Ohm,
-    swR     = 1     @u_Ohm,
-    loadR   = 1     @u_kOhm,
-    pwmFreq = 10**3,
+    inL     = 1     @u_mH,   # Spolens induktans
+    outC    = 33    @u_uF,   # Utgångskondensatorns kapacitans
+    gateR   = 0.25  @u_Ohm,  # Switcharnas/transistorernas gate-resistans
+    loadR   = 0.5   @u_Ohm,  # Lastens resistans
+    pwmFreq = 10**4,
     pwmDutyCycle = 0.5,
     pwmAmp = 5,
-    pwmOffset = -0.5
+    pwmOffset = 0
 ):
     """ Returns a PySpice Circuit buck-converter with the parameters specified """
+    
+    spice_library = SpiceLibrary("./libs/")
+
     circuit = Circuit('Buck-converter')
 
-    contStepSource(circuit, 'in', 'n_Vin', circuit.gnd, inV)
+    contStepSource(circuit, 'in', 'nVin', circuit.gnd, inV, smoothness=0.01)
 
-    contPWMSource(circuit, 'pwm', 'n_pwm', circuit.gnd, pwmFreq, pwmAmp, pwmDutyCycle, pwmOffset)
+    contTriangleSource(circuit, "tri", 'nTri', circuit.gnd, pwmFreq, 0.5, 0.5, smoothness=0.001)
 
-    circuit.L('in', 'n_Vin', 'n_a', inL)
-    circuit.R('in', 'n_a', 'n_b', inR)
+    # PWM-källor
+    circuit.BehavioralSource('pwm_a', 'npwm_a', circuit.gnd, v=f"{pwmOffset} + {pwmAmp} * tanh(10 * ({pwmDutyCycle} - V(nTri)))")
+    circuit.BehavioralSource('pwm_b', 'npwm_b', circuit.gnd, v=f"{pwmOffset} + {pwmAmp} * tanh(10 * (-{pwmDutyCycle}+0.03 + V(nTri)))")
 
-    circuit.R('sw', 'n_b', 'n_sw', swR)
+    # MOSFET-Transistorer
+    # circuit.include(spice_library["BSB012N03LX3"])
+    # circuit.X('a', "BSB012N03LX3", 'nVin', 'nGateA', 'n1', 25, 25)
+    # circuit.X('b', "BSB012N03LX3", 'n1', 'nGateB', circuit.gnd, 25, 25)
 
-    spice_library = SpiceLibrary("./libs/")
-    # circuit.include(spice_library["S3_30_l_var"])
-    # circuit.X('sw', "S3_30_l_var", 'n_sw', 'n_pwm', circuit.gnd, 25)  # Tj = 25, junction temperature is 25 degrees C
+    # Ideella switchar
+    circuit.subcircuit(SwitchSubCircuit('sub_switch'))
+    circuit.X('a', 'sub_switch', 'nVin', 'n1', 'nGateA', circuit.gnd)
+    circuit.X('b', 'sub_switch', 'n1', circuit.gnd, 'nGateB', circuit.gnd)
 
-    circuit.subcircuit(SwitchSubCircuit('sub_sw'))
-    circuit.X('sw', 'sub_sw', 'n_sw', circuit.gnd, 'n_pwm', circuit.gnd)
+    # Gate-resistorer
+    circuit.R('gateA', 'npwm_a', 'nGateA', gateR)
+    circuit.R('gateB', 'npwm_b', 'nGateB', gateR)
 
-    circuit.include(spice_library["DI_1N4002G"])
-    circuit.Diode(1, 'n_out', 'n_b', model="DI_1N4002G")
+    # Induktor
+    circuit.L(1, 'n1', 'nout', inL)
 
-    circuit.R('out', 'n_out', 'n_c', outR)
-    circuit.C('out', 'n_c', circuit.gnd, outC)
+    # Spänningsutjämnande utgångs-kondensator
+    circuit.C('out', 'nout', circuit.gnd, outC)
 
-    circuit.R('load', 'n_out', circuit.gnd, loadR)
+    # Last
+    circuit.R('load', 'nout', circuit.gnd, loadR)
 
     return circuit
 
 
 
 # Simuleringarnas tidssteg
-step_time = 100 @u_us
+step_time = 1 @u_us
 
 # Simuleringarnas sluttid
-final_time = 1000 @u_ms
-
-from plotting import plotFourier, plotSet
+final_time = 20 @u_ms
 
 if __name__ == '__main__':
-    circuit = buckConverter()
 
-    # simulator = circuit.simulator(temperature=25, nominal_temperature=25)
-    # analysis = simulator.transient(step_time=step_time, end_time=final_time)
-
-
-    #Plot över utspänning
     plt.figure(1)
-    plt.title('Output voltage')
+    plt.title(f'D = 0.5')
     plt.xlabel('Time [s]')
     plt.ylabel('Voltage [V]')
     plt.grid()
-    plotSet(circuits=[
-        [buckConverter(pwmDutyCycle=0.1), "D=0.1"],
-        [buckConverter(pwmDutyCycle=0.5), "D=0.5"],
-        [buckConverter(pwmDutyCycle=0.9), "D=0.9"]
-        ],
-        net="n_out",
-        step_time=step_time,
-        final_time=final_time
-    )
-    #plot(analysis['n_out'], label="$\mathregular{V_{out}}$")
-    #plot(analysis['n_Vin'], label="$\mathregular{V_{in}}$")
-    #plot(analysis['n_pwm'], label="$\mathregular{V_{pwm}}$")
+    circuit = buckConverter(pwmDutyCycle=0.5)
+    simulator = circuit.simulator(temperature=25, nominal_temperature=25)
+    analysis = simulator.transient(step_time=step_time, end_time=final_time)
+    plt.plot((analysis["npwm_a"]), label="$\mathregular{V_{pwm,a}}$")
+    plt.plot((analysis["npwm_b"]), label="$\mathregular{V_{pwm,b}}$")
+    plt.plot((analysis["nVin"]-analysis["n1"]), label="$\mathregular{V_{Qa}}$")
+    plt.plot((analysis["n1"]), label="$\mathregular{V_{Qb}}$")
     plt.legend()
 
+    plt.figure(2)
+    for fig, dc in [[2, 0.1], [3, 0.5], [4, 0.9]]:
+        #plt.title(f'D = {dc}')
+        plt.xlabel('Time [s]')
+        plt.ylabel('Voltage [V]')
+        plt.grid()
+        circuit = buckConverter(pwmDutyCycle=dc)
+        simulator = circuit.simulator(temperature=25, nominal_temperature=25)
+        analysis = simulator.transient(step_time=step_time, end_time=final_time)
+        if fig == 2: plt.plot((analysis["nVin"]), label="$\mathregular{V_{in}}$")
+        plt.plot((analysis["nout"]), label=f"$\mathregular{{V_{{out,{dc}}}}}$")
+        plt.legend()
+    
+    
+    
     # plt.figure(2)
     # plotFourier(analysis['n_out'], step_time)
     # plt.xlim(0, 5000)
