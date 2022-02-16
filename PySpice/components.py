@@ -42,6 +42,10 @@ def contStepSource(circuit, name, in_node, out_node, amplitude):
     delta = 0.000
     circuit.BehavioralSource(name, in_node, out_node, v=f"{amplitude} * tanh(time / {delta})")
 
+def contStepSource1(circuit, name, in_node, out_node, amplitude, delta):
+    # delta ändrar stegets skarphet. 0 ger ett perfekt (diskont.?) steg
+    circuit.BehavioralSource(name, in_node, out_node, v=f"{amplitude} * tanh(time / {delta})")
+
 # Lägger till en kontinuerlig pwm-källa till circuit som går från 0V till +amplitude
 def contPWMSource(circuit, name, in_node, out_node, frequency, amplitude, dutyCycle, offset=0):
     # delta ändrar den kontinuerliga fyrkantsvågens skarphet. 0 ger perfekt (diskont.?) fyrkantsvåg, 0.1 och högre ger sinusvåg.
