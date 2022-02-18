@@ -9,10 +9,10 @@ KiCad/*
 !KiCad/*.kicad_sch
 
 # Ignorera outputs från simuleringar
-.cir
-.raw
-.log
-.zip
+*.cir
+*.raw
+*.log
+*.zip
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
