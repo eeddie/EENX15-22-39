@@ -39,24 +39,35 @@ def contSquareSource(circuit, name, in_node, out_node, frequency, amplitude, off
     # factor ser till att signalens amplitud är 'amplitude' oavsett smoothness
     factor = 1 / float(atan(1/(smoothness * pi)))
     period = 1 / float(frequency)
-    circuit.BehavioralSource(name, in_node, out_node, v=f"{offset} + {amplitude} / 2 * (1 + {factor} * atan( sin({pi} * time / {period}) / {delta*pi}))")
+    circuit.BehavioralSource(name, in_node, out_node, v=f"{offset} + {amplitude} / 2 * (1 + {factor} * atan( sin({pi} * time / {period}) / {smoothness*pi}))")
 
-# Lägger till en kontinuerlig step-källa till circuit som stiger från 0V till +amplitude vid time = 0
-def contStepSource(circuit, name, in_node, out_node, amplitude):
-    # delta ändrar stegets skarphet. 0 ger ett perfekt (diskont.?) steg
-    delta = 0.000
-    circuit.BehavioralSource(name, in_node, out_node, v=f"{amplitude} * tanh(time / {delta})")
 
-def contStepSource1(circuit, name, in_node, out_node, amplitude, delta):
-    # delta ändrar stegets skarphet. 0 ger ett perfekt (diskont.?) steg
-    circuit.BehavioralSource(name, in_node, out_node, v=f"{amplitude} * tanh(time / {delta})")
+def contTanhStepSource(circuit, name, in_node, out_node, amplitude, smoothness=0.001):
+    """ 
+    Lägger till en kontinuerlig step-källa till circuit som stiger från 0V till +amplitude vid time = 0, derivatan vid 0 är amplitude
 
-# Lägger till en kontinuerlig pwm-källa till circuit som går från 0V till +amplitude
-def contPWMSource(circuit, name, in_node, out_node, frequency, amplitude, dutyCycle, offset=0):
-    # delta ändrar den kontinuerliga fyrkantsvågens skarphet. 0 ger perfekt (diskont.?) fyrkantsvåg, 0.1 och högre ger sinusvåg.
-    delta = 0.0001
-    # factor ser till att signalens amplitud är 'amplitude' oavsett delta (trubbighet)
-    factor = 1 / float(atan(1/(delta * pi)))
+    smoothness - ändrar stegets skarphet. 0 ger ett perfekt (diskont.?) steg
+    """
+    circuit.BehavioralSource(name, in_node, out_node, v=f"{amplitude} * tanh(time / {smoothness})")
+
+def contSigmoidStepSource(circuit, name, in_node, out_node, amplitude, smoothness=0.01):
+    """ 
+    Lägger till en kontinuerlig step-källa till circuit som stiger från 0V till +amplitude vid time = 0, derivatan vid 0 är ~0
+
+    smoothness - ändrar stegets skarphet. 0 ger ett perfekt (diskont.?) steg
+    """
+    circuit.BehavioralSource(name, in_node, out_node, v=f"{amplitude/2} * (1+tanh((time / {smoothness}) - 3))")
+
+
+def contPWMSource(circuit, name, in_node, out_node, frequency, amplitude, dutyCycle, offset=0, smoothness = 0.001):
+    """
+    Lägger till en kontinuerlig pwm-källa till circuit som går från 0V till +amplitude
+    
+    smoothness - ändrar den kontinuerliga fyrkantsvågens skarphet. 0 ger perfekt (diskont.?) fyrkantsvåg, 0.1 och högre ger sinusvåg.
+    """
+    
+    # factor ser till att signalens amplitud är 'amplitude' oavsett smoothness
+    factor = 1 / float(atan(1/(smoothness * pi)))
     period = 1 / float(frequency)
     circuit.BehavioralSource(name, in_node, out_node, v=f"{offset} + {amplitude} / 4 * ((1 + {factor} * atan( sin({pi} * time / {period}) / {smoothness*pi})) - (1 + {factor} * atan( sin({pi} * ((time/{period}) - {dutyCycle}) ) / {smoothness*pi})))**2")
 
@@ -74,7 +85,7 @@ class ContGreaterThanSubCircuit(SubCircuit):
 
 class SwitchSubCircuit(SubCircuit):
     """ Subkrets med en diod och switch i parallell koppling """
-    
+
     __nodes__ = ('t_in', 't_out', 't_c+', 't_c-')
 
     def __init__(self, name):

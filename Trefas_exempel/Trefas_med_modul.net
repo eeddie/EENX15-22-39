@@ -1,0 +1,58 @@
+* C:\Users\ed_th\OneDrive\Dokument\Chalmers\Kandidat\Trefas_exempel\Trefas_med_modul.asc
+V_mod N005 0 {Mod}
+V_freq N003 0 {Freq}
+Vdc N001 0 PULSE(0V 100V 0s 5ms 0 200m)
+M1 N001 G1 A A IPI200N25N3
+M2 A G2 0 0 IPI200N25N3
+M3 N001 G3 B B IPI200N25N3
+M4 B G4 0 0 IPI200N25N3
+M5 N001 G5 C C IPI200N25N3
+M6 C G6 0 0 IPI200N25N3
+R1 A N002 {R_motor}
+L1 N002 N {L_motor} Rser=0.02
+R2 B N004 {R_motor}
+L2 N004 N {L_motor} Rser=0.02
+R3 C N006 {R_motor}
+L3 N006 N {L_motor} Rser=0.02
+XPWM1 N003 N005 A 0 B 0 C 0 G1 G2 G3 G4 G5 G6 trefas_exempel
+
+* block symbol definitions
+.subckt trefas_exempel Freq Mod E1 E2 E3 E4 E5 E6 G1 G2 G3 G4 G5 G6
+B§Sin_A Ph_A 0 V= V(M)*sin(2*Pi*V(Frq)*time)
+B§Sin_B Ph_B 0 V= V(M)*sin(2*Pi*V(Frq)*time-2*Pi/3)
+B§Sin_C Ph_C 0 V= V(M)*sin(2*Pi*V(Frq)*time+2*Pi/3)
+B§E_PWM_A PWM_A 0 V= 15*tanh(Gain*(V(Ph_A)-V(Triangle)))
+B§E_PWM_B PWM_B 0 V= 15*tanh(Gain*(V(Ph_B)-V(Triangle)))
+B§E_PWM_C PWM_C 0 V= 15*tanh(Gain*(V(Ph_C)-V(Triangle)))
+B§Tri Triangle 0 V= (2/Pi)*asin(sin(2*Pi*Fs*Time))
+E§Dr1 N001 E1 PWM_A 0 1
+E§Dr3 N003 E3 PWM_B 0 1
+E§Dr5 N005 E5 PWM_C 0 1
+E§Dr2 N002 E2 0 PWM_A 1
+E§Dr4 N004 E4 0 PWM_B 1
+E§Dr6 N006 E6 0 PWM_C 1
+Rg1 N001 G1 10
+Rg2 N002 G2 10
+Rg3 N003 G3 10
+Rg4 N004 G4 10
+Rg5 N005 G5 10
+Rg6 N006 G6 10
+E1 Frq 0 Freq 0 1
+E2 M 0 Mod 0 1
+.ends trefas_exempel
+
+.model NMOS NMOS
+.model PMOS PMOS
+.lib C:\Users\ed_th\OneDrive\Dokument\LTspiceXVII\lib\cmp\standard.mos
+.tran 0 200m 100m 1us
+.PARAM L_Motor = 13.8m
+.PARAM R_Motor = 7.2
+.param Mod= 0.9
+.param Freq = 60
+.param Fs = 20000
+.param Gain = 100
+.ic I(L1) = 0
+.ic I(L2) = 0
+.ic I(L3) = 0
+.backanno
+.end

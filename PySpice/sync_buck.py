@@ -42,19 +42,19 @@ if __name__ == '__main__':
     circuit = Circuit("Synchronous Buck Inverter")
 
     ## Main circuit
-    new_line = '.include libs/MOS.lib' 
+    new_line = ".include 'MOS.lib'"
     circuit.raw_spice += new_line + os.linesep
     print(circuit)
     contStepSource1(circuit, "in", "Vin", circuit.gnd, Vin, step_delta)
-    circuit.M("sw1","Vin", "G1", "S1", "KP912")                      # "Switching MOSFET"
-    circuit.M("sw2","S1", "G2", circuit.gnd, "KP912")                # Rectification MOSFET
+    circuit.M("sw1","Vin", "G1", "S1", "IXFH58N20")                      # "Switching MOSFET"
+    circuit.M("sw2","S1", "G2", circuit.gnd, "IXFH58N20")                # Rectification MOSFET
     circuit.L("Lf", "S1", "out", Lf)                                        # Choke
     circuit.R("ESR", "out", "Vc", ESR_Cf)                                   # ESR of filtering capacitor
     circuit.C("Cf", "Vc", circuit.gnd, Cf)                                  # Filtering capacitor
     circuit.R("Rload", "out", circuit.gnd, Rload)                           # Load resistance
 
     ## Triangle wave
-    circuit.BehavioralSource("Tri", "Triangle", circuit.gnd, v=f"0.5 + asin(sin(2*Pi*{Fsw}*ime))/Pi")
+    circuit.BehavioralSource("Tri", "Triangle", circuit.gnd, v=f"0.5 + asin(sin(2*Pi*{Fsw}*time))/Pi")
 
     ## Control signal for M1
     circuit.BehavioralSource("E_PWMa", "PWMa", circuit.gnd, v=f"{Vgs}*tanh({Gain}*({Duty}-V(Triangle)))")
