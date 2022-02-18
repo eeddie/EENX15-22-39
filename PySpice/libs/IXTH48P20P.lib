@@ -1,0 +1,4 @@
+. MODEL IXTH48P20P VDMOS Pchan Vds =200 VTO = -4 KP =10 Lambda =5 m
++ Mtriode =0.3 Ksubthres =120 m Rs =10 m Rd =20 m Rds =200 e6
++ Cgdmax =6000 p Cgdmin =100 p A =0.25 Cgs =5000 p Cjo =9000 p
++ Is =2 e -6 Rb =20 m BV =200 IBV =250 e -6 NBV =4 TT =260 e -9
