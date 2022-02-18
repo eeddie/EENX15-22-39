@@ -24,57 +24,48 @@ tstep = 1 @u_ns
 tfinal = 180 @u_us
 
 # Component values
-Lf = 1 @u_mH
-Cf = 33 @u_uF
-ESR_Cf = 0.25 @u_Ohm
-Rload = 0.5 @u_Ohm
-Rg = 0.25 @u_Ohm
+# Lf = 1 @u_mH
+#Cf = 33 @u_uF
+#ESR_Cf = 0.25 @u_Ohm
+#Rload = 0.5 @u_Ohm
+#Rg = 0.25 @u_Ohm
 
 # Control params
-Vin = 12
-Fsw = 10**6
-Gain = 100
-Duty = 0.28
-step_delta = 0.001
-Vgs = 15
+#Vin = 12
+#Fsw = 10**6
+#Gain = 100
+#Duty = 0.28
+#step_delta = 0.001
+#Vgs = 15
 
 if __name__ == '__main__':
     circuit = Circuit("Synchronous Buck Inverter")
 
     ## Main circuit
-    new_line = ".include 'MOS.lib'"
-    circuit.raw_spice += new_line + os.linesep
-    print(circuit)
-    contStepSource1(circuit, "in", "Vin", circuit.gnd, Vin, step_delta)
-    circuit.M("sw1","Vin", "G1", "S1", "IXFH58N20")                      # "Switching MOSFET"
-    circuit.M("sw2","S1", "G2", circuit.gnd, "IXFH58N20")                # Rectification MOSFET
-    circuit.L("Lf", "S1", "out", Lf)                                        # Choke
-    circuit.R("ESR", "out", "Vc", ESR_Cf)                                   # ESR of filtering capacitor
-    circuit.C("Cf", "Vc", circuit.gnd, Cf)                                  # Filtering capacitor
-    circuit.R("Rload", "out", circuit.gnd, Rload)                           # Load resistance
-
-    ## Triangle wave
-    circuit.BehavioralSource("Tri", "Triangle", circuit.gnd, v=f"0.5 + asin(sin(2*Pi*{Fsw}*time))/Pi")
-
-    ## Control signal for M1
-    circuit.BehavioralSource("E_PWMa", "PWMa", circuit.gnd, v=f"{Vgs}*tanh({Gain}*({Duty}-V(Triangle)))")
-
-    ## Control signal for M2
-    circuit.BehavioralSource("E_PWMb", "PWMb", circuit.gnd, v=f"{Vgs}*tanh({Gain}*(-({Duty}+0.03)+V(Triangle)))")
-
-    ## Gate driver for M1, dependent voltage source
-    circuit.BehavioralSource("Dr1", "GR1", "S1", v=f"V(PWMa)")
-    circuit.R("Rg1", "GR1", "G1", Rg)
-
-    ## Gate driver for M2, dependent voltage source
-    circuit.BehavioralSource("Dr2", "GR2", circuit.gnd, v=f"V(PWMa)")
-    circuit.R("Rg2", "GR2", "G2", Rg)
-
-    print(circuit)
-
+    circuit.raw_spice += """Vin N001 0 PULSE(0 12 0 20us)
+M1 N001 G1 E1 BSB012N03LX3
+L1 E1 Out 1u
+R1 Out Cin 0.25
+C1 Cin 0 33u
+R2 Out 0 0.5
+BTri Triangle 0 V=0.5 + asin(sin(2*Pi*Fsw*Time))/Pi
+BE_PWMa N003 0 V=15*tanh(Gain*(Duty-V(Triangle)))
+BE_PWMb N004 0 V=15*tanh(Gain*(-(Duty+0.03)+V(Triangle)))
+EDr1 N002 E1 N003 0 1
+EDr2 N005 0 N004 0 1
+Rg1 N002 G1 0.25
+Rg2 N005 G2 0.25
+M2 E1 G2 0 0 BSB012N03LX3
+.model NMOS NMOS
+.model PMOS PMOS
+.inc C:\\Users\\ed_th\\OneDrive\\Dokument\\LTspiceXVII\\lib\\cmp\\standard.mos
+.ic V(Out)=0
+.param Duty = 0.28
+.param Gain = 100
+.param Fsw= 1.0Meg"""
     ## Set up simulation
     simulator = circuit.simulator(temperature=25, nominal_temperature=25)
-    simulator.initial_condition(out = 0)
+    print(simulator)
     analysis = simulator.transient(step_time=tstep, end_time=tfinal)
     y = np.array(analysis['out'])
 
