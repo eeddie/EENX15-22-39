@@ -29,3 +29,63 @@ write
     f = open(filename, 'w')
     f.write(netlist)
     f.close()
+
+def build_inverter_netlist(Modulation: str, Frequency: str, Fsw: str, MOStype: str, L_m: str, R_m: str, BatV: str, Gain: str, Rg: str):
+    f"""trefas med subcircuit
+V_mod N005 0 {{Mod}}
+V_freq N003 0 {{Freq}}
+Vdc N001 0 PULSE(0V {BatV} 0s 5ms)
+M1 N001 G1 A A {MOStype}
+M2 A G2 0 0 {MOStype}
+M3 N001 G3 B B {MOStype}
+M4 B G4 0 0 {MOStype}
+M5 N001 G5 C C {MOStype}
+M6 C G6 0 0 {MOStype}
+R1 A N002 {{R_motor}}
+L1 N002 N {{L_motor}}
+R2 B N004 {{R_motor}}
+L2 N004 N {{L_motor}}
+R3 C N006 {{R_motor}}
+L3 N006 N {{L_motor}}
+XPWM1 N003 N005 A 0 B 0 C 0 G1 G2 G3 G4 G5 G6 trefas_exempel
+
+* block symbol definitions
+.subckt trefas_exempel Freq Mod E1 E2 E3 E4 E5 E6 G1 G2 G3 G4 G5 G6
+BSin_A Ph_A 0 V= V(M)*sin(2*Pi*V(Frq)*time)
+BSin_B Ph_B 0 V= V(M)*sin(2*Pi*V(Frq)*time-2*Pi/3)
+BSin_C Ph_C 0 V= V(M)*sin(2*Pi*V(Frq)*time+2*Pi/3)
+BE_PWM_A PWM_A 0 V= 15*tanh(Gain*(V(Ph_A)-V(Triangle)))
+BE_PWM_B PWM_B 0 V= 15*tanh(Gain*(V(Ph_B)-V(Triangle)))
+BE_PWM_C PWM_C 0 V= 15*tanh(Gain*(V(Ph_C)-V(Triangle)))
+BTri Triangle 0 V= (2/Pi)*asin(sin(2*Pi*Fs*Time))
+EDr1 N001 E1 PWM_A 0 1
+EDr3 N003 E3 PWM_B 0 1
+EDr5 N005 E5 PWM_C 0 1
+EDr2 N002 E2 0 PWM_A 1
+EDr4 N004 E4 0 PWM_B 1
+EDr6 N006 E6 0 PWM_C 1
+Rg1 N001 G1 {Rg}
+Rg2 N002 G2 {Rg}
+Rg3 N003 G3 {Rg}
+Rg4 N004 G4 {Rg}
+Rg5 N005 G5 {Rg}
+Rg6 N006 G6 {Rg}
+E1 Frq 0 Freq 0 1
+E2 M 0 Mod 0 1
+.ends trefas_exempel
+
+.model NMOS NMOS
+.model PMOS PMOS
+.inc .\MOS.lib
+.tran 1us 200m 0 1us
+.control
+plot i(L1) i(L2) i(L3)
+write
+.endc
+.PARAM L_Motor = {L_m}
+.PARAM R_Motor = {R_m}
+.param Mod= {Modulation}
+.param Freq = {Frequency}
+.param Fs = {Fsw}
+.param Gain = {Gain}
+.end"""
