@@ -16,7 +16,7 @@ Rg2 N005 G2 {Rg}
 M2 E1 G2 0 0 {M2}
 .model NMOS NMOS
 .model PMOS PMOS
-.inc C:\\Users\\ed_th\\OneDrive\\Dokument\\LTspiceXVII\\lib\\cmp\\standard.mos
+.inc .\MOS.lib
 .ic V(Out)=0
 .param Duty = {Duty}
 .param Gain = {Gain}
