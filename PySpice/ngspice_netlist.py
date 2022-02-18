@@ -30,8 +30,8 @@ write
     f.write(netlist)
     f.close()
 
-def build_inverter_netlist(Modulation: str, Frequency: str, Fsw: str, MOStype: str, L_m: str, R_m: str, BatV: str, Gain: str, Rg: str):
-    f"""trefas med subcircuit
+def build_inverter_netlist(Modulation: str, Frequency: str, Fsw: str, MOStype: str, L_m: str, R_m: str, BatV: str, Gain: str, Rg: str, filename: str):
+    netlist = f"""trefas med subcircuit
 V_mod N005 0 {{Mod}}
 V_freq N003 0 {{Freq}}
 Vdc N001 0 PULSE(0V {BatV} 0s 5ms)
@@ -89,3 +89,6 @@ write
 .param Fs = {Fsw}
 .param Gain = {Gain}
 .end"""
+    f = open(filename, 'w')
+    f.write(netlist)
+    f.close()
