@@ -30,7 +30,7 @@ logger = Logging.setup_logging()
 
 
 def buckConverter(
-    inV     = 12,
+    inV     = 12,            # Inspänningen
     inL     = 1     @u_mH,   # Spolens induktans
     outC    = 33    @u_uF,   # Utgångskondensatorns kapacitans
     gateR   = 0.25  @u_Ohm,  # Switcharnas/transistorernas gate-resistans
@@ -40,13 +40,13 @@ def buckConverter(
     pwmAmp = 5,
     pwmOffset = 0
 ):
-    """ Returns a PySpice Circuit buck-converter with the parameters specified """
+    """ Konstruerar en buck-converter-krets med de givna parametrarna och returnar den """
     
     spice_library = SpiceLibrary("./libs/")
 
     circuit = Circuit('Buck-converter')
 
-    contStepSource(circuit, 'in', 'nVin', circuit.gnd, inV, smoothness=0.01)
+    contSigmoidStepSource(circuit, 'in', 'nVin', circuit.gnd, inV, smoothness=0.0001)
 
     contTriangleSource(circuit, "tri", 'nTri', circuit.gnd, pwmFreq, 0.5, 0.5, smoothness=0.001)
 

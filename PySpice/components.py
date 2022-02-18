@@ -42,13 +42,21 @@ def contSquareSource(circuit, name, in_node, out_node, frequency, amplitude, off
     circuit.BehavioralSource(name, in_node, out_node, v=f"{offset} + {amplitude} / 2 * (1 + {factor} * atan( sin({pi} * time / {period}) / {smoothness*pi}))")
 
 
-def contStepSource(circuit, name, in_node, out_node, amplitude, smoothness=0.001):
+def contTanhStepSource(circuit, name, in_node, out_node, amplitude, smoothness=0.001):
     """ 
-    Lägger till en kontinuerlig step-källa till circuit som stiger från 0V till +amplitude vid time = 0
+    Lägger till en kontinuerlig step-källa till circuit som stiger från 0V till +amplitude vid time = 0, derivatan vid 0 är amplitude
 
     smoothness - ändrar stegets skarphet. 0 ger ett perfekt (diskont.?) steg
     """
     circuit.BehavioralSource(name, in_node, out_node, v=f"{amplitude} * tanh(time / {smoothness})")
+
+def contSigmoidStepSource(circuit, name, in_node, out_node, amplitude, smoothness=0.01):
+    """ 
+    Lägger till en kontinuerlig step-källa till circuit som stiger från 0V till +amplitude vid time = 0, derivatan vid 0 är ~0
+
+    smoothness - ändrar stegets skarphet. 0 ger ett perfekt (diskont.?) steg
+    """
+    circuit.BehavioralSource(name, in_node, out_node, v=f"{amplitude/2} * (1+tanh((time / {smoothness}) - 3))")
 
 
 def contPWMSource(circuit, name, in_node, out_node, frequency, amplitude, dutyCycle, offset=0, smoothness = 0.001):
@@ -77,7 +85,7 @@ class ContGreaterThanSubCircuit(SubCircuit):
 
 class SwitchSubCircuit(SubCircuit):
     """ Subkrets med en diod och switch i parallell koppling """
-    
+
     __nodes__ = ('t_in', 't_out', 't_c+', 't_c-')
 
     def __init__(self, name):
