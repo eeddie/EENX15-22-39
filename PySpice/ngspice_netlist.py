@@ -16,7 +16,7 @@ Rg2 N005 G2 {Rg}
 M2 E1 G2 0 0 {M2}
 .model NMOS NMOS
 .model PMOS PMOS
-.inc .\MOS.lib
+.inc .\libs\MOS.lib
 .ic V(Out)=0
 .param Duty = {Duty}
 .param Gain = {Gain}
@@ -76,7 +76,7 @@ E2 M 0 Mod 0 1
 
 .model NMOS NMOS
 .model PMOS PMOS
-.inc .\MOS.lib
+.inc .\libs\MOS.lib
 .tran 1us 200m 0 1us
 .control
 plot i(L1) i(L2) i(L3)
