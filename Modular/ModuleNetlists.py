@@ -1,5 +1,12 @@
-def getInverterControlNetlist(Fs, Rg, Gain, OverlapProtection, name):
-    return f""".subckt {name} Freq Mod E1 E2 E3 E4 E5 E6 G1 G2 G3 G4 G5 G6
+def getInverterControlNetlist(
+    name,
+    Fs                  = 2000      @u_Hz,      # Switchfrekvens                                        TODO: Kolla upp vad en typisk switchfrekvensen är
+    Rg                  = 1.5       @u_Ohm,     # Gateresistans                                         NOTE: Tagen från extern källa med AN-1001 IGBT:er
+    Gain                = 100,                  # Switchningens aggressivitet                           TODO: Välj ett passande typiskt värde
+    OverlapProtection   = 0.1,                  # Switchmarginal mellan positiv och negativ transistor  TODO: Välj ett passande typiskt värde 
+    ):
+    return f"""
+.subckt {name} Freq Mod E1 E2 E3 E4 E5 E6 G1 G2 G3 G4 G5 G6
 BSin_A Ph_A 0 V= V(M)*sin(2*Pi*V(Frq)*time)
 BSin_B Ph_B 0 V= V(M)*sin(2*Pi*V(Frq)*time-2*Pi/3)
 BSin_C Ph_C 0 V= V(M)*sin(2*Pi*V(Frq)*time+2*Pi/3)
@@ -26,7 +33,17 @@ E1 Frq 0 Freq 0 1
 E2 M 0 Mod 0 1
 .ends {name}"""
 
-def getInverterNetlist(Mod, Freq, MOStype, ParCap, name):
+def getInverterNetlist(
+    name,
+    Mod, 
+    Freq,                       
+    MOStype,                    # Mosfet-typ
+    ParCapA     = 1.4   @u_pF,  # Parasiterande kapacitans fas A till hölje. 
+    ParCapB     = 2.0   @u_pF,  # Parasiterande kapacitans fas B till hölje. 
+    ParCapC     = 0.7   @u_pF,  # Parasiterande kapacitans fas C till hölje. 
+    ParCapP     = 1.1   @u_pF,  # Parasiterande kapacitans positiv till hölje. 
+    ParCapN     = 2.0   @u_pF,  # Parasiterande kapacitans negativ till hölje. 
+    ):
     return f""".subckt {name} Pos Neg A B C Case
 V_mod N005 0 {Mod}
 V_freq N003 0 {Freq}
@@ -37,12 +54,22 @@ M4 B G4 Neg 0 {MOStype}
 M5 Pos G5 C C {MOStype}
 M6 C G6 Neg 0 {MOStype}
 XPWM1 N003 N005 A Neg B Neg C Neg G1 G2 G3 G4 G5 G6 inverterControl
-C1 A Case {ParCap}
-C2 B Case {ParCap}
-C3 C Case {ParCap}
+C1 A Case {ParCapA}
+C2 B Case {ParCapB}
+C3 C Case {ParCapC}
+C4 Pos Case {ParCapP}
+C5 Neg Case {ParCapN}
 .ends {name}"""
 
-def getStaticLoadNetlist(R_load, L_load, ParCapPh, ParCapY, name):
+def getStaticLoadNetlist(
+    name,                           
+    R_load      = 1.09  @u_Ohm,     # Lastresistans                                 TODO: 1.09 Ω är resistansen vid DC, kolla Thomas "Circuit Parameters.docx" för frekvensberoende resistans.
+    L_load      = 20    @u_mH,      # Lastinduktans
+    ParCapA     = 12    @u_pF,      # Parasiterande kapacitans fas A till Hölje
+    ParCapB     = 15    @u_pF,      # Parasiterande kapacitans fas B till Hölje
+    ParCapC     = 18    @u_pF,      # Parasiterande kapacitans fas C till Hölje
+    ParCapY     = 55    @u_pF,      # Parasiterande kapacitans neutral till Hölje
+    ):
     return f""".subckt {name} A B C Case
 R1 A N001 {R_load}
 L1 N001 N {L_load}
@@ -50,13 +77,21 @@ R2 B N002 {R_load}
 L2 N002 N {L_load}
 R3 C N003 {R_load}
 L3 N003 N {L_load}
-C1 A Case {ParCapPh}
-C2 B Case {ParCapPh}
-C3 C Case {ParCapPh}
+C1 A Case {ParCapA}
+C2 B Case {ParCapB}
+C3 C Case {ParCapC}
 C4 N Case {ParCapY}
 .ends {name}"""
 
-def getSimpleBatteryNetlist(Voltage, R_self, L_self, RampTime, ParCapP, ParCapN, name):
+def getSimpleBatteryNetlist(
+    name,
+    Voltage,                        # Batterispänning
+    RampTime,                       # Upprampningstid
+    R_self      = 0.1   @u_Ohm,     # Serieresistans batteri                        NOTE: 0.1 Ω är resistansen vid DC, kolla Thomas "Circuit Parameters.docx" för frekvensberoende resistans.
+    L_self      = 500   @u_nH,      # Serieinduktans batteri
+    ParCapP     = 52    @u_pF,      # Parasiterande kapacitans positiv till hölje
+    ParCapN     = 48    @u_pF       # Parasiterande kapacitans negativ till hölje
+    ):
     return f""".subckt {name} Pos Neg Case
 V1 N001 Neg PULSE(0V {Voltage} 0s {RampTime})
 R1 N001 N002 {R_self}
