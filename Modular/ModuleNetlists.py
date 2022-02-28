@@ -108,3 +108,31 @@ C1 Pos Case {ParCapP}
 C2 Pos Case {ParCapN}
 .ends {name}
 """
+
+
+def ToGroundNetlist(name, battery_values, inverter_values, motor_values):
+    return f""" .subckt {name} battery_node inverter_node motor_node node_out
+.subckt BatteryToGround node_in node_out
+C1 node_in node_out {battery_values[0]}
+R1 node_in temp {battery_values[1]}
+L1 temp node_out {battery_values[2]}
+.ends BatteryToGround
+
+.subckt InverterToGround node_in node_out
+C1 node_in node_out {inverter_values[0]}
+R1 node_in temp {inverter_values[1]}
+L1 temp node_out {inverter_values[2]}
+.ends InverterToGround
+
+.subckt MotorToGround node_in node_out
+C1 node_in node_out {motor_values[0]}
+R1 node_in temp {motor_values[1]}
+L1 temp node_out {motor_values[2]}
+.ends MotorToGround
+
+Xbattery battery_node ground_node BatteryToGround
+Xinverter inverter_node ground_node InverterToGround
+Xmotor motor_node ground_node MotorToGround
+
+.ends {name}
+"""
