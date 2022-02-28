@@ -1,16 +1,20 @@
+# 
+# ModuleNetlists.py
+#
+# Innehåller funktioner för att hämta netlists på de olika krets-modulerna
+#
 
-# Returns a netlist in the form of a string for the subcircuit that generates the control signal
-# Is usually used within the netlist for the entire inverter
-# Freq, Mod are inputs, G1-G6 and E1-E6 are the outputs that are connected to the transistors
-# Arguments:
-# Fs: Switching frequency
-# Rg: Resistance of gate resistor
-# Gain: Sharpness of generated PWM wave
-# OverlapProtection: A small value added to the reference sine wave, used to prevent two transistors 
-#   in the same half bridge conducting at the same time.
-# name: The name of the subcircuit, useful for several different subcircuits of the same type
-def getInverterControlNetlist(Fs, Rg, Gain, OverlapProtection, name):
-    return f""".subckt {name} Freq Mod E1 E2 E3 E4 E5 E6 G1 G2 G3 G4 G5 G6
+
+
+def getInverterControlNetlist(
+    name,
+    Fs                  = 2000, # Switchfrekvens                                        TODO: Kolla upp vad en typisk switchfrekvensen är
+    Rg                  = 1.5,  # Gateresistans                                         NOTE: Tagen från extern källa med AN-1001 IGBT:er
+    Gain                = 100,  # Switchningens skarphet                                TODO: Välj ett passande default-värde
+    OverlapProtection   = 0.1,  # Switchmarginal mellan positiv och negativ transistor  TODO: Välj ett passande default-värde 
+    ):
+    return f"""
+.subckt {name} Freq Mod E1 E2 E3 E4 E5 E6 G1 G2 G3 G4 G5 G6
 BSin_A Ph_A 0 V= V(M)*sin(2*Pi*V(Frq)*time)
 BSin_B Ph_B 0 V= V(M)*sin(2*Pi*V(Frq)*time-2*Pi/3)
 BSin_C Ph_C 0 V= V(M)*sin(2*Pi*V(Frq)*time+2*Pi/3)
@@ -37,16 +41,17 @@ E1 Frq 0 Freq 0 1
 E2 M 0 Mod 0 1
 .ends {name}"""
 
-
-# Returns a netlist in the form of a string for the subcircuit of the inverter
-# Pos and Neg are connected to the battery in the overlying circuit, A, B and C are connected to the load
-# Case is connected to ground via another subcircuit
-# Arguments:
-# Mod: Modulation, i.e. amplitude of reference sine wave. Values higher than 1 may lead to distorted output
-# Freq: Frequency of the output three phase current
-# MOStype: name of the mosfet used. For this topology, NMOS only works
-# ParCap: Parasitic capacitance between the phases and the inverter casing.
-def getInverterNetlist(Mod, Freq, MOStype, ParCap, name, controlName):
+def getInverterNetlist(
+    name,
+    Mod, 
+    Freq,                       
+    MOStype,            # Mosfet-typ
+    ParCapA     = 1.4,  # Parasiterande kapacitans fas A till hölje. 
+    ParCapB     = 2.0,  # Parasiterande kapacitans fas B till hölje. 
+    ParCapC     = 0.7,  # Parasiterande kapacitans fas C till hölje. 
+    ParCapP     = 1.1,  # Parasiterande kapacitans positiv till hölje. 
+    ParCapN     = 2.0,  # Parasiterande kapacitans negativ till hölje. 
+    ):
     return f""".subckt {name} Pos Neg A B C Case
 V_mod N005 0 {Mod}
 V_freq N003 0 {Freq}
@@ -56,22 +61,23 @@ M3 Pos G3 B B {MOStype}
 M4 B G4 Neg 0 {MOStype}
 M5 Pos G5 C C {MOStype}
 M6 C G6 Neg 0 {MOStype}
-XPWM1 N003 N005 A Neg B Neg C Neg G1 G2 G3 G4 G5 G6 {controlName}
-C1 A Case {ParCap}
-C2 B Case {ParCap}
-C3 C Case {ParCap}
+XPWM1 N003 N005 A Neg B Neg C Neg G1 G2 G3 G4 G5 G6 inverterControl
+C1 A Case {ParCapA}
+C2 B Case {ParCapB}
+C3 C Case {ParCapC}
+C4 Pos Case {ParCapP}
+C5 Neg Case {ParCapN}
 .ends {name}"""
 
-
-# Returns a netlist in the form of a string of a static load, in this case a wye-connected RL-load
-# A, B and C are connected to the inverter outputs, and Case is coupled to ground using another subcircuit
-# Arguments:
-# R_load: Resistance of load
-# L_load: Inductance of load
-# ParCapPh: Parasitic capacitance between phases and casing
-# ParCapY: Parasitic capacitance between neutral point and casing
-# name: Name of subcircuit
-def getStaticLoadNetlist(R_load, L_load, ParCapPh, ParCapY, name):
+def getStaticLoadNetlist(
+    name,                           
+    R_load      = 1.09, # Lastresistans                                 TODO: 1.09 Ω är resistansen vid DC, kolla Thomas "Circuit Parameters.docx" för frekvensberoende resistans.
+    L_load      = 20,   # Lastinduktans
+    ParCapA     = 12,   # Parasiterande kapacitans fas A till Hölje
+    ParCapB     = 15,   # Parasiterande kapacitans fas B till Hölje
+    ParCapC     = 18,   # Parasiterande kapacitans fas C till Hölje
+    ParCapY     = 55,   # Parasiterande kapacitans neutral till Hölje
+    ):
     return f""".subckt {name} A B C Case
 R1 A N001 {R_load}
 L1 N001 N {L_load}
@@ -79,13 +85,21 @@ R2 B N002 {R_load}
 L2 N002 N {L_load}
 R3 C N003 {R_load}
 L3 N003 N {L_load}
-C1 A Case {ParCapPh}
-C2 B Case {ParCapPh}
-C3 C Case {ParCapPh}
+C1 A Case {ParCapA}
+C2 B Case {ParCapB}
+C3 C Case {ParCapC}
 C4 N Case {ParCapY}
 .ends {name}"""
 
-def getSimpleBatteryNetlist(Voltage, R_self, L_self, RampTime, ParCapP, ParCapN, name):
+def getSimpleBatteryNetlist(
+    name,
+    Voltage,            # Batterispänning
+    RampTime,           # Upprampningstid
+    R_self      = 0.1,  # Serieresistans batteri                        NOTE: 0.1 Ω är resistansen vid DC, kolla Thomas "Circuit Parameters.docx" för frekvensberoende resistans.
+    L_self      = 500,  # Serieinduktans batteri
+    ParCapP     = 52,   # Parasiterande kapacitans positiv till hölje
+    ParCapN     = 48    # Parasiterande kapacitans negativ till hölje
+    ):
     return f""".subckt {name} Pos Neg Case
 V1 N001 Neg PULSE(0V {Voltage} 0s {RampTime})
 R1 N001 N002 {R_self}
