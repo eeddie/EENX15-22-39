@@ -110,24 +110,35 @@ C2 Pos Case {ParCapN}
 """
 
 
-def ToGroundNetlist(name, battery_values, inverter_values, motor_values):
+def ToGroundNetlist(
+        name,
+        battery_resistance=1.59 * 10 ** (-3),
+        battery_capacitance=3.36 * 10 ** (-9),
+        battery_inductance=300.0 ** 10 ** (-9),
+        inverter_resistance=1.59 * 10 ** (-3),
+        inverter_capacitance=4.48 * 10 ** (-9),
+        inverter_inductance=400.0 ** 10 ** (-9),
+        motor_resistance=1.59 * 10 ** (-3),
+        motor_capacitance=8.96 * 10 ** (-9),
+        motor_inductance=800.0 * 10 ** (-9),
+):
     return f""" .subckt {name} battery_node inverter_node motor_node node_out
 .subckt BatteryToGround node_in node_out
-C1 node_in node_out {battery_values[0]}
-R1 node_in temp {battery_values[1]}
-L1 temp node_out {battery_values[2]}
+C1 node_in node_out {battery_capacitance}
+R1 node_in temp {battery_resistance}
+L1 temp node_out {battery_inductance}
 .ends BatteryToGround
 
 .subckt InverterToGround node_in node_out
-C1 node_in node_out {inverter_values[0]}
-R1 node_in temp {inverter_values[1]}
-L1 temp node_out {inverter_values[2]}
+C1 node_in node_out {inverter_capacitance}
+R1 node_in temp {inverter_resistance}
+L1 temp node_out {inverter_inductance}
 .ends InverterToGround
 
 .subckt MotorToGround node_in node_out
-C1 node_in node_out {motor_values[0]}
-R1 node_in temp {motor_values[1]}
-L1 temp node_out {motor_values[2]}
+C1 node_in node_out {motor_capacitance}
+R1 node_in temp {motor_resistance}
+L1 temp node_out {motor_inductance}
 .ends MotorToGround
 
 Xbattery battery_node ground_node BatteryToGround
