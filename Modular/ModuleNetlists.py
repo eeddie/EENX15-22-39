@@ -46,11 +46,11 @@ def getInverterNetlist(
     Mod, 
     Freq,                       
     MOStype,            # Mosfet-typ
-    ParCapA     = 1.4,  # Parasiterande kapacitans fas A till hölje. 
-    ParCapB     = 2.0,  # Parasiterande kapacitans fas B till hölje. 
-    ParCapC     = 0.7,  # Parasiterande kapacitans fas C till hölje. 
-    ParCapP     = 1.1,  # Parasiterande kapacitans positiv till hölje. 
-    ParCapN     = 2.0,  # Parasiterande kapacitans negativ till hölje. 
+    ParCapA     = 1.4*(10**-12),  # Parasiterande kapacitans fas A till hölje. 
+    ParCapB     = 2.0*(10**-12),  # Parasiterande kapacitans fas B till hölje. 
+    ParCapC     = 0.7*(10**-12),  # Parasiterande kapacitans fas C till hölje. 
+    ParCapP     = 1.1*(10**-12),  # Parasiterande kapacitans positiv till hölje. 
+    ParCapN     = 2.0*(10**-12),  # Parasiterande kapacitans negativ till hölje. 
     ):
     return f""".subckt {name} Pos Neg A B C Case
 V_mod N005 0 {Mod}
@@ -71,12 +71,12 @@ C5 Neg Case {ParCapN}
 
 def getStaticLoadNetlist(
     name,                           
-    R_load      = 1.09, # Lastresistans                                 TODO: 1.09 Ω är resistansen vid DC, kolla Thomas "Circuit Parameters.docx" för frekvensberoende resistans.
-    L_load      = 20,   # Lastinduktans
-    ParCapA     = 12,   # Parasiterande kapacitans fas A till Hölje
-    ParCapB     = 15,   # Parasiterande kapacitans fas B till Hölje
-    ParCapC     = 18,   # Parasiterande kapacitans fas C till Hölje
-    ParCapY     = 55,   # Parasiterande kapacitans neutral till Hölje
+    R_load      = 1.09,             # Lastresistans                                 TODO: 1.09 Ω är resistansen vid DC, kolla Thomas "Circuit Parameters.docx" för frekvensberoende resistans.
+    L_load      = 20*(10**-3),      # Lastinduktans
+    ParCapA     = 12*(10**-12),     # Parasiterande kapacitans fas A till Hölje
+    ParCapB     = 15*(10**-12),     # Parasiterande kapacitans fas B till Hölje
+    ParCapC     = 18*(10**-12),     # Parasiterande kapacitans fas C till Hölje
+    ParCapY     = 55*(10**-12),     # Parasiterande kapacitans neutral till Hölje
     ):
     return f""".subckt {name} A B C Case
 R1 A N001 {R_load}
@@ -93,12 +93,12 @@ C4 N Case {ParCapY}
 
 def getSimpleBatteryNetlist(
     name,
-    Voltage,            # Batterispänning
-    RampTime,           # Upprampningstid
-    R_self      = 0.1,  # Serieresistans batteri                        NOTE: 0.1 Ω är resistansen vid DC, kolla Thomas "Circuit Parameters.docx" för frekvensberoende resistans.
-    L_self      = 500,  # Serieinduktans batteri
-    ParCapP     = 52,   # Parasiterande kapacitans positiv till hölje
-    ParCapN     = 48    # Parasiterande kapacitans negativ till hölje
+    Voltage,                        # Batterispänning
+    RampTime,                       # Upprampningstid
+    R_self      = 0.1,              # Serieresistans batteri                        NOTE: 0.1 Ω är resistansen vid DC, kolla Thomas "Circuit Parameters.docx" för frekvensberoende resistans.
+    L_self      = 500*(10**-9),     # Serieinduktans batteri
+    ParCapP     = 52*(10**-12),     # Parasiterande kapacitans positiv till hölje
+    ParCapN     = 48*(10**-12)      # Parasiterande kapacitans negativ till hölje
     ):
     return f""".subckt {name} Pos Neg Case
 V1 N001 Neg PULSE(0V {Voltage} 0s {RampTime})
