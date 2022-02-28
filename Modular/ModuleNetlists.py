@@ -5,6 +5,23 @@
 #
 
 
+def getTotalNetlist(
+    batteryName,
+    batteryFilterName,
+    inverterName,
+    phaseFilterName,
+    loadName,
+    groundingName
+):
+    return f"""
+    Xbattery BatPos BatNeg BatCase {batteryName}
+    Xbatfilt BatPos BatNeg InvPos InvNeg {batteryFilterName}
+    Xinverter InvPos InvNeg InvA InvB InvC InvCase {inverterName}
+    Xphfilter InvA InvB InvC PhA PhB PhC {phaseFilterName}
+    Xload PhA PhB PhC LoadCase {loadName}
+    Xgrounding BatCase InvCase LoadCase 0 {groundingName}
+    """
+
 
 def getInverterControlNetlist(
     name,
@@ -110,6 +127,8 @@ C2 Pos Case {ParCapN}
 """
 
 
+
+
 def ToGroundNetlist(
         name,
         battery_resistance=1.59 * 10 ** (-3),
@@ -147,3 +166,25 @@ Xmotor motor_node ground_node MotorToGround
 
 .ends {name}
 """
+
+
+# Inget filter mellan batteri och inverter. 0 V mellan de två
+def getNoBatteryFilterNetlist(
+    name
+):
+    return f""".subckt {name} BatPos BatNeg InvPos InvNeg
+    V0 BatPos InvPos 0V
+    V1 BatNeg InvNeg 0V
+    .ends {name}
+    """
+
+# Ingen common-mode choke ller annat filter, 0 V mellan inverter och last
+def getNoLoadFilterNetlist(
+    name
+):
+    return f""".subckt {name} InA InB InC OutA OutB OutC
+    V0 InA OutA 0V
+    V1 InB OutB 0V
+    V2 InC OutC 0V
+    .ends {name}
+    """
