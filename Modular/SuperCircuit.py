@@ -10,8 +10,8 @@ import os
 
 
 def exampleNetlist():
-    batteryNetlist = netlist.getSimpleBatteryNetlist('battery', 400, 0.005)
-    inverterControlNetlist = netlist.getInverterControlNetlist('inverterControl')
+    batteryNetlist = netlist.getSimpleBatteryNetlist('battery', 400, 0.05)
+    inverterControlNetlist = netlist.getInverterControlNetlist('inverterControl',2000, 0.5,100)
     inverterNetlist = netlist.getInverterNetlist('inverter', 1, 50, 'IPI200N25N3')
     loadNetlist = netlist.getStaticLoadNetlist('RLload')
 
