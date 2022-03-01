@@ -4,43 +4,33 @@
 # Innehåller funktioner för att hämta netlists på de olika krets-modulerna
 #
 
+import os
 
-def getTotalNetlist(
-    batteryName,
-    batteryFilterName,
-    inverterName,
-    phaseFilterName,
-    loadName,
-    groundingName
-):
-    return f"""
-    Xbattery BatPos BatNeg BatCase {batteryName}
-    Xbatfilt BatPos BatNeg InvPos InvNeg {batteryFilterName}
-    Xinverter InvPos InvNeg InvA InvB InvC InvCase {inverterName}
-    Xphfilter InvA InvB InvC PhA PhB PhC {phaseFilterName}
-    Xload PhA PhB PhC LoadCase {loadName}
-    Xgrounding BatCase InvCase LoadCase 0 {groundingName}
-    """
-
+def simulateNetlist(netlist: str):
+        netlist_file = open('tmp.net', 'w')
+        netlist_file.write(netlist)
+        netlist_file.close()
+        os.system(f'D:\\NGSpice\\ngspice-36_64\\Spice64\\bin\\ngspice.exe "tmp.net"')
+        os.remove("tmp.net")
 
 def getInverterControlNetlist(
     name,
     Fs                  = 2000, # Switchfrekvens                                        TODO: Kolla upp vad en typisk switchfrekvensen är
     Rg                  = 1.5,  # Gateresistans                                         NOTE: Tagen från extern källa med AN-1001 IGBT:er
     Gain                = 100,  # Switchningens skarphet                                TODO: Välj ett passande default-värde
-    OverlapProtection   = 0.1,  # Switchmarginal mellan positiv och negativ transistor  TODO: Välj ett passande default-värde 
+    OverlapProtection   = 0.01,  # Switchmarginal mellan positiv och negativ transistor  TODO: Välj ett passande default-värde 
     ):
     return f"""
 .subckt {name} Freq Mod E1 E2 E3 E4 E5 E6 G1 G2 G3 G4 G5 G6
-BSin_A Ph_A 0 V= V(M)*sin(2*Pi*V(Frq)*time)
-BSin_B Ph_B 0 V= V(M)*sin(2*Pi*V(Frq)*time-2*Pi/3)
-BSin_C Ph_C 0 V= V(M)*sin(2*Pi*V(Frq)*time+2*Pi/3)
-BE_PWM_A PWM_A 0 V= 15*tanh({Gain}*(V(Ph_A)-{OverlapProtection}-V(Triangle)))
-BE_PWM_B PWM_B 0 V= 15*tanh({Gain}*(V(Ph_B)-{OverlapProtection}-V(Triangle)))
-BE_PWM_C PWM_C 0 V= 15*tanh({Gain}*(V(Ph_C)-{OverlapProtection}-V(Triangle)))
-BE_PWM_A_n PWM_A_n 0 V= 15*tanh({Gain}*(V(Ph_A)+{OverlapProtection}-V(Triangle)))
-BE_PWM_B_n PWM_B_n 0 V= 15*tanh({Gain}*(V(Ph_B)+{OverlapProtection}-V(Triangle)))
-BE_PWM_C_n PWM_C_n 0 V= 15*tanh({Gain}*(V(Ph_C)+{OverlapProtection}-V(Triangle)))
+BSin_A      Ph_A    0 V= V(M)*sin(2*Pi*V(Frq)*time)
+BSin_B      Ph_B    0 V= V(M)*sin(2*Pi*V(Frq)*time-2*Pi/3)
+BSin_C      Ph_C    0 V= V(M)*sin(2*Pi*V(Frq)*time+2*Pi/3)
+BE_PWM_A    PWM_A   0 V= 15*tanh({Gain}*(V(Ph_A)-{OverlapProtection}-V(Triangle)))
+BE_PWM_B    PWM_B   0 V= 15*tanh({Gain}*(V(Ph_B)-{OverlapProtection}-V(Triangle)))
+BE_PWM_C    PWM_C   0 V= 15*tanh({Gain}*(V(Ph_C)-{OverlapProtection}-V(Triangle)))
+BE_PWM_A_n  PWM_A_n 0 V= 15*tanh({Gain}*(V(Ph_A)+{OverlapProtection}-V(Triangle)))
+BE_PWM_B_n  PWM_B_n 0 V= 15*tanh({Gain}*(V(Ph_B)+{OverlapProtection}-V(Triangle)))
+BE_PWM_C_n  PWM_C_n 0 V= 15*tanh({Gain}*(V(Ph_C)+{OverlapProtection}-V(Triangle)))
 BTri Triangle 0 V= (2/Pi)*asin(sin(2*Pi*{Fs}*Time))
 EDr1 N001 E1 PWM_A 0 1
 EDr3 N003 E3 PWM_B 0 1
@@ -62,7 +52,7 @@ def getInverterNetlist(
     name,
     Mod, 
     Freq,                       
-    MOStype,            # Mosfet-typ
+    MOStype,                      # Mosfet-typ
     ParCapA     = 1.4*(10**-12),  # Parasiterande kapacitans fas A till hölje. 
     ParCapB     = 2.0*(10**-12),  # Parasiterande kapacitans fas B till hölje. 
     ParCapC     = 0.7*(10**-12),  # Parasiterande kapacitans fas C till hölje. 
@@ -118,54 +108,46 @@ def getSimpleBatteryNetlist(
     ParCapN     = 48*(10**-12)      # Parasiterande kapacitans negativ till hölje
     ):
     return f""".subckt {name} Pos Neg Case
-V1 N001 Neg PULSE(0V {Voltage} 0s {RampTime})
+V1 N001 Neg PULSE(0V {Voltage} 0s {RampTime}) 
 R1 N001 N002 {R_self}
 L1 N002 Pos {L_self}
 C1 Pos Case {ParCapP}
 C2 Pos Case {ParCapN}
-.ends {name}
-"""
-
-
+.ends {name}"""
 
 
 def ToGroundNetlist(
         name,
-        battery_resistance=1.59 * 10 ** (-3),
-        battery_capacitance=3.36 * 10 ** (-9),
-        battery_inductance=300.0 * 10 ** (-9),
-        inverter_resistance=1.59 * 10 ** (-3),
-        inverter_capacitance=4.48 * 10 ** (-9),
-        inverter_inductance=400.0 * 10 ** (-9),
-        motor_resistance=1.59 * 10 ** (-3),
-        motor_capacitance=8.96 * 10 ** (-9),
-        motor_inductance=800.0 * 10 ** (-9),
+        battery_resistance=1.59 * (10 ** (-3)),
+        battery_capacitance=3.36 * (10 ** (-9)),
+        battery_inductance=300.0 * (10 ** (-9)),
+        inverter_resistance=1.59 * (10 ** (-3)),
+        inverter_capacitance=4.48 * (10 ** (-9)),
+        inverter_inductance=400.0 * (10 ** (-9)),
+        motor_resistance=1.59 * (10 ** (-3)),
+        motor_capacitance=8.96 * (10 ** (-9)),
+        motor_inductance=800.0 * (10 ** (-9)),
 ):
-    return f""" .subckt {name} battery_node inverter_node motor_node node_out
+    return f""".subckt {name} battery_node inverter_node motor_node node_out
 .subckt BatteryToGround node_in node_out
 C1 node_in node_out {battery_capacitance}
 R1 node_in temp {battery_resistance}
 L1 temp node_out {battery_inductance}
 .ends BatteryToGround
-
 .subckt InverterToGround node_in node_out
 C1 node_in node_out {inverter_capacitance}
 R1 node_in temp {inverter_resistance}
 L1 temp node_out {inverter_inductance}
 .ends InverterToGround
-
 .subckt MotorToGround node_in node_out
 C1 node_in node_out {motor_capacitance}
 R1 node_in temp {motor_resistance}
 L1 temp node_out {motor_inductance}
 .ends MotorToGround
-
 Xbattery battery_node ground_node BatteryToGround
 Xinverter inverter_node ground_node InverterToGround
 Xmotor motor_node ground_node MotorToGround
-
-.ends {name}
-"""
+.ends {name}"""
 
 
 # Inget filter mellan batteri och inverter. 0 V mellan de två
@@ -173,18 +155,60 @@ def getNoBatteryFilterNetlist(
     name
 ):
     return f""".subckt {name} BatPos BatNeg InvPos InvNeg
-    V0 BatPos InvPos 0V
-    V1 BatNeg InvNeg 0V
-    .ends {name}
-    """
+V0 BatPos InvPos 0V
+V1 BatNeg InvNeg 0V
+.ends {name}"""
 
 # Ingen common-mode choke ller annat filter, 0 V mellan inverter och last
 def getNoLoadFilterNetlist(
     name
 ):
     return f""".subckt {name} InA InB InC OutA OutB OutC
-    V0 InA OutA 0V
-    V1 InB OutB 0V
-    V2 InC OutC 0V
-    .ends {name}
-    """
+V0 InA OutA 0V
+V1 InB OutB 0V
+V2 InC OutC 0V
+.ends {name}"""
+
+
+
+
+def simulateNetlist(netlist: str):
+        netlist_file = open('tmp.net', 'w')
+        netlist_file.write(netlist)
+        netlist_file.close()
+        os.system(f'D:\\NGSpice\\ngspice-36_64\\Spice64\\bin\\ngspice.exe "tmp.net"')
+        os.remove("tmp.net")
+
+
+if __name__ == "__main__":
+    netlist = f""".title drivlina
+{getInverterControlNetlist("inverterControl", OverlapProtection=0.1)}
+.model MOSN NMOS level=8
+{getInverterNetlist("inverter", Mod=1, Freq=1, MOStype="MOSN")}
+{getStaticLoadNetlist("load")}
+{getNoLoadFilterNetlist("loadFilter")}
+{getNoBatteryFilterNetlist("batteryFilter")}
+{ToGroundNetlist("toGround")}
+{getSimpleBatteryNetlist("battery", 400, 0.0001)}
+
+Xbattery BatPos BatNeg BatCase {"battery"}
+Xbatfilt BatPos BatNeg InvPos InvNeg {"batteryFilter"}
+Xinverter InvPos InvNeg InvA InvB InvC InvCase {"inverter"}
+Xloadfilter InvA InvB InvC PhA PhB PhC {"loadFilter"}
+Xload PhA PhB PhC LoadCase {"load"}
+Xgrounding BatCase InvCase LoadCase 0 {"toGround"}
+
+
+.ic V(BatPos)=0 V(BatNeg)=0
+.option method=gear
+.control
+tran 50u 5ms
+plot BatPos PhA V(PhA,PhB)
+.endc
+.end"""
+
+
+    simulateNetlist(netlist)
+
+
+
