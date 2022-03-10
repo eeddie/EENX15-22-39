@@ -173,7 +173,7 @@ if __name__ == "__main__":
     netlist = f""".title drivlina
 {getInverterControlNetlist("inverterControl", OverlapProtection=0.01, Gain=50)}
 .model MOSN NMOS level=1
-{getInverterNetlist("inverter", Mod=1, Freq=100, MOStype="MOSN")}
+{getInverterNetlist("inverter", Mod=1, Freq=100, MOStype="IPI200N25N3")}
 {getInverterGroundNetlist("invGnd")}
 {getStaticLoadNetlist("load")}
 {getLoadGroundNetlist("loadGnd")}
@@ -194,9 +194,11 @@ XbatGnd BatCase 0 {"batGnd"}
 XinvGnd InvCase 0 {"invGnd"}
 XloadGnd LoadCase 0 {"loadGnd"}
 
+.inc .\\PySpice\\libs\\MOS.lib
+
 .ic v(InvA)=0 v(InvB)=0 v(InvC)=0
 .option method=trap
-.tran 1ms 40ms
+.tran 1ms 100ms 80ms
 .end"""
 
 
