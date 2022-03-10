@@ -198,11 +198,7 @@ XloadGnd LoadCase 0 {"loadGnd"}
 
 .ic v(InvA)=0 v(InvB)=0 v(InvC)=0
 .option method=trap
-<<<<<<< HEAD
-.tran 100ns 100ms
-=======
-.tran 1ms 100ms 80ms
->>>>>>> 8e93d77ee58757b41b785c120e3bd99858b537bd
+.tran 100ns 80ms
 .end"""
 
 

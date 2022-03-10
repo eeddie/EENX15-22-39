@@ -11,6 +11,7 @@ KiCad/*
 # Ignorera outputs från simuleringar
 *.cir
 *.raw
+*.fft
 *.log
 *.zip
 
