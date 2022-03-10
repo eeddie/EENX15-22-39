@@ -10,14 +10,14 @@ def simulateNetlist(netlist: str, name='tmp'):
         netlist_file = open('tmp.net', 'w')
         netlist_file.write(netlist)
         netlist_file.close()
-        os.system(f'D:\\NGSpice\\ngspice-36_64\\Spice64\\bin\\ngspice.exe {name}.net"')
+        os.system(f'ngspice.exe {name}.net"')                       # NOTE: Lägg till mappen med ngspice i systemvariablerna istället så slipper vi byta
         os.remove(f"{name}.net")
 
 def batchNetlist(netlist: str, name = 'tmp'):
         netlist_file = open(f'{name}.net', 'w')
         netlist_file.write(netlist)
         netlist_file.close()
-        os.system(f'D:\\NGSpice\\ngspice-36_64\\Spice64\\bin\\ngspice_con.exe -b -r {name}.raw {name}.net')
+        os.system(f'ngspice_con.exe -b -r {name}.raw {name}.net')   # NOTE: Lägg till mappen med ngspice i systemvariablerna istället så slipper vi byta
         os.remove(f"{name}.net")
 
 def getInverterControlNetlist(
@@ -196,7 +196,7 @@ XloadGnd LoadCase 0 {"loadGnd"}
 
 .ic v(InvA)=0 v(InvB)=0 v(InvC)=0
 .option method=trap
-.tran 1ms 40ms
+.tran 100ns 100ms
 .end"""
 
 
