@@ -118,8 +118,6 @@ def getSimpleBatteryNetlist(
 V1 N001 Neg PULSE(0V {Voltage} 0s {RampTime}) 
 R1 N001 N002 {R_self}
 L1 N002 Pos {L_self}
-* Negativ ar kopplad till chassit med en resistans R2, denna saknades innan, osaker om endast resistans racker.
-*R2 Neg Case 0.1
 C1 Pos Case {ParCapP}
 C2 Neg Case {ParCapN}
 .ends {name}"""
@@ -198,11 +196,21 @@ XloadGnd LoadCase 0 {"loadGnd"}
 
 .ic v(InvA)=0 v(InvB)=0 v(InvC)=0
 .option method=trap
-.tran 100ns 80ms
+.save i(l.xload.l1)
+.save i(l.xload.l2)
+.save i(l.xload.l3)
+.save v(pha)
+.save v(phb)
+.save v(phc)
+.save i(l.xbatgnd.c1)
+.save i(l.xinvgnd.c1)
+.save i(l.xloadgnd.c1)
+
+.tran 5ns 80ms 60ms 5ns
 .end"""
 
 
-    batchNetlist(netlist, "tmp_noLoad")
+    batchNetlist(netlist, "tmp_ascii_small")
 
 
 
