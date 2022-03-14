@@ -19,10 +19,10 @@ from ltspice import Ltspice
 
 
 def uniformResample(time: list, values: list, timeStep: float):
-    """ returns a [time,value] list with uniform timestep with linearly interpolated values """
-    f = interpolate.interp1d(time, values)
-    uniTime = np.arange(time[0],time[time.size-1], timeStep)
-    uniVal = f(uniTime)
+    """ returns a [time,value] list with an evenly spaced timestep and linearly interpolated values for the new timesteps """
+    f = interpolate.interp1d(time, values)                      # Creates a function which returns an interpolated number of values for a given time
+    uniTime = np.arange(time[0],time[time.size-1], timeStep)    # Creates a time array of the same time span with evenly spaced time steps
+    uniVal = f(uniTime)                                         # Fill the array uniVal with interpolated numbers for all the evenly spaced timesteps
     return [uniTime, uniVal]
 
 
@@ -40,6 +40,7 @@ if __name__ == "__main__":
 
     # Plot current over time
     plt.figure(0)
+    plt.title("Phase current over time")
     plt.plot(timeVec, currentVec)
 
 
@@ -61,7 +62,8 @@ if __name__ == "__main__":
     #                                   PyNUFFT package is for non-uniform fft but I could not get it to work.
     fourier = fft(currentVec)
 
-    plt.figure(3)
+    plt.figure(1)
+    plt.title("FFT of phase current over time")
     # Number of sample points
     N = timeVec.size
     # sample spacing
@@ -71,7 +73,7 @@ if __name__ == "__main__":
 
     plt.yscale("log")
     plt.xscale("log")
-    plt.plot(xf, 2.0/N * np.abs(yf[0:N//2]))
+    plt.plot(xf, 2.0/N * np.abs(yf[0:N//2]), label="non-uniform sampling")
     plt.grid()
 
     #plt.figure(4)
@@ -83,6 +85,7 @@ if __name__ == "__main__":
 
     #plt.yscale("log")
     #plt.xscale("log")
-    plt.plot(xf, 2.0/N * np.abs(yf[0:N//2]))
+    plt.plot(xf, 2.0/N * np.abs(yf[0:N//2]), label="interpolated uniform subsampling")
+    plt.legend()
     #plt.grid()
     plt.show()
