@@ -143,6 +143,23 @@ V1 InB OutB 0V
 V2 InC OutC 0V
 .ends {name}"""
 
+def getCommonModeChokeNetlist(
+    name,                           
+    R_ser        = 0.02,           # Serieresistans
+    L_choke      = 20*(10**-3),    # Chokens induktans
+    Coupling     = 1,              # Kopplingsfaktor mellan induktanserna, 0 < Coupling <= 1
+    ):
+    return f""".subckt {name} A_inv B_inv C_inv A_load B_load C_load
+R1 A_inv N001 {R_ser}
+L1 N001 A_load {L_choke}
+R2 B_inv N002 {R_ser}
+L2 N002 B_load {L_choke}
+R3 C_inv N003 {R_ser}
+L3 N003 C_load {L_choke}
+K12 L1 L2 {Coupling}
+K23 L2 L3 {Coupling}
+K31 L3 L1 {Coupling}
+.ends {name}"""
 
 def getGroundingNetlist(
     name,
