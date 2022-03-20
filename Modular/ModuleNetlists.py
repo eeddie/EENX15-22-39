@@ -22,9 +22,9 @@ def batchNetlist(netlist: str, name = 'tmp'):
 
 def getInverterControlNetlist(
     name,
-    Fs                  = 10000,  # Switchfrekvens                                        TODO: Kolla upp vad en typisk switchfrekvensen är
+    Fs                  = 10000,  # Switchfrekvens                                        
     Rg                  = 1.5,   # Gateresistans                                          NOTE: Tagen från extern källa med AN-1001 IGBT:er
-    Gain                = 100,   # Switchningens skarphet                                 TODO: Välj ett passande default-värde
+    Gain                = 1000,   # Switchningens skarphet                                gain på 1000 ger rise-/fall-time på 10 ns
     OverlapProtection   = 0.01,  # Switchmarginal mellan positiv och negativ transistor   TODO: Välj ett passande default-värde 
     ):
     return f"""
@@ -55,6 +55,13 @@ E1 Frq 0 Freq 0 1
 E2 M 0 Mod 0 1
 .ends {name}"""
 
+def getMosfetNetlist(
+    name,
+    MOSType
+    ):
+    return f""".subckt {name} Drain Gate Source
+M1 Drain Gate Source Source {MOSType}"""
+
 def getInverterNetlist(
     name,
     Mod, 
@@ -70,11 +77,11 @@ def getInverterNetlist(
 V_mod N005 0 {Mod}
 V_freq N003 0 {Freq}
 M1 Pos G1 A A {MOStype}
-M2 A G2 Neg 0 {MOStype}
+M2 A G2 Neg Neg {MOStype}
 M3 Pos G3 B B {MOStype}
-M4 B G4 Neg 0 {MOStype}
+M4 B G4 Neg Neg {MOStype}
 M5 Pos G5 C C {MOStype}
-M6 C G6 Neg 0 {MOStype}
+M6 C G6 Neg Neg {MOStype}
 XPWM1 N003 N005 A Neg B Neg C Neg G1 G2 G3 G4 G5 G6 inverterControl
 C1 A Case {ParCapA}
 C2 B Case {ParCapB}
@@ -131,6 +138,19 @@ def getNoBatteryFilterNetlist(
     return f""".subckt {name} BatPos BatNeg InvPos InvNeg
 V0 BatPos InvPos 0V
 V1 BatNeg InvNeg 0V
+.ends {name}"""
+
+# X-cap mellan node och inverter
+def getXCapNetlist(
+    name,
+    C_self = 500*10**-6,
+    R_self = 1.9*10**-3
+):
+    return f""".subckt {name} BatPos BatNeg InvPos InvNeg
+V0 BatPos InvPos 0V
+V1 BatNeg InvNeg 0V
+C1 BatPos Node {C_self}
+R1 Node BatNeg {R_self}
 .ends {name}"""
 
 # Ingen common-mode choke eller annat filter, 0 V mellan inverter och last
@@ -191,6 +211,7 @@ if __name__ == "__main__":
 {getInverterGroundNetlist("invGnd")}
 {getStaticLoadNetlist("load")}
 {getLoadGroundNetlist("loadGnd")}
+{getXCapNetlist("xCap")}
 {getNoLoadFilterNetlist("loadFilter")}
 {getACCommonModeChokeNetlist("acCMC")}
 {getNoBatteryFilterNetlist("batteryFilter")}
@@ -198,7 +219,7 @@ if __name__ == "__main__":
 {getSimpleBatteryNetlist("battery", 400, 0.00001)}
 
 Xbattery BatPos BatNeg BatCase {"battery"}
-Xbatfilt BatPos BatNeg InvPos InvNeg {"batteryFilter"}
+Xbatfilt BatPos BatNeg InvPos InvNeg {"xCap"}
 
 Xinverter InvPos InvNeg InvA InvB InvC InvCase {"inverter"}
 
@@ -215,37 +236,37 @@ XloadGnd LoadCase 0 {"loadGnd"}
 .option method=trap
 .options savecurrents
 
-.save i(l.xload.l1)
-.save i(l.xload.l2)
-.save i(l.xload.l3)
-.save v(pha)
-.save v(phb)
-.save v(phc)
-.save i(l.xbatgnd.c1)
-.save i(l.xinvgnd.c1)
-.save i(l.xloadgnd.c1)
 
-.save i(l.xbatgnd.c1)
-.save i(l.xinvgnd.c1)
-.save i(l.xloadgnd.c1)
 
-.save i(@c.xinverter.c1[i])
-.save i(@c.xinverter.c2[i])
-.save i(@c.xinverter.c3[i])
-.save i(@c.xinverter.c4[i])
-.save i(@c.xinverter.c5[i])
-
-.save i(l.xload.l1)
-.save i(l.xload.l2)
-.save i(l.xload.l3)
-
-.tran 5ns 80ms 60ms 5ns
+.tran 5ns 80ms 70ms 5ns
 .end"""
 
 
-    batchNetlist(netlist, "tmp_cmc")
+    batchNetlist(netlist, "tmp_xcap")
 
 
 
+# .save i(l.xload.l1)
+# .save i(l.xload.l2)
+# .save i(l.xload.l3)
+# .save v(pha)
+# .save v(phb)
+# .save v(phc)
+# .save i(l.xbatgnd.c1)
+# .save i(l.xinvgnd.c1)
+# .save i(l.xloadgnd.c1)
 
+# .save i(l.xbatgnd.c1)
+# .save i(l.xinvgnd.c1)
+# .save i(l.xloadgnd.c1)
+
+# .save i(@c.xinverter.c1[i])
+# .save i(@c.xinverter.c2[i])
+# .save i(@c.xinverter.c3[i])
+# .save i(@c.xinverter.c4[i])
+# .save i(@c.xinverter.c5[i])
+
+# .save i(l.xload.l1)
+# .save i(l.xload.l2)
+# .save i(l.xload.l3)
 

@@ -6,14 +6,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-from scipy import signal, interpolate
+from scipy import interpolate
 from scipy.fftpack import fft, fftfreq
 
 from ltspice import Ltspice
-
-# Non uniform fourier transform, for transforms with uneven time steps
-# NUDFT is supposedly the same but with double precision.
-#from pynufft import NUFFT, NUDFT
 
 
 
@@ -87,82 +83,19 @@ def compareUniformResample(rawFileName: str, resampleTime=1*10**-9):
     plt.show()
 
 
-def compareCMC(noCMCRawFileName: str, cmcRawFileName: str, alpha=0.5, resampleTime=1*10**-9):
-    """ Jämför svar av en krets utan common-mode-choke med en innehållande CMC """
+def plotTimeDiff(filename: str):
+    """ Plot the timestep size over time, i.e. a line at the max timestep size with dips where the simulator has decreases the timestep """
 
-    ncRaw = Ltspice(noCMCRawFileName)
-    ncRaw._x_dtype = np.float64
-    ncRaw._y_dtype = np.float64
+    raw = Ltspice(filename)
+    raw._x_dtype = np.float64
+    raw._y_dtype = np.float64
+    raw.parse()
 
-    ncRaw.parse()
-
-    cmcRaw = Ltspice(cmcRawFileName)
-    cmcRaw._x_dtype = np.float64
-    cmcRaw._y_dtype = np.float64
-
-    cmcRaw.parse()
-
-    ncTime = ncRaw.get_time()
-    ncCurrent = ncRaw.get_data("i(l.xload.l1)")
-
-    cmcTime = cmcRaw.get_time()
-    cmcCurrent = cmcRaw.get_data("i(l.xload.l1)")
-
-
-    # Plot current over time
-    plt.figure(0)
-    plt.title("Phase current over time")
-    plt.plot(ncTime, ncCurrent, linewidth=1, alpha=alpha, label="No CMC")
-    plt.plot(cmcTime, cmcCurrent, linewidth=1, alpha=alpha, label="CMC")
-    plt.legend()
-
-
-    # Plot timestep size, shows a constant line at the set timestep with dips when the simulator decreases the timestep
-    ncDiffTime  =     ncTime[1:ncTime.size-1] -   ncTime[0:ncTime.size-2]
-    cmcDiffTime =    cmcTime[1:cmcTime.size-1] - cmcTime[0:cmcTime.size-2]
+    time = raw.get_time()
+    diffTime  =  time[1:time.size-1] -   time[0:time.size-2]
     
-    
-
-    plt.figure(1)
     plt.title("Delta-time")
-    plt.plot(ncTime[0:ncTime.size-2], ncDiffTime, linewidth=1, alpha=alpha,    label="No CMC")
-    plt.plot(cmcTime[0:cmcTime.size-2], cmcDiffTime, linewidth=1, alpha=alpha, label="CMC")
-    plt.legend()
-
-
-    # Plot fourier of current
-    # Resample the values into new vectors with uniform timestep of 5 ns
-    [ncUniTime, ncUniVal] = uniformResample(ncTime, ncCurrent, resampleTime)
-    [cmcUniTime, cmcUniVal] = uniformResample(cmcTime, cmcCurrent, resampleTime)
-
-    plt.figure(2)
-    plt.title("FFT of phase current over time")
-    plt.yscale("log")
-    plt.xscale("log")
-    plt.grid()
-
-    # Plot uniform time fourier with no CMC
-    # Number of sample points
-    N = ncUniTime.size
-    yf = fft(ncUniVal)
-    xf = fftfreq(N, resampleTime)[:N//2]
-    plt.plot(xf, 2.0/N * np.abs(yf[0:N//2]), linewidth=1, alpha=alpha, label="No CMC")
-
-    # Plot uniform time fourier with CMC
-    plt.title("FFT of phase current over time")
-    plt.yscale("log")
-    plt.xscale("log")
-    plt.grid()
-
-    # Number of sample points
-    N = cmcUniTime.size
-    yf = fft(cmcUniVal)
-    xf = fftfreq(N, resampleTime)[:N//2]
-    plt.plot(xf, 2.0/N * np.abs(yf[0:N//2]), linewidth=1, alpha=alpha, label="CMC")
-    
-    plt.legend()
-    plt.show()
-
+    plt.plot(time[0:time.size-2], diffTime, linewidth=1)
 
 
 def compareCMCCurrent(noCMCRawFileName: str, cmcRawFileName: str, label1: str, label2: str, alpha=0.5, resampleTime=1*10**-9):
@@ -229,6 +162,35 @@ def compareCMCCurrent(noCMCRawFileName: str, cmcRawFileName: str, label1: str, l
     plt.show()
 
 
+def compareFourier(filenames: list, labels: list, variableName="i(l.xload.l1)", title="", alpha=0.5, resampleTime=1*10**-9):
+    """ Jämför en variabel över ett antal raw-filer  """
+
+    plt.title(title)
+    plt.loglog()
+    plt.grid()
+
+    # Walk through every file and plot the fourier of its value vector to the graph
+    for i in np.arange(len(filenames)):
+        raw = Ltspice(filenames[i])
+        raw._x_dtype = np.float64
+        raw._y_dtype = np.float64
+
+        raw.parse()
+
+        time = raw.get_time()
+        val = raw.get_data(variableName)
+
+        # Resample the values into new vectors with uniform timestep
+        [uniTime, uniVal] = uniformResample(time, val, resampleTime)
+
+        
+        N = len(uniTime)
+        yf = fft(uniVal)
+        xf = fftfreq(N, resampleTime)[:N//2]
+        plt.plot(xf, 2.0/N * np.abs(yf[0:N//2]), linewidth=1, alpha=alpha, label=labels[i])
+    
+    plt.legend()
+
 def plotVars(fileName: str, variables: list, labels: list, alpha=0.5, title=""):
     """ Plotta alla givna variabler från en datafil i en plot, med labels """
 
@@ -245,13 +207,43 @@ def plotVars(fileName: str, variables: list, labels: list, alpha=0.5, title=""):
 
 
     # Plot
-    plt.figure(0)
     plt.title(title)
     for i in np.arange(min(len(values), len(labels))):
         plt.plot(time, values[i], linewidth=1, alpha=alpha, label=labels[i])
     
     plt.legend()
-    plt.show()
+
+def plotFourier(filename: str, variableNames: list, labels: list, title, alpha=0.5, resampleTime=1*10**-9):
+    """ Plotta fourier för fera variabler från en och samma raw-fil  """
+    
+    raw = Ltspice(filename)
+    raw._x_dtype = np.float64
+    raw._y_dtype = np.float64
+
+    raw.parse()
+
+    time = raw.get_time()
+
+    
+    plt.title(title)
+    plt.loglog()
+    plt.grid()
+
+    for i in np.arange(len(variableNames)):
+
+        val = raw.get_data(variableNames[i])
+
+        # Resample the values into new vectors with uniform timestep
+        [uniTime, uniVal] = uniformResample(time, val, resampleTime)
+
+        
+        N = len(uniTime)
+        yf = fft(uniVal)
+        xf = fftfreq(N, resampleTime)[:N//2]
+        plt.plot(xf, 2.0/N * np.abs(yf[0:N//2]), linewidth=1, alpha=alpha, label=labels[i])
+    
+    plt.legend()
+
 
 
 def visInterpolation():
@@ -278,11 +270,11 @@ def visInterpolation():
 if __name__ == "__main__":
 
     # Jämför simuleringsresultat mellan en krets utan common-mode-choke och en med
-    # compareCMC("tmp_bin.raw", "tmp_cmc.raw")
+    # compareFourier(["tmp_cmc_all2.raw", "tmp_cmc_all.raw"], labels=["all2", "all"])
 
     # Jämför common mode strömmen mellan två kretsar (från försimulerad data)
     # compareCMCCurrent("tmp_bin.raw", "tmp_cmc.raw", "No CMC", "Lcmc = 51 mH")
-
+    
     # Jämför FFT mellan icke-subsamplad fasström och subsamplad fasström, också lite andra plots
     # compareUniformResample("tmp_bin.raw")
 
@@ -290,6 +282,21 @@ if __name__ == "__main__":
     # visInterpolation()
 
     # Plotta ett antal variabler i samma graf med olika färger
+    plt.figure(0)
     plotVars("tmp_cmc.raw", ["i(@c.xbatgnd.c1[i])", "i(@c.xinvgnd.c1[i])", "i(@c.xloadgnd.c1[i])"], ["Battery", "Inverter", "Load"], title="Current through parasitic capacitances")
+    plt.figure(1)
+    plotVars("tmp_cmc.raw", ["v(pha)", "v(phb)", "v(phc)"], ["A", "B", "C"], title="Phase Voltages")
+    plt.figure(2)
+    plotVars("tmp_cmc.raw", ["i(l.xload.l1)", "i(l.xload.l2)", "i(l.xload.l3)"], ["A", "B", "C"], title="Phase Currents")
+
+    plt.figure(3)
+    compareFourier(["tmp_cmc.raw"], labels=[""], variableName="i(l.xload.l1)", title="Phase current")
+
+    plt.figure(4)
+    plotFourier("tmp_cmc.raw", ["i(@c.xbatgnd.c1[i])", "i(@c.xinvgnd.c1[i])", "i(@c.xloadgnd.c1[i])"], ["Battery", "Inverter", "Load"], title="Current through parasitic capacitances")
+
+    plt.show()
+    
+    
         
         
