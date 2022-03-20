@@ -26,7 +26,7 @@ def uniformResample(time: list, values: list, timeStep: float):
 
 
 
-def compareUniformResample(rawFileName: str):
+def compareUniformResample(rawFileName: str, resampleTime=1*10**-9):
     """ Plots the deltatime, phase-current over time and fourier of both non-uniform time data and sub-sampled uniform time data for comparison """
 
     l = Ltspice(rawFileName)
@@ -39,7 +39,7 @@ def compareUniformResample(rawFileName: str):
     currentVec = l.get_data("i(l.xload.l1)")
 
     # Resample the values into new vectors with uniform timestep of 5 ns
-    [uniTime, uniVal] = uniformResample(timeVec, currentVec, 5*10**-9)
+    [uniTime, uniVal] = uniformResample(timeVec, currentVec, resampleTime)
 
     # Plot current over time
     plt.figure(0)
@@ -72,26 +72,22 @@ def compareUniformResample(rawFileName: str):
     # Plot non-uniform time fourier
     # Number of sample points
     N = timeVec.size
-    # sample spacing
-    T = 5*(10**-9)
     yf = fft(currentVec)
-    xf = fftfreq(N, T)[:N//2]
+    xf = fftfreq(N, resampleTime)[:N//2]
     plt.plot(xf, 2.0/N * np.abs(yf[0:N//2]), label="Non-uniform time")
 
     # Plot uniform time fourier
     # Number of sample points
     N = uniTime.size
-    # sample spacing
-    T = 5*(10**-9)
     yf = fft(uniVal)
-    xf = fftfreq(N, T)[:N//2]
+    xf = fftfreq(N, resampleTime)[:N//2]
     plt.plot(xf, 2.0/N * np.abs(yf[0:N//2]), label="Uniform time")
     
     plt.legend()
     plt.show()
 
 
-def compareCMC(noCMCRawFileName: str, cmcRawFileName: str, alpha=0.5):
+def compareCMC(noCMCRawFileName: str, cmcRawFileName: str, alpha=0.5, resampleTime=1*10**-9):
     """ Jämför svar av en krets utan common-mode-choke med en innehållande CMC """
 
     ncRaw = Ltspice(noCMCRawFileName)
@@ -124,8 +120,8 @@ def compareCMC(noCMCRawFileName: str, cmcRawFileName: str, alpha=0.5):
     # Plot timestep size, shows a constant line at the set timestep with dips when the simulator decreases the timestep
     ncDiffTime  =     ncTime[1:ncTime.size-1] -   ncTime[0:ncTime.size-2]
     cmcDiffTime =    cmcTime[1:cmcTime.size-1] - cmcTime[0:cmcTime.size-2]
-
-
+    
+    
 
     plt.figure(1)
     plt.title("Delta-time")
@@ -136,8 +132,8 @@ def compareCMC(noCMCRawFileName: str, cmcRawFileName: str, alpha=0.5):
 
     # Plot fourier of current
     # Resample the values into new vectors with uniform timestep of 5 ns
-    [ncUniTime, ncUniVal] = uniformResample(ncTime, ncCurrent, 5*10**-9)
-    [cmcUniTime, cmcUniVal] = uniformResample(cmcTime, cmcCurrent, 5*10**-9)
+    [ncUniTime, ncUniVal] = uniformResample(ncTime, ncCurrent, resampleTime)
+    [cmcUniTime, cmcUniVal] = uniformResample(cmcTime, cmcCurrent, resampleTime)
 
     plt.figure(2)
     plt.title("FFT of phase current over time")
@@ -148,10 +144,8 @@ def compareCMC(noCMCRawFileName: str, cmcRawFileName: str, alpha=0.5):
     # Plot uniform time fourier with no CMC
     # Number of sample points
     N = ncUniTime.size
-    # sample spacing
-    T = 5*(10**-9)
     yf = fft(ncUniVal)
-    xf = fftfreq(N, T)[:N//2]
+    xf = fftfreq(N, resampleTime)[:N//2]
     plt.plot(xf, 2.0/N * np.abs(yf[0:N//2]), linewidth=1, alpha=alpha, label="No CMC")
 
     # Plot uniform time fourier with CMC
@@ -159,12 +153,11 @@ def compareCMC(noCMCRawFileName: str, cmcRawFileName: str, alpha=0.5):
     plt.yscale("log")
     plt.xscale("log")
     plt.grid()
+
     # Number of sample points
     N = cmcUniTime.size
-    # sample spacing
-    T = 5*(10**-9)
     yf = fft(cmcUniVal)
-    xf = fftfreq(N, T)[:N//2]
+    xf = fftfreq(N, resampleTime)[:N//2]
     plt.plot(xf, 2.0/N * np.abs(yf[0:N//2]), linewidth=1, alpha=alpha, label="CMC")
     
     plt.legend()
@@ -172,7 +165,7 @@ def compareCMC(noCMCRawFileName: str, cmcRawFileName: str, alpha=0.5):
 
 
 
-def compareCMCCurrent(noCMCRawFileName: str, cmcRawFileName: str, label1: str, label2: str, alpha=0.5):
+def compareCMCCurrent(noCMCRawFileName: str, cmcRawFileName: str, label1: str, label2: str, alpha=0.5, resampleTime=1*10**-9):
     """ Jämför svar av en krets utan common-mode-choke med en innehållande CMC """
 
     ncRaw = Ltspice(noCMCRawFileName)
@@ -221,19 +214,15 @@ def compareCMCCurrent(noCMCRawFileName: str, cmcRawFileName: str, label1: str, l
     # Plot uniform time fourier with no CMC
     # Number of sample points
     N = ncUniTime.size
-    # sample spacing
-    T = 5*(10**-9)
     yf = fft(ncUniVal)
-    xf = fftfreq(N, T)[:N//2]
+    xf = fftfreq(N, resampleTime)[:N//2]
     plt.plot(xf, 2.0/N * np.abs(yf[0:N//2]), linewidth=1, alpha=alpha, label=label1)
 
     # Plot uniform time fourier with CMC
     # Number of sample points
     N = cmcUniTime.size
-    # sample spacing
-    T = 5*(10**-9)
     yf = fft(cmcUniVal)
-    xf = fftfreq(N, T)[:N//2]
+    xf = fftfreq(N, resampleTime)[:N//2]
     plt.plot(xf, 2.0/N * np.abs(yf[0:N//2]), linewidth=1, alpha=alpha, label=label2)
     
     plt.legend()
@@ -275,4 +264,5 @@ if __name__ == "__main__":
 
     # Visualiserar hur interpoleringen av datan fungerar
     # visInterpolation()
+        
         
