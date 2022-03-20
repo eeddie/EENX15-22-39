@@ -22,7 +22,7 @@ def batchNetlist(netlist: str, name = 'tmp'):
 
 def getInverterControlNetlist(
     name,
-    Fs                  = 35000,  # Switchfrekvens                                        TODO: Kolla upp vad en typisk switchfrekvensen är
+    Fs                  = 10000,  # Switchfrekvens                                        TODO: Kolla upp vad en typisk switchfrekvensen är
     Rg                  = 1.5,   # Gateresistans                                          NOTE: Tagen från extern källa med AN-1001 IGBT:er
     Gain                = 100,   # Switchningens skarphet                                 TODO: Välj ett passande default-värde
     OverlapProtection   = 0.01,  # Switchmarginal mellan positiv och negativ transistor   TODO: Välj ett passande default-värde 
@@ -143,11 +143,11 @@ V1 InB OutB 0V
 V2 InC OutC 0V
 .ends {name}"""
 
-def getCommonModeChokeNetlist(
+def getACCommonModeChokeNetlist(
     name,                           
     R_ser        = 0.02,           # Serieresistans
-    L_choke      = 20*(10**-3),    # Chokens induktans
-    Coupling     = 1,              # Kopplingsfaktor mellan induktanserna, 0 < Coupling <= 1
+    L_choke      = 51*(10**-3),    # Chokens induktans
+    Coupling     = 0.95,           # Kopplingsfaktor mellan induktanserna, 0 < Coupling <= 1
     ):
     return f""".subckt {name} A_inv B_inv C_inv A_load B_load C_load
 R1 A_inv N001 {R_ser}
@@ -187,12 +187,12 @@ def getBatteryGroundNetlist(name,   resistance = 1.59 * (10 ** (-3)),   capacita
 if __name__ == "__main__":
     netlist = f""".title drivlina
 {getInverterControlNetlist("inverterControl", OverlapProtection=0.01, Gain=50)}
-.model MOSN NMOS level=1
 {getInverterNetlist("inverter", Mod=1, Freq=100, MOStype="IPI200N25N3")}
 {getInverterGroundNetlist("invGnd")}
 {getStaticLoadNetlist("load")}
 {getLoadGroundNetlist("loadGnd")}
 {getNoLoadFilterNetlist("loadFilter")}
+{getACCommonModeChokeNetlist("acCMC")}
 {getNoBatteryFilterNetlist("batteryFilter")}
 {getBatteryGroundNetlist("batGnd")}
 {getSimpleBatteryNetlist("battery", 400, 0.00001)}
@@ -202,7 +202,7 @@ Xbatfilt BatPos BatNeg InvPos InvNeg {"batteryFilter"}
 
 Xinverter InvPos InvNeg InvA InvB InvC InvCase {"inverter"}
 
-Xloadfilter InvA InvB InvC PhA PhB PhC {"loadFilter"}
+Xloadfilter InvA InvB InvC PhA PhB PhC {"acCMC"}
 Xload PhA PhB PhC LoadCase {"load"}
 
 XbatGnd BatCase 0 {"batGnd"}
@@ -213,6 +213,8 @@ XloadGnd LoadCase 0 {"loadGnd"}
 
 .ic v(InvA)=0 v(InvB)=0 v(InvC)=0
 .option method=trap
+.options savecurrents
+
 .save i(l.xload.l1)
 .save i(l.xload.l2)
 .save i(l.xload.l3)
@@ -223,11 +225,25 @@ XloadGnd LoadCase 0 {"loadGnd"}
 .save i(l.xinvgnd.c1)
 .save i(l.xloadgnd.c1)
 
+.save i(l.xbatgnd.c1)
+.save i(l.xinvgnd.c1)
+.save i(l.xloadgnd.c1)
+
+.save i(@c.xinverter.c1[i])
+.save i(@c.xinverter.c2[i])
+.save i(@c.xinverter.c3[i])
+.save i(@c.xinverter.c4[i])
+.save i(@c.xinverter.c5[i])
+
+.save i(l.xload.l1)
+.save i(l.xload.l2)
+.save i(l.xload.l3)
+
 .tran 5ns 80ms 60ms 5ns
 .end"""
 
 
-    batchNetlist(netlist, "tmp_ascii_small")
+    batchNetlist(netlist, "tmp_cmc")
 
 
 
