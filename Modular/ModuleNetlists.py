@@ -153,6 +153,21 @@ C1 BatPos Node {C_self}
 R1 Node BatNeg {R_self}
 .ends {name}"""
 
+# X-cap mellan node och inverter
+def getDCCommonModeChokeNetlist(
+    name,
+    R_ser       = 20    *10**-3,
+    L_choke     = 51    *10**-3,
+    Coupling    = 0.95
+):
+    return f""".subckt {name} BatPos BatNeg InvPos InvNeg
+R1 BatPos PosNode {R_ser}
+L1 PosNode InvPos {L_choke}
+R2 BatNeg NegNode {R_ser}
+L2 NegNode InvNeg {L_choke}
+K12 L1 L2 {Coupling}
+.ends {name}"""
+
 # Ingen common-mode choke eller annat filter, 0 V mellan inverter och last
 def getNoLoadFilterNetlist(
     name
