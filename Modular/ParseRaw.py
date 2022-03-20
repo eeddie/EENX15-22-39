@@ -229,6 +229,30 @@ def compareCMCCurrent(noCMCRawFileName: str, cmcRawFileName: str, label1: str, l
     plt.show()
 
 
+def plotVars(fileName: str, variables: list, labels: list, alpha=0.5, title=""):
+    """ Plotta alla givna variabler från en datafil i en plot, med labels """
+
+    raw = Ltspice(fileName)
+    raw._x_dtype = np.float64
+    raw._y_dtype = np.float64
+
+    raw.parse()
+
+    time = raw.get_time()
+    values = []
+    for i in np.arange(len(variables)):
+        values.append(raw.get_data(variables[i]))
+
+
+    # Plot
+    plt.figure(0)
+    plt.title(title)
+    for i in np.arange(min(len(values), len(labels))):
+        plt.plot(time, values[i], linewidth=1, alpha=alpha, label=labels[i])
+    
+    plt.legend()
+    plt.show()
+
 
 def visInterpolation():
     """ Visar en plot på hur interpoleringen av ström/spännings-datan fungerar """
@@ -256,13 +280,16 @@ if __name__ == "__main__":
     # Jämför simuleringsresultat mellan en krets utan common-mode-choke och en med
     # compareCMC("tmp_bin.raw", "tmp_cmc.raw")
 
-
-    compareCMCCurrent("tmp_bin.raw", "tmp_cmc.raw", "No CMC", "Lcmc = 51 mH")
+    # Jämför common mode strömmen mellan två kretsar (från försimulerad data)
+    # compareCMCCurrent("tmp_bin.raw", "tmp_cmc.raw", "No CMC", "Lcmc = 51 mH")
 
     # Jämför FFT mellan icke-subsamplad fasström och subsamplad fasström, också lite andra plots
     # compareUniformResample("tmp_bin.raw")
 
     # Visualiserar hur interpoleringen av datan fungerar
     # visInterpolation()
+
+    # Plotta ett antal variabler i samma graf med olika färger
+    plotVars("tmp_cmc.raw", ["i(@c.xbatgnd.c1[i])", "i(@c.xinvgnd.c1[i])", "i(@c.xloadgnd.c1[i])"], ["Battery", "Inverter", "Load"], title="Current through parasitic capacitances")
         
         
