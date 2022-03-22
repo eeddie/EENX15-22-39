@@ -13,11 +13,11 @@ def simulateNetlist(netlist: str, name='tmp'):
         os.system(f'ngspice.exe {name}.net"')                       # NOTE: Lägg till mappen med ngspice i systemvariablerna istället så slipper vi byta
         os.remove(f"{name}.net")
 
-def batchNetlist(netlist: str, name = 'tmp'):
+def batchNetlist(netlist: str, name = 'tmp', logString="-o ngspice.log"):
         netlist_file = open(f'{name}.net', 'w')
         netlist_file.write(netlist)
         netlist_file.close()
-        os.system(f'ngspice_con.exe -b -r {name}.raw {name}.net')   # NOTE: Lägg till mappen med ngspice i systemvariablerna istället så slipper vi byta
+        os.system(f'ngspice_con.exe -b -r {name}.raw {logString} {name}.net')   # NOTE: Lägg till mappen med ngspice i systemvariablerna istället så slipper vi byta
         os.remove(f"{name}.net")
 
 def getInverterControlNetlist(
@@ -122,7 +122,8 @@ def getSimpleBatteryNetlist(
     ParCapN     = 48*(10**-12)      # Parasiterande kapacitans negativ till hölje
     ):
     return f""".subckt {name} Pos Neg Case
-V1 N001 Neg PULSE(0V {Voltage} 0s {RampTime}) 
+*V1 N001 Neg PULSE(0V {Voltage} 0s {RampTime}) 
+B1 N001 Neg v={Voltage} * tanh({1/RampTime} * time)
 R1 N001 N002 {R_self}
 L1 N002 Pos {L_self}
 C1 Pos Case {ParCapP}
@@ -153,7 +154,7 @@ C1 BatPos Node {C_self}
 R1 Node BatNeg {R_self}
 .ends {name}"""
 
-# X-cap mellan node och inverter
+# common mode choke på DC-sidan
 def getDCCommonModeChokeNetlist(
     name,
     R_ser       = 20    *10**-3,
@@ -220,25 +221,28 @@ def getBatteryGroundNetlist(name,   resistance = 1.59 * (10 ** (-3)),   capacita
 
 
 if __name__ == "__main__":
+
     netlist = f""".title drivlina
-{getInverterControlNetlist("inverterControl", OverlapProtection=0.01, Gain=50)}
-{getInverterNetlist("inverter", Mod=1, Freq=100, MOStype="IPI200N25N3")}
+.lib /Modular/libs/Infineon_automotive_IGBT.lib
+{getInverterControlNetlist("inverterControl")}
+{getInverterNetlist("inverter", Mod=1, Freq=100, TranSubCir="IKW40N65H5A_L2", MOSType="IPI200N25N3")}  ;MOSType="IPI200N25N3"
 {getInverterGroundNetlist("invGnd")}
 {getStaticLoadNetlist("load")}
 {getLoadGroundNetlist("loadGnd")}
 {getXCapNetlist("xCap")}
-{getNoLoadFilterNetlist("loadFilter")}
+{getNoLoadFilterNetlist("noLFilter")}
 {getACCommonModeChokeNetlist("acCMC")}
-{getNoBatteryFilterNetlist("batteryFilter")}
+{getNoBatteryFilterNetlist("noBFilter")}
 {getBatteryGroundNetlist("batGnd")}
-{getSimpleBatteryNetlist("battery", 400, 0.00001)}
+{getSimpleBatteryNetlist("battery")}
 
 Xbattery BatPos BatNeg BatCase {"battery"}
-Xbatfilt BatPos BatNeg InvPos InvNeg {"xCap"}
+Xbatfilt BatPos BatNeg InvPos InvNeg {"noBFilter"}
+
 
 Xinverter InvPos InvNeg InvA InvB InvC InvCase {"inverter"}
 
-Xloadfilter InvA InvB InvC PhA PhB PhC {"acCMC"}
+Xloadfilter InvA InvB InvC PhA PhB PhC {"noLFilter"}
 Xload PhA PhB PhC LoadCase {"load"}
 
 XbatGnd BatCase 0 {"batGnd"}
@@ -248,8 +252,17 @@ XloadGnd LoadCase 0 {"loadGnd"}
 .inc .\\PySpice\\libs\\MOS.lib
 
 .ic v(InvA)=0 v(InvB)=0 v(InvC)=0
-.option method=trap
-.options savecurrents
+.option method=gear
+
+* trapezoidal: Fast calculations and high precision, but problematic convergence
+* modified trap: Improved convergence compared with the trapezoidal method
+* Gear (predictor correction method): Ease of convergence, but inferior calculation speed and precision
+
+.options reltol=3e-3   ; > 1ms  "Never larger than 0.003!"
+.options abstol=11e-9  ; > 10ns
+.options itl4=31       ; > 30
+.options gmin=1e-10    ;        "Minimum conductance"
+.options cshunt=1e-15  ;        "Capacitance added from each node to ground"
 
 
 

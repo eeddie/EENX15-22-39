@@ -127,12 +127,6 @@ def compareCMCCurrent(noCMCRawFileName: str, cmcRawFileName: str, label1: str, l
     plt.plot(cmcTime, cmcCurrent, linewidth=1, alpha=alpha, label=label1)
     plt.legend()
 
-
-    # Plot timestep size, shows a constant line at the set timestep with dips when the simulator decreases the timestep
-    ncDiffTime  =     ncTime[1:ncTime.size-1] -   ncTime[0:ncTime.size-2]
-    cmcDiffTime =    cmcTime[1:cmcTime.size-1] - cmcTime[0:cmcTime.size-2]
-
-
     # Plot fourier of current
     # Resample the values into new vectors with uniform timestep of 5 ns
     [ncUniTime, ncUniVal] = uniformResample(ncTime, ncCurrent, 5*10**-9)
@@ -265,38 +259,3 @@ def visInterpolation():
     plt.show()
 
 
-
-
-if __name__ == "__main__":
-
-    # Jämför simuleringsresultat mellan en krets utan common-mode-choke och en med
-    # compareFourier(["tmp_cmc_all2.raw", "tmp_cmc_all.raw"], labels=["all2", "all"])
-
-    # Jämför common mode strömmen mellan två kretsar (från försimulerad data)
-    # compareCMCCurrent("tmp_bin.raw", "tmp_cmc.raw", "No CMC", "Lcmc = 51 mH")
-    
-    # Jämför FFT mellan icke-subsamplad fasström och subsamplad fasström, också lite andra plots
-    # compareUniformResample("tmp_bin.raw")
-
-    # Visualiserar hur interpoleringen av datan fungerar
-    # visInterpolation()
-
-    # Plotta ett antal variabler i samma graf med olika färger
-    plt.figure(0)
-    plotVars("tmp_cmc.raw", ["i(@c.xbatgnd.c1[i])", "i(@c.xinvgnd.c1[i])", "i(@c.xloadgnd.c1[i])"], ["Battery", "Inverter", "Load"], title="Current through parasitic capacitances")
-    plt.figure(1)
-    plotVars("tmp_cmc.raw", ["v(pha)", "v(phb)", "v(phc)"], ["A", "B", "C"], title="Phase Voltages")
-    plt.figure(2)
-    plotVars("tmp_cmc.raw", ["i(l.xload.l1)", "i(l.xload.l2)", "i(l.xload.l3)"], ["A", "B", "C"], title="Phase Currents")
-
-    plt.figure(3)
-    compareFourier(["tmp_cmc.raw"], labels=[""], variableName="i(l.xload.l1)", title="Phase current")
-
-    plt.figure(4)
-    plotFourier("tmp_cmc.raw", ["i(@c.xbatgnd.c1[i])", "i(@c.xinvgnd.c1[i])", "i(@c.xloadgnd.c1[i])"], ["Battery", "Inverter", "Load"], title="Current through parasitic capacitances")
-
-    plt.show()
-    
-    
-        
-        
