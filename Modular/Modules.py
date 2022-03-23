@@ -1,24 +1,8 @@
 # 
-# ModuleNetlists.py
+#   Modules.py
 #
-# Innehåller funktioner för att hämta netlists på de olika krets-modulerna
+#   Innehåller funktioner för att hämta netlists på de olika krets-modulerna
 #
-
-import os
-
-def simulateNetlist(netlist: str, name='tmp'):
-        netlist_file = open('tmp.net', 'w')
-        netlist_file.write(netlist)
-        netlist_file.close()
-        os.system(f'ngspice.exe {name}.net"')                       # NOTE: Lägg till mappen med ngspice i systemvariablerna istället så slipper vi byta
-        os.remove(f"{name}.net")
-
-def batchNetlist(netlist: str, name = 'tmp', logString="-o ngspice.log"):
-        netlist_file = open(f'{name}.net', 'w')
-        netlist_file.write(netlist)
-        netlist_file.close()
-        os.system(f'ngspice_con.exe -b -r {name}.raw {logString} {name}.net')   # NOTE: Lägg till mappen med ngspice i systemvariablerna istället så slipper vi byta
-        os.remove(f"{name}.net")
 
 def getInverterControlNetlist(
     name,
@@ -55,18 +39,30 @@ E1 Frq 0 Freq 0 1
 E2 M 0 Mod 0 1
 .ends {name}"""
 
+
 def getMosfetNetlist(
     name,
     MOSType
     ):
     return f""".subckt {name} Drain Gate Source
-M1 Drain Gate Source Source {MOSType}"""
+M1 Drain Gate Source Source {MOSType}
+.ends {name}"""
+
+
+def getIGBTNetlist(
+    name,
+    IGBTType
+    ):
+    return f""".subckt {name} Collector Gate Emitter
+X1 Collector Gate Emitter {IGBTType}
+.ends {name}"""
+
 
 def getInverterNetlist(
     name,
     Mod, 
     Freq,                       
-    MOStype,                      # Mosfet-typ
+    TranSubCir,                      # Mosfet-typ
     ParCapA     = 1.4*(10**-12),  # Parasiterande kapacitans fas A till hölje. 
     ParCapB     = 2.0*(10**-12),  # Parasiterande kapacitans fas B till hölje. 
     ParCapC     = 0.7*(10**-12),  # Parasiterande kapacitans fas C till hölje. 
@@ -76,12 +72,12 @@ def getInverterNetlist(
     return f""".subckt {name} Pos Neg A B C Case
 V_mod N005 0 {Mod}
 V_freq N003 0 {Freq}
-M1 Pos G1 A A {MOStype}
-M2 A G2 Neg Neg {MOStype}
-M3 Pos G3 B B {MOStype}
-M4 B G4 Neg Neg {MOStype}
-M5 Pos G5 C C {MOStype}
-M6 C G6 Neg Neg {MOStype}
+X1 Pos G1 A {TranSubCir}
+X2 A G2 Neg {TranSubCir}
+X3 Pos G3 B {TranSubCir}
+X4 B G4 Neg {TranSubCir}
+X5 Pos G5 C {TranSubCir}
+X6 C G6 Neg {TranSubCir}
 XPWM1 N003 N005 A Neg B Neg C Neg G1 G2 G3 G4 G5 G6 inverterControl
 C1 A Case {ParCapA}
 C2 B Case {ParCapB}
@@ -119,7 +115,7 @@ def getSimpleBatteryNetlist(
     R_self      = 0.1,              # Serieresistans batteri                        NOTE: 0.1 Ω är resistansen vid DC, kolla Thomas "Circuit Parameters.docx" för frekvensberoende resistans.
     L_self      = 500*(10**-9),     # Serieinduktans batteri
     ParCapP     = 52*(10**-12),     # Parasiterande kapacitans positiv till hölje
-    ParCapN     = 48*(10**-12)      # Parasiterande kapacitans negativ till hölje
+    ParCapN     = 48*(10**-12),      # Parasiterande kapacitans negativ till hölje
     ):
     return f""".subckt {name} Pos Neg Case
 *V1 N001 Neg PULSE(0V {Voltage} 0s {RampTime}) 
@@ -217,84 +213,3 @@ def getInverterGroundNetlist(name,  resistance  = 1.59 * (10 ** (-3)),  capacita
 
 def getBatteryGroundNetlist(name,   resistance = 1.59 * (10 ** (-3)),   capacitance=3.36 * (10 ** (-9)),    inductance=300.0 * (10 ** (-9))):
     return getGroundingNetlist(name, resistance, capacitance, inductance)
-
-
-
-if __name__ == "__main__":
-
-    netlist = f""".title drivlina
-.lib /Modular/libs/Infineon_automotive_IGBT.lib
-{getInverterControlNetlist("inverterControl")}
-{getInverterNetlist("inverter", Mod=1, Freq=100, TranSubCir="IKW40N65H5A_L2", MOSType="IPI200N25N3")}  ;MOSType="IPI200N25N3"
-{getInverterGroundNetlist("invGnd")}
-{getStaticLoadNetlist("load")}
-{getLoadGroundNetlist("loadGnd")}
-{getXCapNetlist("xCap")}
-{getNoLoadFilterNetlist("noLFilter")}
-{getACCommonModeChokeNetlist("acCMC")}
-{getNoBatteryFilterNetlist("noBFilter")}
-{getBatteryGroundNetlist("batGnd")}
-{getSimpleBatteryNetlist("battery")}
-
-Xbattery BatPos BatNeg BatCase {"battery"}
-Xbatfilt BatPos BatNeg InvPos InvNeg {"noBFilter"}
-
-
-Xinverter InvPos InvNeg InvA InvB InvC InvCase {"inverter"}
-
-Xloadfilter InvA InvB InvC PhA PhB PhC {"noLFilter"}
-Xload PhA PhB PhC LoadCase {"load"}
-
-XbatGnd BatCase 0 {"batGnd"}
-XinvGnd InvCase 0 {"invGnd"}
-XloadGnd LoadCase 0 {"loadGnd"}
-
-.inc .\\PySpice\\libs\\MOS.lib
-
-.ic v(InvA)=0 v(InvB)=0 v(InvC)=0
-.option method=gear
-
-* trapezoidal: Fast calculations and high precision, but problematic convergence
-* modified trap: Improved convergence compared with the trapezoidal method
-* Gear (predictor correction method): Ease of convergence, but inferior calculation speed and precision
-
-.options reltol=3e-3   ; > 1ms  "Never larger than 0.003!"
-.options abstol=11e-9  ; > 10ns
-.options itl4=31       ; > 30
-.options gmin=1e-10    ;        "Minimum conductance"
-.options cshunt=1e-15  ;        "Capacitance added from each node to ground"
-
-
-
-.tran 5ns 80ms 70ms 5ns
-.end"""
-
-
-    batchNetlist(netlist, "tmp_xcap")
-
-
-
-# .save i(l.xload.l1)
-# .save i(l.xload.l2)
-# .save i(l.xload.l3)
-# .save v(pha)
-# .save v(phb)
-# .save v(phc)
-# .save i(l.xbatgnd.c1)
-# .save i(l.xinvgnd.c1)
-# .save i(l.xloadgnd.c1)
-
-# .save i(l.xbatgnd.c1)
-# .save i(l.xinvgnd.c1)
-# .save i(l.xloadgnd.c1)
-
-# .save i(@c.xinverter.c1[i])
-# .save i(@c.xinverter.c2[i])
-# .save i(@c.xinverter.c3[i])
-# .save i(@c.xinverter.c4[i])
-# .save i(@c.xinverter.c5[i])
-
-# .save i(l.xload.l1)
-# .save i(l.xload.l2)
-# .save i(l.xload.l3)
-
