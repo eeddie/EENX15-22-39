@@ -13,8 +13,8 @@ if __name__ == "__main__":
     netlist = f""".title drivlina
 {getInverterControlNetlist("inverterControl", Gain=100)}
 {getMosfetNetlist("mosfet", "IPI200N25N3")}
-{getIGBTNetlist("IGBT", "FGW40N120WE")}
-{getInverterNetlist("inverter", Mod=1, Freq=100, TranSubCir="mosfet")}  ;MOSType="IPI200N25N3"
+{getIGBTNetlist("IGBT", "rgw00ts65chr")}
+{getInverterNetlist("inverter", Mod=1, Freq=100, TranSubCir="IGBT")}  ;MOSType="IPI200N25N3"
 {getInverterGroundNetlist("invGnd")}
 {getStaticLoadNetlist("load")}
 {getLoadGroundNetlist("loadGnd")}
@@ -54,7 +54,7 @@ XloadGnd LoadCase 0 {"loadGnd"}
 
 .save i(l.xload.l1)
 
-.tran 5ns 110ms 100ms 5ns
+.tran 0.1ns 110ms 100ms 0.1ns
 .end"""
 
 

@@ -1,5 +1,5 @@
 #
-# Skapar en krets med bara en mosfet som är till för att undersöka in- och utsignaler för MOSFET:en
+# Skapar en krets med bara en IGBT som är till för att undersöka in- och utsignaler för IGBT:n
 # Plottar sedan en jämförande fourieranalys mellan gatespänning och drain-source-ström
 #
 
@@ -11,25 +11,32 @@ sys.path.append('./Modular/')
 from Functions import *
 
 
-def runMOSFETSim(
+def runIGBTSim(
     R_Gate = 1.0,
     Gain = 1000,
     Fs = 10000,
     Freq = 100,
     OverlapProtection = 0.03,
-    MOSType = "IPI200N25N3"
+    IGBTType = "rgw00ts65chr",
 ):
-    """ Kör en simulering av en grundläggande krets med bara en mosfet. outputtar i tmp.raw """
+    """ Kör en simulering av en grundläggande krets med bara en IGBT. outputtar i tmp.raw """
 
-    netlist = f""".title MOSFET-Test
-.lib /Modular/libs/MOS.lib
+    netlist = f""".title IGBT-Test
+.lib /Modular/libs/IGBT/{IGBTType}.lib
 BSin      Ph    0 V= sin(2*Pi*{Freq}*time)
 BE_PWM    PWM   0 V= 15*tanh({Gain}*(V(Ph)-{OverlapProtection}-V(Triangle)))
 BTri Triangle 0 V= (2/Pi)*asin(sin(2*Pi*{Fs}*Time))
 V1 in 0 {str(2*15*1.0175)}  ; Denna spänning ser till att gate-spänningen och drain-source-strömmen har samma amplitud för att kunna jämföra fourier
 R1 PWM Gate {R_Gate}
 R2 in Drain 1
-M1 Drain Gate 0 0 {MOSType}
+X1 Drain Gate 0 {IGBTType}
+
+                       ; Recommendations for Infineons IGBT:s
+.options reltol=1e-3   ; > 1ms  "Never larger than 0.003!"
+.options abstol=10e-9  ; > 10ns
+.options itl4=30       ; > 30
+.options gmin=1e-10    ;        "Minimum conductance"
+.options cshunt=1e-15  ;        "Capacitance added from each node to ground"
 
 .tran 1ns 1ms 0ms 1ns
 .end """
@@ -40,35 +47,37 @@ M1 Drain Gate 0 0 {MOSType}
 def compareGateDrainSource():
     """ Plottar frekvens- och tidsdomän för gate-spänning och drain-source-ström för en krets """
 
-    runMOSFETSim()
+    runIGBTSim()
 
     plt.figure(0)
-    plt.title("Mosfet Test")
-    plotFourierFromFile("tmp.raw", "v(PWM)", "Gate Voltage")
-    plotFourierFromFile("tmp.raw", "i(V1)", "Drain-Source Current")
+    plt.title("IGBT Test")
+    plotFourierFromFile("tmp.raw", "v(PWM)", r"$V_{ge}$")
+    plotFourierFromFile("tmp.raw", "i(V1)", r"$I_{ce}$")
     plt.legend()
+    plt.rcParams['text.usetex'] = True
     
     plt.figure(1)
-    plt.title("Mosfet Test")
-    plotVars("tmp.raw", "v(PWM)", "Gate Voltage")
-    plotVars("tmp.raw", "i(V1)", "Drain-Source Current")
+    plt.title("IGBT Test")
+    plotVars("tmp.raw", "v(PWM)", label=r"$V_{ge}$")
+    plotVars("tmp.raw", "i(V1)", label=r"$I_{ce}$")
     plt.show()
 
     remove("tmp.raw")
 
 
 def compareGain():
-    """ Plottar frekvenssvaret av fyra MOSFET-kretsar med gain, 10-10⁴ """
+    """ Plottar frekvenssvaret av fyra IGBT-kretsar med gain=10²-10⁴ """
 
     plt.figure(0)
-    plt.title("Gate-spänning")
+    plt.title(r"V_{ge}")
     plt.figure(1)
-    plt.title("Drain-Source-ström")
+    plt.title(r"I_{ce}")
     plt.figure(2)
-    plt.title("Gate-spänning")
+    plt.title(r"V_{ce}")
+    plt.rcParams['text.usetex'] = True
 
     for gain in [10**5, 10**4, 10**3, 10**2]:     # Vi plottar i omvänd ordning eftersom vi då kan se de högsta frekvenserna av varje fourier 
-        runMOSFETSim(Gain=gain)
+        runIGBTSim(Gain=gain)
 
         plt.figure(0)
         plotFourierFromFile("tmp.raw", "v(PWM)", f"gain={gain}", alpha=1, resampleTime=10**-10)
@@ -90,16 +99,16 @@ def compareGain():
     plt.show()
 
 def compareGateResistance():
-    """ Plottar frekvenssvaret av fyra MOSFET-kretsar med olika gate-resistanser, 0.25, 0.5, 0.75, 1 """
+    """ Plottar frekvenssvaret av fyra IGBT-kretsar med olika gate-resistanser, 0.25, 0.5, 0.75, 1 """
 
     plt.figure(0)
-    plt.title("Gate-spänning")
+    plt.title(r"V_{ge}")
     plt.figure(1)
-    plt.title("Drain-Source-ström")
+    plt.title(r"I_{ce}")
     plt.rcParams['text.usetex'] = True
 
     for R_Gate in [100, 10, 1, 0.1]:     # Vi plottar i omvänd ordning eftersom vi då kan se de högsta frekvenserna av varje fourier 
-        runMOSFETSim(R_Gate=R_Gate)
+        runIGBTSim(R_Gate=R_Gate)
 
         plt.figure(0)
         plotFourierFromFile("tmp.raw", "v(PWM)", f"$R_{{gate}}={R_Gate}$", alpha=1)
@@ -120,17 +129,19 @@ def compareMOSFETModels(*models):
     """ Plottar frekvenssvaret av olka MOSFETs """
 
     plt.rcParams['text.usetex'] = True
+    plt.figure(0)
+    plt.title(r"$V_{ge}$")
     plt.figure(1)
-    plt.title(r"$I_ds$")
-
-    for MOSType in models:
-        runMOSFETSim(MOSType=MOSType, )
+    plt.title(r"$I_{ce}$")
+    
+    for [IGBTType] in models:
+        runIGBTSim(IGBTType=IGBTType, )
 
         plt.figure(0)
-        plotFourierFromFile("tmp.raw", "v(PWM)", f"MOSFET={MOSType}", formatString="k", alpha=0.5)
+        plotFourierFromFile("tmp.raw", "v(PWM)", f"IGBT={IGBTType}", formatString="k", alpha=0.5)
         
         plt.figure(1)
-        plotFourierFromFile("tmp.raw", "i(V1)", f"MOSFET={MOSType}", formatString="k", alpha=0.5)
+        plotFourierFromFile("tmp.raw", "i(V1)", f"MOSFET={IGBTType}", formatString="k", alpha=0.5)
 
         remove("tmp.raw")
 
@@ -143,11 +154,9 @@ def compareMOSFETModels(*models):
 if __name__ == "__main__":
     # compareGateResistance()
     # compareGateDrainSource()
-    # compareGain()
+    compareGain()
     
-    compareMOSFETModels(
-        "IPI200N25N3",
-        "RJK0451DPB",
-        "TN2404K",
-        "IRF2805S"
-        )
+    # compareIGBTModels(
+    #     "FGW75XS65",
+    #     "FGW50XS65",
+    #     )

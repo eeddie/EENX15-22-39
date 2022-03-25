@@ -55,7 +55,8 @@ def getIGBTNetlist(
     ):
     return f""".subckt {name} Collector Gate Emitter
 X1 Collector Gate Emitter {IGBTType}
-.ends {name}"""
+.ends {name}
+.lib /Modular/libs/IGBT/{IGBTType}.lib"""
 
 
 def getInverterNetlist(

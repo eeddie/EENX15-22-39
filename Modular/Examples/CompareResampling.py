@@ -6,26 +6,21 @@
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.fft import *
-from ltspice import Ltspice
+
 import sys
 sys.path.append('./Modular/')
-from Functions import uniformResample
+from Functions import *
 
 filename = "raws/gain=100.raw"
 resampleTime = 1*10**-9     # The time step for the uniform fouriers
 maxTimeStep  = 5*10**-9     # The time step for the non-uniform fourier
 
 if __name__=="__main__": 
-    l = Ltspice(filename)
-    l._x_dtype = np.float64
-    l._y_dtype = np.float64
-    l.parse()
 
-    time = l.get_time()
-    current = l.get_data("i(l.xload.l1)")
+    [time, current] = readVariables(filename, "i(l.xload.l1)")
 
     [uniTime, currentLin] = uniformResample(time, current, timeStep=1*10**-9, interpKind="linear")
-    [uniTime, currentCub] = uniformResample(time, current, timeStep=1*10**-9, interpKind="cubic")
+    [_      , currentCub] = uniformResample(time, current, timeStep=1*10**-9, interpKind="cubic")
 
     # Plot non-uniform time fourier
     N = time.size
