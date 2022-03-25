@@ -67,26 +67,26 @@ def compareGain():
     plt.figure(2)
     plt.title("Gate-spänning")
 
-    for gain in [10000, 1000, 100, 10]:     # Vi plottar i omvänd ordning eftersom vi då kan se de högsta frekvenserna av varje fourier 
+    for gain in [10**5, 10**4, 10**3, 10**2]:     # Vi plottar i omvänd ordning eftersom vi då kan se de högsta frekvenserna av varje fourier 
         runMOSFETSim(Gain=gain)
 
         plt.figure(0)
-        plotFourierFromFile("tmp.raw", "v(PWM)", f"gain={gain}", alpha=1)
+        plotFourierFromFile("tmp.raw", "v(PWM)", f"gain={gain}", alpha=1, resampleTime=10**-10)
         
         plt.figure(1)
-        plotFourierFromFile("tmp.raw", "i(V1)", f"gain={gain}", alpha=1)
+        plotFourierFromFile("tmp.raw", "i(V1)", f"gain={gain}", alpha=1, resampleTime=10**-10)
 
         plt.figure(2)
-        plotVar("tmp.raw", "V(PWM)", label=f"gain={gain}", alpha=1)
+        plotVars("tmp.raw", "V(PWM)", label=f"gain={gain}", alpha=1)
 
         remove("tmp.raw")
 
     plt.figure(0)
-    plt.legend()
+    plt.legend(loc="lower left")
     plt.figure(1)
-    plt.legend()
+    plt.legend(loc="lower left")
     plt.figure(2)
-    plt.legend()
+    plt.legend(loc="lower left")
     plt.show()
 
 def compareGateResistance():
