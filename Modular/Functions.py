@@ -103,14 +103,16 @@ def plotFourierFromFile(filename: str, variableName: str, label: str, formatStri
 
 
 # Skriv gärna denna funktion (saveResults())
-# Kolla här: https://www.geeksforgeeks.org/append-to-json-file-using-python/
-# Idén är att använda en JSON-fil för att enkelt spara ned dictionaries på alla simuleringar vi gjort och sedan kunna veta exakt vad de innehöll
+# Denna funktion ska lägga till invariabler och utvariabler från en utförd simulering till en fil där alla simuleringar sparas.
+# Det enklaste sättet är att använda en JSON-fil, där man kan spara ned en dict för vilka parametrar kretsens komponenter hade (ex. R_batt = 1.2)
+# och en annan dict för alla möjliga resultat (oönskvärda strömmar/effekt) (ex. den integrerade effekten av common-mode-strömmen)
+# Funktionen behöver inte veta vilka dessa är, utan sparar bara ned två dicts som innehåller allt sånt.
 # Filen kommer alltså se ut något såhär:
 #
 # "sims": [                                                                 // En array med simuleringar
 #   {                                                                       // Första simuleringen
-#   "inparams": {"R_batt": 1.2, "L_batt": 0.05, "gain": 1000},             // Värdena på kretskomponenterna
-#   "results": {"batCapPower": 50, "invCapPower": 30, "loadCapPower": 60}   // Olika resultat, vi kan senare bestämm vilka dessa är och vilka vi vill ha bara genom att byta namn på dem
+#   "inparams": {"R_batt": 1.2, "L_batt": 0.05, "gain": 1000},              // Värdena på kretskomponenterna
+#   "results": {"batCapPower": 50, "commonModePower": 30}                   // Olika resultat, vi kan senare bestämm vilka dessa är och vilka vi vill ha bara genom att byta namn på dem
 #   },                                                                       // Resultaten kan också innehålla vektorer
 #   {
 #   "inparams": {"R_batt": 1.0, ...},
@@ -119,9 +121,9 @@ def plotFourierFromFile(filename: str, variableName: str, label: str, formatStri
 # ]
 #
 # Använd JSON-biblioteket, inte text för att generera och ändra filen 
-# typ: ladda in den existerande json-filen i en dict, lägg till simuleringen, spara ned dicten i json-filen igen. Se ex. andra exemplet i länken
+# Kolla här: https://www.geeksforgeeks.org/append-to-json-file-using-python/
+# typ: ladda in den existerande json-filen i en dict, lägg till simuleringen, spara ned dicten i json-filen igen. Se andra exemplet i länken
 # 
-#
 # //Axel
 
 def saveResults(filename: str, inparams: dict, results: dict):
