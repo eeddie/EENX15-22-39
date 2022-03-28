@@ -5,30 +5,28 @@
 #
 
 import matplotlib.pyplot as plt
-
 import numpy as np
 import os
-
 from scipy import interpolate
 from scipy.fftpack import fft, fftfreq
-
 from ltspice import Ltspice
+import json
 
 
 
-def simulateNetlist(netlist: str, name='tmp'):
+def simulateNetlist(netlist: str, name='tmp', removeNetlist=True):
         netlist_file = open('tmp.net', 'w')
         netlist_file.write(netlist)
         netlist_file.close()
         os.system(f'ngspice.exe {name}.net"')                       # NOTE: Lägg till mappen med ngspice i systemvariablerna istället så slipper vi byta
-        os.remove(f"{name}.net")
+        if removeNetlist: os.remove(f"{name}.net")
 
-def batchNetlist(netlist: str, name = 'tmp', log=False):
+def batchNetlist(netlist: str, name = 'tmp', log=False, removeNetlist=True):
         netlist_file = open(f'{name}.net', 'w')
         netlist_file.write(netlist)
         netlist_file.close()
         os.system(f'ngspice_con.exe -b -r {name}.raw {"-o " + name + ".log" if log else ""} {name}.net')   # NOTE: Lägg till mappen med ngspice i systemvariablerna istället så slipper vi byta
-        os.remove(f"{name}.net")
+        if removeNetlist: os.remove(f"{name}.net")
 
 
 def uniformResample(time: list, values: list, timeStep: float, interpKind="cubic"):
@@ -102,29 +100,20 @@ def plotFourierFromFile(filename: str, variableName: str, label: str, formatStri
 
 
 
-# Skriv gärna denna funktion (saveResults())
-# Denna funktion ska lägga till invariabler och utvariabler från en utförd simulering till en fil där alla simuleringar sparas.
-# Det enklaste sättet är att använda en JSON-fil, där man kan spara ned en dict för vilka parametrar kretsens komponenter hade (ex. R_batt = 1.2)
-# och en annan dict för alla möjliga resultat (oönskvärda strömmar/effekt) (ex. den integrerade effekten av common-mode-strömmen)
-# Funktionen behöver inte veta vilka dessa är, utan sparar bara ned två dicts som innehåller allt sånt.
-# Filen kommer alltså se ut något såhär:
-#
-# "sims": [                                                                 // En array med simuleringar
-#   {                                                                       // Första simuleringen
-#   "inparams": {"R_batt": 1.2, "L_batt": 0.05, "gain": 1000},              // Värdena på kretskomponenterna
-#   "results": {"batCapPower": 50, "commonModePower": 30}                   // Olika resultat, vi kan senare bestämm vilka dessa är och vilka vi vill ha bara genom att byta namn på dem
-#   },                                                                       // Resultaten kan också innehålla vektorer
-#   {
-#   "inparams": {"R_batt": 1.0, ...},
-#   "results": {"batCapPower":30, ...} 
-#   }
-# ]
-#
-# Använd JSON-biblioteket, inte text för att generera och ändra filen 
-# Kolla här: https://www.geeksforgeeks.org/append-to-json-file-using-python/
-# typ: ladda in den existerande json-filen i en dict, lägg till simuleringen, spara ned dicten i json-filen igen. Se andra exemplet i länken
-# 
-# //Axel
+def saveSim(filename: str, modules: list, simParams: dict, results: dict):
+    """ Sparar ned simuleringens parametrar till en JSON-fil, lägger till simuleringen om filen redan existerar """
 
-def saveResults(filename: str, inparams: dict, results: dict):
-    """ Lägger till simuleringens inparams (kretskomponenters värden) och results (ex. effekten i olika komponenter inom olika frekvensband) i JSON-filen "filename". """
+    with open(filename, "w+") as file:                                          # Öppna/Skapa json fil
+        try: 
+            file_data = json.load(file)                                         # Ladda in JSON-data som python object (list eller dict)
+        except json.JSONDecodeError:
+            file_data = []                                                      # Om filen är tom, skapa en tom lista, i denna hamnar alla utförda simuleringar
+
+        file_data.append(
+            {
+            "modules": {module.name:module.params for module in modules},       # Lägg till det objekt i listan som inkapslar all data från simuleringen
+            "simParams": simParams,                                             # Här en dict med tre underliggande dicts
+            "result": results
+            })      
+        file.seek(0)                                                            # Börja om från början så vi skriver om filen med den nya datan
+        json.dump(file_data, file, indent=4)                                    # Dumpa Python-objekten till JSON-filen
