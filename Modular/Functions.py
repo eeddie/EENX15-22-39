@@ -39,10 +39,10 @@ def uniformResample(time: list, values: list, timeStep: float, interpKind="cubic
     return [uniTime, uniVal]
 
 
-def readVariables(fileName: str, *variables):
+def readVariables(filename: str, *variables):
     """ Hämtar tid och variabel-vektorer från en raw-fil i formatet [time, data] där data är 2-dimensionell """
 
-    raw = Ltspice(fileName)
+    raw = Ltspice(filename)
     raw._x_dtype = np.float64
     raw._y_dtype = np.float64
     raw.parse()
@@ -55,19 +55,19 @@ def readVariables(fileName: str, *variables):
     return [time, data]
 
 
-def plotTimeDiff(fileName: str):
+def plotTimeDiff(filename: str):
     """ Plotta storleken på tidsstegen över tid i den aktiva plotten """
 
-    [time, _] = readVariables(fileName)
+    [time, _] = readVariables(filename)
     diffTime  =  time[1:time.size-1] -   time[0:time.size-2]
     
     plt.plot(time[0:time.size-2], diffTime, linewidth=1)
 
 
-def plotVars(fileName: str, *variables: str, label: str, alpha=0.5):
+def plotVars(filename: str, *variables: str, label: str, alpha=0.5):
     """ Plotta en variabel från en datafil i den aktiva ploten """
 
-    [time, data] = readVariables(fileName, *variables)
+    [time, data] = readVariables(filename, *variables)
 
     for d in data:
         plt.plot(time, d, linewidth=1, alpha=alpha, label=label)
@@ -99,3 +99,30 @@ def plotFourierFromFile(filename: str, variableName: str, label: str, formatStri
     plotFourierFromVector(uniTime, uniData, label, formatString=formatString, alpha=alpha)
 
     
+
+
+
+# Skriv gärna denna funktion (saveResults())
+# Kolla här: https://www.geeksforgeeks.org/append-to-json-file-using-python/
+# Idén är att använda en JSON-fil för att enkelt spara ned dictionaries på alla simuleringar vi gjort och sedan kunna veta exakt vad de innehöll
+# Filen kommer alltså se ut något såhär:
+#
+# "sims": [                                                                 // En array med simuleringar
+#   {                                                                       // Första simuleringen
+#   "inparams": {"R_batt": 1.2, "L_batt": 0.05, "gain": 1000},             // Värdena på kretskomponenterna
+#   "results": {"batCapPower": 50, "invCapPower": 30, "loadCapPower": 60}   // Olika resultat, vi kan senare bestämm vilka dessa är och vilka vi vill ha bara genom att byta namn på dem
+#   },                                                                       // Resultaten kan också innehålla vektorer
+#   {
+#   "inparams": {"R_batt": 1.0, ...},
+#   "results": {"batCapPower":30, ...} 
+#   }
+# ]
+#
+# Använd JSON-biblioteket, inte text för att generera och ändra filen 
+# typ: ladda in den existerande json-filen i en dict, lägg till simuleringen, spara ned dicten i json-filen igen. Se ex. andra exemplet i länken
+# 
+#
+# //Axel
+
+def saveResults(filename: str, inparams: dict, results: dict):
+    """ Lägger till simuleringens inparams (kretskomponenters värden) och results (ex. effekten i olika komponenter inom olika frekvensband) i JSON-filen "filename". """
