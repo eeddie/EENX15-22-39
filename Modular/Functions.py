@@ -11,6 +11,7 @@ from scipy import interpolate
 from scipy.fftpack import fft, fftfreq
 from ltspice import Ltspice
 import json
+import operator
 
 
 
@@ -99,7 +100,6 @@ def plotFourierFromFile(filename: str, variableName: str, label: str, formatStri
     
 
 
-
 def saveSim(filename: str, modules: list, simParams: dict, results: dict):
     """ Sparar ned simuleringens parametrar till en JSON-fil, lägger till simuleringen om filen redan existerar """
 
@@ -109,11 +109,41 @@ def saveSim(filename: str, modules: list, simParams: dict, results: dict):
         except json.JSONDecodeError:
             file_data = []                                                      # Om filen är tom, skapa en tom lista, i denna hamnar alla utförda simuleringar
 
-        file_data.append(
+        file_data.append(                                                       # Lägg till en ny dict, som innehåller datan från simuleringen, i listan 
             {
-            "modules": {module.name:module.params for module in modules},       # Lägg till det objekt i listan som inkapslar all data från simuleringen
-            "simParams": simParams,                                             # Här en dict med tre underliggande dicts
-            "result": results
+            "modules": {module.name:module.params for module in modules},       # "modules" är en dict med moduler där modulnamn är key och parameterdicten är value
+            "simParams": simParams,                                             # "simParams" är en dict med simuleringsparametrar ex. tstep, tstart, tstop
+            "results": results                                                   # Results är en dict med resultat. Ex. {"commonModeCurrent": 50}
             })      
         file.seek(0)                                                            # Börja om från början så vi skriver om filen med den nya datan
         json.dump(file_data, file, indent=4)                                    # Dumpa Python-objekten till JSON-filen
+
+
+def plotFromJSON(filename: str, module: str, param: str, result: str, label="", formatString="-", alpha=1):
+    """ Plottar datapunkter från ett flertal simuleringar med en kretsparameter som x-axel och en resultatvariabel som y-axel """
+
+    with open(filename, "r+") as file:
+        
+        file_data = json.load(file)                                             # Om filen är tom kommer denna rad ge JSONDecodeError
+
+        # Fyll x och y med 
+        x = []
+        y = []
+        for sim in file_data:                                                   # sim är en simulation, d.v.s. en dict med modules, simParams och results
+            try:
+                x.append(float(sim["modules"][module][param]))
+                y.append(float(sim["results"][result]))
+            except KeyError:                                                    # Om modulen, parametern eller resultatet inte finns i en simulering, hoppa över simuleringen
+                pass
+
+        # Sortera x och y efter x
+        x, y = zip(*sorted(zip(x,y), key=operator.itemgetter(0)))
+
+        plt.plot(x, y, formatString, label=label, alpha=alpha)
+        plt.show()
+
+
+
+
+if __name__ == "__main__":
+    plotFromJSON("params.json", "InverterControlModule", "Fs", "test")
