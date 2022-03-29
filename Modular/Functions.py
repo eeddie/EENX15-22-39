@@ -100,6 +100,7 @@ def plotFourierFromFile(filename: str, variableName: str, label: str, formatStri
 
 
 def energyInFrequencyBand(data: list, lower: float, upper: float, fs=10**9):
+    """ Beräknar effekten i ett visst frekvensband. Indatan bör ha uniform sampling med samplingsfrekvens fs. """
     x = np.array(data)
     f, Pxx = sp.signal.periodogram(x, fs=fs)
     ind_min = sp.argmax(f > lower) - 1
