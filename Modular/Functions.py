@@ -6,6 +6,7 @@
 
 import matplotlib.pyplot as plt
 import numpy as np
+import scipy as sp
 import os
 from scipy import interpolate
 from scipy.fftpack import fft, fftfreq
@@ -97,6 +98,13 @@ def plotFourierFromFile(filename: str, variableName: str, label: str, formatStri
 
     plotFourierFromVector(uniTime, uniData, label, formatString=formatString, alpha=alpha)
 
+
+def energyInFrequencyBand(data: list, lower: float, upper: float, fs=10**9):
+    x = np.array(data)
+    f, Pxx = sp.signal.periodogram(x, fs=fs)
+    ind_min = sp.argmax(f > lower) - 1
+    ind_max = sp.argmax(f > upper) - 1
+    return sp.trapz(Pxx[ind_min: ind_max], f[ind_min: ind_max])
     
 
 
