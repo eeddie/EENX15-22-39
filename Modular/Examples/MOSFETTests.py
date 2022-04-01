@@ -44,14 +44,15 @@ def compareGateDrainSource():
 
     plt.figure(0)
     plt.title("Mosfet Test")
-    plotFourierFromFile("tmp.raw", "v(PWM)", "Gate Voltage")
-    plotFourierFromFile("tmp.raw", "i(V1)", "Drain-Source Current")
+    plotFourierFromFile("tmp.raw", "v(PWM)", "$V_{gs}$")
+    plotFourierFromFile("tmp.raw", "i(V1)", "$I_{ds}$")
     plt.legend()
+    plt.rcParams['text.usetex'] = True
     
     plt.figure(1)
     plt.title("Mosfet Test")
-    plotVars("tmp.raw", "v(PWM)", "Gate Voltage")
-    plotVars("tmp.raw", "i(V1)", "Drain-Source Current")
+    plotVars("tmp.raw", "v(PWM)", label="$V_{gs}$")
+    plotVars("tmp.raw", "i(V1)", label="$I_{ds}$")
     plt.show()
 
     remove("tmp.raw")
@@ -61,11 +62,11 @@ def compareGain():
     """ Plottar frekvenssvaret av fyra MOSFET-kretsar med gain, 10-10⁴ """
 
     plt.figure(0)
-    plt.title("Gate-spänning")
+    plt.title("V_{gs}")
     plt.figure(1)
-    plt.title("Drain-Source-ström")
+    plt.title("I_{ds}")
     plt.figure(2)
-    plt.title("Gate-spänning")
+    plt.title("V_{gs}")
 
     for gain in [10**5, 10**4, 10**3, 10**2]:     # Vi plottar i omvänd ordning eftersom vi då kan se de högsta frekvenserna av varje fourier 
         runMOSFETSim(Gain=gain)
@@ -98,7 +99,7 @@ def compareGateResistance():
     plt.title("Drain-Source-ström")
     plt.rcParams['text.usetex'] = True
 
-    for R_Gate in [100, 10, 1, 0.1]:     # Vi plottar i omvänd ordning eftersom vi då kan se de högsta frekvenserna av varje fourier 
+    for R_Gate in [0.1, 1, 10, 100]:     # Vi plottar i omvänd ordning eftersom vi då kan se de högsta frekvenserna av varje fourier 
         runMOSFETSim(R_Gate=R_Gate)
 
         plt.figure(0)
@@ -120,8 +121,10 @@ def compareMOSFETModels(*models):
     """ Plottar frekvenssvaret av olka MOSFETs """
 
     plt.rcParams['text.usetex'] = True
+    plt.figure(0)
+    plt.title(r"$V_{pwm}$")
     plt.figure(1)
-    plt.title(r"$I_ds$")
+    plt.title(r"$I_{ds}$")
 
     for MOSType in models:
         runMOSFETSim(MOSType=MOSType, )

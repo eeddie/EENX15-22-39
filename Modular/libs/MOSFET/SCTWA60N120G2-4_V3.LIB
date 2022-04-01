@@ -1,0 +1,288 @@
+*****************************************************************
+****STMicroelectronics MOSFET, IGBT and Bipolar Library *********
+*****************************************************************
+*                                                               *
+* Models provided by STMicroelectronics are not guaranteed to   *
+* fully represent all the specifications and operating          *
+* characteristics of the product behavior that they reproduce.  *
+* The model describes the characteristics of a typical device.  *
+* In all cases, the current product data sheet contains all     *
+* information to be used like final design guidelines and the   *
+* only actual performance specification.                        *
+* Altough models can be a useful tool in evaluating device      *
+* performance, they cannot model exact device performance under *
+* all conditions.                                               *
+* STMicroelectronics therefore does not assume any              *
+* responsibility arising from their use.                        *
+* STMicroelectronics reserves the right to change models        *
+* without prior notice.       								    *
+*                                                               *
+* Note: The model doesn't take into account the drain, gate,    *
+* source inductances.If these contributions have to be		    *
+* considered it is possible include the inductors externally.   *
+*                                                               *
+* Rev 1.2.4 - Marzo 2020                                       *
+*****************************************************************
+
+*****************************************************************
+
+.subckt SCTWA60N120G2-4_V3 drain gate source kelvin Tj Tcase  PARAMS:  dR=0 dVth=0 dVsd=0 dCi=0 dCr=0 dCo=0 
+
+*E1    Tj     val_T      VALUE={TEMP}
+*R1   val_T   0      1m
+
+
+Rkelvin kelvin s2 5m
+Ckelvin kelvin s2 1p
+Ld    drain   d3x  0.5n
+RLd   drain   d3x    1
+VR_dr  d3  d2   0
+Rdrain-fissa d3x d3 3m
+Lg gate    g2     4n
+RLg gate    g2      1
+Ls source  s2      1n
+RLs source  s2      1
+
+Rg   g2 g1  1.0
+
+*****************************************************************
+.param AX=9m BX=850m DX=1.1 Ct0=240 EX=0.65 R_gain=10k fx=1  
+*****************************************************************
+
+V2xx 22  d1  0
+Grdrain 22 d2 value ={(r_gain*v(d1,d2))/((Fx*(AX*V(Tj)*V(Tj)+BX*V(Tj)+CX))+DX*(I(V2xx)**EX))}
+rdrainb 22 d2 500k
+
+.PARAM  CX={(Ct0+(Ctmax-Ct0)*limit(dR,0,1)-(Ctmin-Ct0)*limit(dR,-1,0))}
+.PARAM Ctmin=-75 Ctmax=13.3
+
+
+*****************************Gmos********************************
+
+.param ksat=2.75
+
+GMOS1 d1 s2 VALUE={ksat*IMOS(V(A2),V(d1,s2),V(Tj))}
+
+RGMOS1 d1 s2 500k
+
+.FUNC GGX(V,W) {1*(V-100m*ASINH(W/1)-100m*W)}
+
+.FUNC GGY(V)   {1.9u*V**(7.487*1)}
+
+.FUNC IMOS(V,W,T) {(V*(1+(1.5*(1+alpha*(T-T0))+V/25))*W/(ABS(W)+(4*(1+beta*(T-T0))+V/50*(1+gamma*(T-T0)))))}
+
+Esoglia1 A1  0 VALUE={GGX(MIN(MAX(V(gx,source),0),30),MIN(MAX(V(A2),0),200))}
+Esoglia2 A2 0 VALUE={GGY(MIN(MAX(V(A1),0),40))}
+
+.PARAM T0=25 alpha=1.90m beta=-2.86m gamma=-4.3m
+
+************************** Soglia *****************************
+.param Vth0=0.65  Vthx=-9m
+Evth g1 gx VALUE={(Vthx*(V(Tj)-T0))+Vth0+(Dsoglia)}
+
+.PARAM  Dsoglia={((Vtmax)*limit(dVth,0,1)+(Vtmin)*limit(dVth,-1,0))}
+.PARAM Vtmin=0.3 Vtmax=1.33
+
+**************************** Ci ********************************
+CGS  g1 source  {1970p*Ci}
+rcgs g1 source 10MEG
+.PARAM  Ci={Ci0+(Cimax-Ci0)*limit(dCi,0,1)-(Cimin-Ci0)*limit(dCi,-1,0)}
+.PARAM Cimin=0.7 Cimax=1.3
+.PARAM Ci0=1
+
+**************************** CMiller ***************************
+.PARAM  Cr={Cr0+(Crmax-Cr0)*limit(dCr,0,1)-(Crmin-Cr0)*limit(dCr,-1,0)}
+.PARAM Crmin=0.7 Crmax=1.3
+.PARAM Cr0=1
+Edev dev1 0 value {v(d1,g1)}
+c_dev1 dev1 dev2 1E-12
+R_dev dev2 dev3 1000
+V_miller dev3 0 0 
+G_miller d1 g1  value ={1*Cr*v(alfa)*i(V_miller)*1E12}
+Rcap alfa 0 1E03
+Ecap alfa 0 TABLE ={V(d1,g1)}
++(0.1,1478.7p) 
++(0.2,1459.13p) 
++(0.5,1416.66p) 
++(1,1351.38p) 
++(2,1237.25p) 
++(3,1124.9p) 
++(5,885.92p) 
++(7,557.93p) 
++(10,72.31p) 
++(15,57.58p) 
++(20,51.01p) 
++(25,46.63p) 
++(30,43.52p) 
++(40,39.18p) 
++(50,36.18p) 
++(100,28.52p) 
++(150,24.8p) 
++(200,22.75p) 
++(250,21.32p) 
++(300,20.35p) 
++(350,19.69p) 
++(400,19.32p) 
++(450,19.06p) 
++(500,18.99p) 
++(550,19.1p) 
++(600,19.38p) 
++(650,19.64p) 
++(700,19.86p) 
++(750,20.04p) 
++(800,20.24p) 
++(850,20.48p) 
++(900,20.68p) 
++(950,20.87p) 
++(1000,21p) 
+
+
+
+****************************** Co *******************************
+.PARAM  Co={Co0+(Comax-Co0)*limit(dCo,0,1)-(Comin-Co0)*limit(dCo,-1,0)}
+.PARAM Comin=0.8 Comax=1.2
+.PARAM Co0=1 
+Edevc dev1c 0 value {v(drain,source)}
+c_dev1c dev1c dev2c 1E-12
+R_devc dev2c dev3c 200
+V_millerc dev3c 0 0 
+G_coss drain source value ={Co*v(alfa2)*i(V_millerc)*1E12}
+Rcap2 alfa2 0 1E03
+Ecap2 alfa2 0 TABLE ={V(drain,source)}
++(0.1,1777.74p) 
++(0.2,1735.08p) 
++(0.5,1647.38p) 
++(1,1525.61p) 
++(2,1345.9p) 
++(3,1208.45p) 
++(5,1018.67p) 
++(7,862.59p) 
++(10,667.96p) 
++(15,561.49p) 
++(20,496.5p) 
++(25,450.2p) 
++(30,414.74p) 
++(40,363.66p) 
++(50,327.95p) 
++(100,235.91p) 
++(150,192.29p) 
++(200,166.49p) 
++(250,149.46p) 
++(300,135.84p) 
++(350,125.1p) 
++(400,116.27p) 
++(450,108.88p) 
++(500,102.56p) 
++(550,98.6p) 
++(600,96.13p) 
++(650,94.59p) 
++(700,93.79p) 
++(750,93.2p) 
++(800,92.66p) 
++(850,92.17p) 
++(900,91.85p) 
++(950,91.55p) 
++(1000,91.31p) 
+
+
+
+
+
+***************************** terzo ******************************
+
+Eee h1 0 value {stacco(limit(v(source,gate),0,5),V(Tj))}
+Ree h1 h 1
+CCC h 0 5u
+
+.PARAM  d_terzo={((Vsdmax)*limit(dVsd,0,1)+(Vsdmin)*limit(dVsd,-1,0))}
+.PARAM Vsdmin=0.016 Vsdmax=0.017
+
+.FUNC stacco(vgs,t) {(0.0145-0.005m*(t-25))*Vgs+(0.1090-0.045m*(t-25))+(d_terzo+0.05m*(t-25)*0)}
+V_diodo d1zd d1z 0
+
+G_diode source d1zd VALUE={I_diode(V(source,d1zd),v(Tj),V(h))}
+R_x source d1zd 1E6
+
+.FUNC I_diode(z3,k3,k6) {(exp(min(-15+z3/(did(k3,k6)),7))-0)}
+.FUNC did(k4,k5) {k5-3E-05*(k4-25)}
+
+.FUNC ResDiodo(x,vgs) {(2.55m-0.035m*(x-25))*vgs+(35m+0.165m*(x-25))}
+
+Gvf drain d1z VALUE={V(drain,d1z)/ResDiodo(V(Tj),v(source,gate))}
+R_Y drain d1z 1
+
+************************** Recovery Diode **************************
+
+E_E001 ba 0 VALUE {-I(V_Diodo)}
+
+R_R002 aa ba 1k
+
+C aa 0 25p
+.PARAM Irrm=1.4E03
+R_edep drain d_dedep 30
+
+E_Eds d_dedep edep VALUE {-V(aa,0)*Irrm}
+
+Edeva dev1a 0 value {v(edep,source)}
+C_dev1a dev1a dev2a 0.3E-12
+R_deva dev2a dev3a 1E-06
+V_millera dev3a 0 0 
+G_millera edep source  value ={1*v(alfaa)*i(V_millera)*1E12}
+**********************************************************************
+Rcapa alfaa 0 1E03
+Ecapa alfaa 0 TABLE ={V(Tj)} (25,5p) (200,3p)  
+*********************************************************************************
+
+RDUMMY TJ TCASE 1E9
+G_Power 0 TJ VALUE ={I(Ld)*v(drain,source)}
+
+************************************* Rth=0.45 ************************************
+.param Kth=1
+
+Rth1 Tj Th1		 {9.035E-05*Kth}
+Rth2 Th1 Th2	 {0.00021684*Kth}
+Rth3 Th2 Th3	 {0.00065052*Kth}
+Rth4 Th3 Th4	 {0.00195156*Kth}
+Rth5 Th4 Th5	 {0.00585468*Kth}
+Rth6 Th5 Th6	 {0.01756405*Kth}
+Rth7 Th6 Th7	 {0.01317304*Kth}
+Rth8 Th7 Th8	 {0.00796488*Kth}
+Rth9 Th8 Th9	 {0.01911572*Kth}
+Rth10 Th9 Th10	 {0.05734716*Kth}
+Rth11 Th10 Th11	 {0.04301037*Kth}
+Rth12 Th11 Th12	 {0.00124503*Kth}
+Rth13 Th12 Th13	 {0.00533584*Kth}
+Rth14 Th13 Th14	 {0.02667918*Kth}
+Rth15 Th14 Th15	 {0.1333959*Kth}
+Rth16 Th15 Th16	 {0.11116325*Kth}
+Rth17 Th16 Th17	 {0.00012244*Kth}
+Rth18 Th17 Th18	 {0.00052476*Kth}
+Rth19 Th18 Th19	 {0.00262378*Kth}
+Rth20 Th19 Tcase {0.00218648*Kth}
+
+Cth1 Tj 0		{5.01E-06/Kth}
+Cth2 Th1 0		{1.5E-05/Kth}
+Cth3 Th2 0		{4.51E-05/Kth}
+Cth4 Th3 0		{0.000135/Kth}
+Cth5 Th4 0		{0.000406/Kth}
+Cth6 Th5 0		{0.001217/Kth}
+Cth7 Th6 0		{0.00365/Kth}
+Cth8 Th7 0		{3.91E-05/Kth}
+Cth9 Th8 0		{0.000117/Kth}
+Cth10 Th9 0		{0.000352/Kth}
+Cth11 Th10 0	{0.001056/Kth}
+Cth12 Th11 0	{0.000318/Kth}
+Cth13 Th12 0	{0.001588/Kth}
+Cth14 Th13 0	{0.00794/Kth}
+Cth15 Th14 0	{0.0397/Kth}
+Cth16 Th15 0	{0.198501/Kth}
+Cth17 Th16 0	{1.35E-07/Kth}
+Cth18 Th17 0	{6.75E-07/Kth}
+Cth19 Th18 0	{3.37E-06/Kth}
+Cth20 Th19 0	{1.69E-05/Kth}
+Cth21 Tcase 0	1.69E-05  
+
+
+.ENDS 
+
+
