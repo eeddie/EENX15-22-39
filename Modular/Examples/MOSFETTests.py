@@ -6,6 +6,8 @@
 import matplotlib.pyplot as plt
 from os import remove
 import sys
+import scipy
+import numpy as np
 
 sys.path.append('./Modular/')
 from Functions import *
@@ -31,7 +33,7 @@ R1 PWM Gate {R_Gate}
 R2 in Drain 1
 M1 Drain Gate 0 0 {MOSType}
 
-.tran 1ns 1ms 0ms 1ns
+.tran 0.5ns 1ms 0ms 0.5ns
 .end """
 
     batchNetlist(netlist, "tmp")
@@ -44,14 +46,14 @@ def compareGateDrainSource():
 
     plt.figure(0)
     plt.title("Mosfet Test")
-    plotFourierFromFile("tmp.raw", "v(PWM)", "$V_{gs}$")
+    plotFourierFromFile("tmp.raw", "v(gate)", "$V_{gs}$")
     plotFourierFromFile("tmp.raw", "i(V1)", "$I_{ds}$")
     plt.legend()
     plt.rcParams['text.usetex'] = True
     
     plt.figure(1)
     plt.title("Mosfet Test")
-    plotVars("tmp.raw", "v(PWM)", label="$V_{gs}$")
+    plotVars("tmp.raw", "v(gate)", label="$V_{gs}$")
     plotVars("tmp.raw", "i(V1)", label="$I_{ds}$")
     plt.show()
 
@@ -143,14 +145,101 @@ def compareMOSFETModels(*models):
     plt.legend()
     plt.show()
 
+def compareAgainst100k():
+    runMOSFETSim(Gain=10**5)
+    [time0,data0] = readVariables("tmp.raw","v(gate)")
+    [time1,data1] = readVariables("tmp.raw","i(v1)")
+    [uniTime0,uniData0] = uniformResample(time0,data0,timeStep=10**(-9))
+    [_,uniData1] = uniformResample(time0,data1,timeStep=10**(-9))
+    N = len(uniTime0)
+    ugf100k = fft(uniData0)
+    #ugf100kplt = 2.0/N * np.abs(ugf100k[0,0:N//2])
+    idsf100k = fft(uniData1)
+    #idsf100kplt = 2.0/N * np.abs(idsf100k[0,0:N//2])
+    tf = fftfreq(N, uniTime0[1]-uniTime0[0])[0:N//2]
+
+    """plt.figure(0)
+    plt.title("V_{gs}")
+    plt.figure(1)
+    plt.title("I_{ds}")
+
+    plt.figure(0)
+    plt.plot(tf, ugf100kplt, "-", linewidth=1, alpha=0.5, label="ug, gain=100k")
+    plt.loglog()
+    plt.grid()
+
+    plt.figure(1)
+    plt.plot(tf, idsf100kplt, "-", linewidth=1, alpha=0.5, label="ids, gain=100k")
+    plt.loglog()
+    plt.grid()
+    plt.show()"""
+
+    plt.figure(0)
+    plt.plot(tf, 2.0/N * np.abs(ugf100k[0,0:N//2]), "-", linewidth=1, alpha=0.5, label=f"ug, gain=10^(5)")
+
+    plt.figure(1)
+    plt.plot(tf, 2.0/N * np.abs(idsf100k[0,0:N//2]), "-", linewidth=1, alpha=0.5, label=f"ids, gain=10^(5)")
+
+    plt.figure(0)
+    plt.loglog()
+    plt.grid()
+
+    plt.figure(1)
+    plt.loglog()
+    plt.grid()
+
+    plt.figure(2)
+    plt.loglog()
+    plt.grid()
+
+    plt.figure(3)
+    plt.loglog()
+    plt.grid()
+
+    for i in [0,1,2]:
+        runMOSFETSim(Gain=10**(4-i))
+        [time0,data0] = readVariables("tmp.raw","v(gate)")
+        [time1,data1] = readVariables("tmp.raw","i(v1)")
+        [uniTime0,uniData0] = uniformResample(time0,data0,timeStep=10**(-9))
+        [_,uniData1] = uniformResample(time0,data1,timeStep=10**(-9))
+        N = len(uniTime0)
+        ugf = fft(uniData0)
+        idsf = fft(uniData1)
+
+        diffug = ugf - ugf100k
+        diffids = idsf - idsf100k
+
+        plt.figure(0)
+        plt.plot(tf, 2.0/N * np.abs(ugf[0,0:N//2]), "-", linewidth=1, alpha=0.5, label=f"ug, gain=10^({4-i})")
+
+        plt.figure(1)
+        plt.plot(tf, 2.0/N * np.abs(idsf[0,0:N//2]), "-", linewidth=1, alpha=0.5, label=f"ids, gain=10^({4-i})")
+
+        plt.figure(2)
+        plt.plot(tf, 2.0/N * np.abs(diffug[0,0:N//2]), "-", linewidth=1, alpha=0.5, label=f"diff ug, gain=10^({4-i})")
+
+        plt.figure(3)
+        plt.plot(tf, 2.0/N * np.abs(diffids[0,0:N//2]), "-", linewidth=1, alpha=0.5, label=f"diff ids, gain=10^({4-i})")
+    
+    plt.figure(0)
+    plt.legend()
+    plt.figure(1)
+    plt.legend()
+    plt.figure(2)
+    plt.legend()
+    plt.figure(3)
+    plt.legend()
+    plt.show()
+
 if __name__ == "__main__":
     # compareGateResistance()
     # compareGateDrainSource()
     # compareGain()
+    compareAgainst100k()
     
-    compareMOSFETModels(
-        "IPI200N25N3",
-        "RJK0451DPB",
-        "TN2404K",
-        "IRF2805S"
-        )
+    #compareMOSFETModels(
+    #    "IPI200N25N3",
+    #    "RJK0451DPB",
+    #    "TN2404K",
+    #    "IRF2805S"
+    #    )
