@@ -13,6 +13,7 @@ from scipy.fftpack import fft, fftfreq
 from ltspice import Ltspice
 import json
 import operator
+import math
 
 
 
@@ -106,6 +107,13 @@ def energyInFrequencyBand(data: list, lower: float, upper: float, fs=10**9):
     ind_min = sp.argmax(f > lower) - 1
     ind_max = sp.argmax(f > upper) - 1
     return sp.trapz(Pxx[ind_min: ind_max], f[ind_min: ind_max])
+
+def find_nearest_freqency(array,value):
+    index = np.searchsorted(array, value, side="left")
+    if index > 0 and (index == len(array) or math.fabs(value - array[index-1]) < math.fabs(value - array[index])):
+        return index
+    else:
+        return index
     
 
 
