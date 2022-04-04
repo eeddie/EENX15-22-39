@@ -62,11 +62,11 @@ def compareGain():
     """ Plottar frekvenssvaret av fyra MOSFET-kretsar med gain, 10-10⁴ """
 
     plt.figure(0)
-    plt.title("V_{gs}")
+    plt.title(r"$V_{gs}$")
     plt.figure(1)
-    plt.title("I_{ds}")
+    plt.title(r"$I_{ds}$")
     plt.figure(2)
-    plt.title("V_{gs}")
+    plt.title(r"$V_{gs}$")
 
     for gain in [10**5, 10**4, 10**3, 10**2]:     # Vi plottar i omvänd ordning eftersom vi då kan se de högsta frekvenserna av varje fourier 
         runMOSFETSim(Gain=gain)
@@ -94,9 +94,9 @@ def compareGateResistance():
     """ Plottar frekvenssvaret av fyra MOSFET-kretsar med olika gate-resistanser, 0.25, 0.5, 0.75, 1 """
 
     plt.figure(0)
-    plt.title("Gate-spänning")
+    plt.title(r"$V_{gs}$")
     plt.figure(1)
-    plt.title("Drain-Source-ström")
+    plt.title(r"$I_{ds}$")
     plt.rcParams['text.usetex'] = True
 
     for R_Gate in [0.1, 1, 10, 100]:     # Vi plottar i omvänd ordning eftersom vi då kan se de högsta frekvenserna av varje fourier 
