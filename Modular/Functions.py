@@ -98,7 +98,7 @@ def plotFourierFromFile(filename: str, variableName: str, label="", formatString
 
     plotFourierFromVector(uniTime, uniData, label, formatString=formatString, alpha=alpha, linewidth=linewidth)
 
-
+# Alternative method
 def energyInFrequencyBand(data: list, lower: float, upper: float, fs=10**9):
     """ Beräknar effekten i ett visst frekvensband. Indatan bör ha uniform sampling med samplingsfrekvens fs. """
     x = np.array(data)
@@ -107,14 +107,22 @@ def energyInFrequencyBand(data: list, lower: float, upper: float, fs=10**9):
     ind_max = sp.argmax(f > upper) - 1
     return sp.trapz(Pxx[ind_min: ind_max], f[ind_min: ind_max])
 
+# Finds the frequency closest to a specified frequency, in a sorted np array of frequencies
 def find_nearest_freqency(array,value):
     index = np.searchsorted(array, value, side="left")
     if index > 0 and (index == len(array) or math.fabs(value - array[index-1]) < math.fabs(value - array[index])):
-        return index
+        return index - 1
     else:
         return index
-    
 
+# Sums the 'energy' in a frequency band. Needs arrays of frequencies and associated frequency response.    
+def sum_energy(xf, yf, lower, upper):
+    start = find_nearest_freqency(xf,lower)
+    end = find_nearest_freqency(xf,upper)
+    energy = 0
+    for i in range(start, end + 1):
+        energy += yf[i]
+    return energy
 
 def saveSim(filename: str, modules: list, simParams: dict, results: dict):
     """ Sparar ned simuleringens parametrar till en JSON-fil, lägger till simuleringen om filen redan existerar """
