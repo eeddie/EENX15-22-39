@@ -4,6 +4,7 @@
 #   Innehåller funktioner som vi använder
 #
 
+from tracemalloc import start
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy as sp
@@ -123,6 +124,39 @@ def sum_energy(xf, yf, lower, upper):
     energy = 0
     for i in range(start, end + 1):
         energy += yf[i]
+    return energy
+
+# Returns a dictionary with key: first freq in frequency band, value: energy in that frequency band.
+def energy_in_interesting_frequencies(xf, yf):
+    startLowFreq = 100*10**3
+    startHighFreq = 30*10**6
+    endHighFreq = 100*10**6
+
+    LFbw = 9*10**3
+    HFbw = 120*10**3
+
+    lowFrequencies = []
+    counter = startLowFreq
+    while counter < startHighFreq:
+        lowFrequencies.append(counter)
+        counter += LFbw
+    
+    highFrequencies = []
+    counter = startHighFreq
+    while counter < endHighFreq:
+        highFrequencies.append(counter)
+        counter += HFbw
+
+    energy={}
+    for freq in lowFrequencies:
+        if freq + LFbw > startHighFreq:
+            energy[freq] = sum_energy(xf=xf, yf=yf, lower=freq, upper=startHighFreq)
+        else:
+            energy[freq] = sum_energy(xf=xf, yf=yf, lower=freq, upper=freq + LFbw)
+    
+    for freq in highFrequencies:
+        energy[freq] = sum_energy(xf=xf, yf=yf, lower=freq, upper=freq + HFbw)
+    
     return energy
 
 def saveSim(filename: str, modules: list, simParams: dict, results: dict):
