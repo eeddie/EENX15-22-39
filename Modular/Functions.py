@@ -86,8 +86,7 @@ def plotFourierFromVector(time: list, data: list, label="", formatString="-", al
     plt.loglog()
     plt.grid()
 
-
-def plotFourierFromFile(filename: str, variableName: str, label: str, formatString="-", alpha=0.5, resampleTime=1*10**-9):
+def plotFourierFromFile(filename: str, variableName: str, label="", formatString="-", alpha=0.5, linewidth=0.5, resampleTime=1*10**-9):
     """ Plotta fourier för en variabel från en och samma raw-fil i den aktiva ploten  """
     
     raw = Ltspice(filename)
@@ -97,7 +96,7 @@ def plotFourierFromFile(filename: str, variableName: str, label: str, formatStri
 
     [uniTime, uniData] = uniformResample(raw.get_time(), raw.get_data(variableName), resampleTime)
 
-    plotFourierFromVector(uniTime, uniData, label, formatString=formatString, alpha=alpha)
+    plotFourierFromVector(uniTime, uniData, label, formatString=formatString, alpha=alpha, linewidth=linewidth)
 
 
 def energyInFrequencyBand(data: list, lower: float, upper: float, fs=10**9):
