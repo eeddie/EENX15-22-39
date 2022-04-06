@@ -150,7 +150,7 @@ def compareMOSFETModels(*models):
     plt.show()
 
 def compareAgainst100k():
-    runMOSFETSim(Gain=10**5)
+    #runMOSFETSim(Gain=10**5)
     [time0,data0] = readVariables("tmp.raw","v(gate)")
     [time1,data1] = readVariables("tmp.raw","i(v1)")
     [uniTime0,uniData0] = uniformResample(time0,data0,timeStep=10**(-9))
@@ -180,6 +180,17 @@ def compareAgainst100k():
 
     plt.figure(0)
     plt.plot(tf, 2.0/N * np.abs(ugf100k[0,0:N//2]), "-", linewidth=1, alpha=0.5, label=f"ug, gain=10^(5)")
+
+    energy = energy_in_interesting_frequencies(tf,2.0/N * np.abs(ugf100k[0,0:N//2]))
+    plt.figure(4)
+    freq = [row[0] for row in energy]
+    value = [row[2]/row[3] for row in energy]
+    plt.plot(tf, 2.0/N * np.abs(ugf100k[0,0:N//2]), "-", linewidth=1, alpha=0.5, label=f"ug, gain=10^(5)")
+    plt.plot(freq,value, '-', linewidth=1,alpha=0.5)
+    plt.loglog()
+    plt.grid()
+    plt.show()
+    
 
     plt.figure(1)
     plt.plot(tf, 2.0/N * np.abs(idsf100k[0,0:N//2]), "-", linewidth=1, alpha=0.5, label=f"ids, gain=10^(5)")
