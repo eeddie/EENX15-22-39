@@ -117,11 +117,9 @@ def find_nearest_freqency(array,value):
         return index
 
 # Sums the 'energy' in a frequency band. Needs arrays of frequencies and associated frequency response.    
-def sum_energy(xf, yf, lower, upper):
-    start = find_nearest_freqency(xf,lower)
-    end = find_nearest_freqency(xf,upper)
+def sum_energy(yf, lower, upper):
     energy = 0
-    for i in range(start, end + 1):
+    for i in range(lower, upper + 1):
         energy += yf[i]
     return energy
 
@@ -146,15 +144,24 @@ def energy_in_interesting_frequencies(xf, yf):
         highFrequencies.append(counter)
         counter += HFbw
 
-    energy={}
+    energy=[]
     for freq in lowFrequencies:
-        if freq + LFbw > startHighFreq:
-            energy[freq] = sum_energy(xf=xf, yf=yf, lower=freq, upper=startHighFreq)
-        else:
-            energy[freq] = sum_energy(xf=xf, yf=yf, lower=freq, upper=freq + LFbw)
+        lower = find_nearest_freqency(array=xf, value=freq)
+        hfreq = startHighFreq
+        if freq + LFbw < startHighFreq:
+            hfreq = freq + LFbw
+        upper=find_nearest_freqency(array=xf, value=hfreq)
+        numOfPoints = upper - lower + 1
+        bandEnergy = sum_energy(yf=yf, lower=lower, upper=upper)
+        energy.append([freq, hfreq, bandEnergy, numOfPoints])
     
     for freq in highFrequencies:
-        energy[freq] = sum_energy(xf=xf, yf=yf, lower=freq, upper=freq + HFbw)
+        lower = find_nearest_freqency(array=xf, value=freq)
+        hfreq = freq + HFbw
+        upper=find_nearest_freqency(array=xf, value=hfreq)
+        numOfPoints = upper - lower + 1
+        bandEnergy = sum_energy(yf=yf, lower=lower, upper=upper)
+        energy.append([freq, hfreq, bandEnergy, numOfPoints])
     
     return energy
 
