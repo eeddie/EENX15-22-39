@@ -4,6 +4,7 @@
 #
 
 from threading import Thread
+import multiprocessing
 import matplotlib.pyplot as plt
 from os import remove
 import sys
@@ -11,11 +12,16 @@ import sys
 sys.path.append('./Modular/')
 from Functions import *
 
+# def multiprocessTest():
+#     with multiprocessing.Pool(processes=multiprocessing.cpu_count()) as pool:
+#         func_arg_tuple = tuple((param1, param2, ratio) for ratio in np.arange(0.3, 1.4, 0.1))
+#         results = pool.starmap(data_generation, func_arg_tuple)
+
 
 def runIGBTSim(
     R_Gate = 1.0,
-    R_Drain = 1.0,
-    Gain = 1000,
+    R_Drain = 10.0,
+    Gain = 10000,
     Fs = 10000,
     Freq = 100,
     OverlapProtection = 0.03,
@@ -48,7 +54,12 @@ X1 Drain Gate 0 {IGBTType}
 .end """
 
     batchNetlist(netlist, filePath)
+    return filePath + ".raw"
 
+def runparallellSims():
+    with multiprocessing.Pool(processes=multiprocessing.cpu_count()) as pool:
+        func_arg_tuple = tuple((param1, param2, ratio) for ratio in np.arange(0.3, 1.4, 0.1))
+        return pool.starmap(data_generation, func_arg_tuple)
 
 def compareGateDrainSource():
     """ Plottar frekvens- och tidsdomän för gate-spänning och drain-source-ström för en krets """
@@ -75,44 +86,37 @@ def compareGateDrainSource():
 
 def runIGBTSimGain(Gain, filePath): runIGBTSim(Gain=Gain, filePath=filePath)
 def runCompareGainSimsParallell():
-    for Gain in [1, 10, 100, 1000, 10000]:
-        Thread(target=runIGBTSimGain,args=(Gain, os.path.join("raws","compareGain",f"gain{Gain}_0.01ns"))).start()
+    for Gain in [100, 1000, 10000]:
+        Thread(target=runIGBTSimGain,args=(Gain, os.path.join("raws","compareGain",f"gain{Gain}_0.1ns"))).start()
 
 def compareGain():
     """ Plottar frekvenssvaret av fyra IGBT-kretsar med gain=10²-10⁴ """
 
-    plt.figure(0)
-    plt.title(r"V_{ge}")
-    plt.figure(1)
-    plt.title(r"I_{ce}")
-    plt.figure(2)
-    plt.title(r"V_{ce}")
     plt.rcParams['text.usetex'] = True
+    fig = 0
 
-    for Gain in [10000, 1000, 10, 1]:     # Vi plottar i omvänd ordning eftersom vi då kan se de högsta frekvenserna av varje fourier 
-        plt.figure(0)
-        plotFourierFromFile(os.path.join("raws","compareGain",f"gain{Gain}_0.01ns.raw"), "v(PWM)", f"gain={Gain}", alpha=1, resampleTime=10**-9)
+    for Gain in [100, 1000, 10000]:
+        plt.subplot(1,3,fig+1)
+        plotFourierFromFile(os.path.join("raws","compareGain",f"gain{Gain}_0.1ns.raw"), "v(Gate)", "$V_{gs}$", alpha=0.5, linewidth=0.25)
+        plotFourierFromFile(os.path.join("raws","compareGain",f"gain{Gain}_0.1ns.raw"), "i(V1)", "$I_{ds}$", alpha=0.5, linewidth=0.25)
+        plt.legend(loc="lower left")
+        plt.title(f"$Gain={Gain}$")
+        plt.loglog()
+        plt.grid()
+
+        fig += 1
     
-        plt.figure(1)
-        plotFourierFromFile(os.path.join("raws","compareGain",f"gain{Gain}_0.01ns.raw"), "i(V1)", f"gain={Gain}", alpha=1, resampleTime=10**-9)
-
-        plt.figure(2)
-        plotVars(os.path.join("raws","compareGain",f"gain{Gain}_0.01ns.raw"), "V(PWM)", label=f"gain={Gain}", alpha=1)
-
-    plt.figure(0)
-    plt.legend(loc="lower left")
-    plt.figure(1)
-    plt.legend(loc="lower left")
-    plt.figure(2)
-    plt.legend(loc="lower left")
     plt.show()
+
+
+
 
 
 def runIGBTSimGateDrainResistance(R_Drain, R_Gate, filePath): runIGBTSim(R_Drain=R_Drain, R_Gate=R_Gate, filePath=filePath)
 def runCompareGateDrainResistanceSimsParallell():
     for R_Drain in [0.1, 1,10]:
         for R_Gate in [0.1, 1, 10]:
-            Thread(target=runIGBTSimGateDrainResistance,args=(R_Drain, R_Gate, os.path.join("raws","compareGateDrainResistance",f"Rd{R_Drain}Rg{R_Gate}_0.1ns"))).start()
+            Thread(target=runIGBTSimGateDrainResistance,args=(R_Drain, R_Gate, os.path.join("raws","compareGateDrainResistance",f"Rd{R_Drain}Rg{R_Gate}G10000_0.1ns"))).start()
 
 def compareGateDrainResistance():
     """ Plottar frekvenssvaret av nio IGBT-kretsar med olika gate. och drain-resistanser, 0.1, 1, 10 """
@@ -122,18 +126,41 @@ def compareGateDrainResistance():
 
     for R_Drain in [0.1, 1, 10]:
         for R_Gate in [0.1, 1, 10]:
-            plt.figure(fig)
-            plotFourierFromFile(os.path.join("raws","compareGateDrainResistance",f"Rd{R_Drain}Rg{R_Gate}_0.1ns.raw"), "v(Gate)", f"$R_{{drain}}={R_Drain}$\n$R_{{gate}}={R_Gate}$", alpha=0.5)
-            plotFourierFromFile(os.path.join("raws","compareGateDrainResistance",f"Rd{R_Drain}Rg{R_Gate}_0.1ns.raw"), "i(V1)", alpha=0.5)
+            plt.subplot(3,3,fig+1)
+            plotFourierFromFile(os.path.join("raws","compareGateDrainResistance",f"Rd{R_Drain}Rg{R_Gate}_0.1ns.raw"), "v(Gate)", "$V_{gs}$", alpha=0.5, linewidth=0.25)
+            plotFourierFromFile(os.path.join("raws","compareGateDrainResistance",f"Rd{R_Drain}Rg{R_Gate}_0.1ns.raw"), "i(V1)", "$I_{ds}$", alpha=0.5, linewidth=0.25)
+            plt.legend(loc="lower left")
+            plt.title(f"$R_{{drain}}={R_Drain}$,$R_{{gate}}={R_Gate}$")
+            plt.loglog()
+            plt.grid()
 
-    plt.figure(0)
-    plt.legend()
-    plt.figure(1)
-    plt.legend()
+            fig += 1
+    
     plt.show()
 
 
+def runCompareRRatioSimsParallell():
+    for (R_Drain, R_Gate) in [[100,10], [10,1], [1,0.1]]:
+        Thread(target=runIGBTSimGateDrainResistance, args=(R_Drain, R_Gate, os.path.join("raws","compareRRatio",f"Rd{R_Drain}Rg{R_Gate}_0.1ns"))).start()
 
+def compareRRatio():
+    """ Plottar frekvenssvaret av fyra IGBT-kretsar med samma förhållande mellan drain- och gate-resistanser """
+
+    plt.rcParams['text.usetex'] = True
+    fig = 0
+
+    for (R_Drain, R_Gate) in [[100,10], [10,1], [1,0.1]]:
+        plt.subplot(1,3,fig+1)
+        plotFourierFromFile(os.path.join("raws","compareRRatio",f"Rd{R_Drain}Rg{R_Gate}_0.1ns.raw"), "v(Gate)", "$V_{gs}$", alpha=0.5, linewidth=0.25)
+        plotFourierFromFile(os.path.join("raws","compareRRatio",f"Rd{R_Drain}Rg{R_Gate}_0.1ns.raw"), "i(V1)", "$I_{ds}$", alpha=0.5, linewidth=0.25)
+        plt.legend(loc="lower left")
+        plt.title(f"$R_{{d}}={R_Drain},R_{{g}}={R_Gate}$")
+        plt.loglog()
+        plt.grid()
+
+        fig += 1
+    
+    plt.show()
 
 
 def compareMOSFETModels(*models):
@@ -165,16 +192,19 @@ def compareMOSFETModels(*models):
 if __name__ == "__main__":
     
     # compareGateDrainSource()
-    
-    # runCompareGainSimsParallell()
-    # compareGain()
 
     # runCompareGateResistanceSimsParallell()
     # compareGateResistance()
 
+    # runCompareGainSimsParallell()
+    # compareGain()
+
+    # runCompareRRatioSimsParallell()
+    compareRRatio()
+
     
 
-    runCompareGateDrainResistanceSimsParallell()
+    # runCompareGateDrainResistanceSimsParallell()
     # compareGateDrainResistance()
 
     # compareIGBTModels(

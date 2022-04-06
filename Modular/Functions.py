@@ -207,3 +207,13 @@ def plotFromJSON(filename: str, module: str, param: str, result: str, label="", 
 
         plt.plot(x, y, formatString, label=label, alpha=alpha)
         plt.show()
+
+
+# Returns a list of mosfet models present in MOS.lib
+def getMOSFETs(libFile = "./Modular/libs/MOS.lib"):
+    mosfetList = []
+    with open(libFile, "r") as f:
+        for line in f:
+            if line.startswith(".model"):
+                mosfetList.append(line.split()[1])
+    return mosfetList

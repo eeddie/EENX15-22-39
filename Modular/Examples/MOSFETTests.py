@@ -12,6 +12,10 @@ import numpy as np
 sys.path.append('./Modular/')
 from Functions import *
 
+# MOSFETS som åtminstone har tillräckligt hög Vds, men inte tillräcklig Ids
+# SPA11N60C3    Vds=650 Id = 11 A
+# STP8NM60      Vds=650 Id = 8 A
+# STW11NM80     Vds=800 Id = 11 A
 
 def runMOSFETSim(
     R_Gate = 1.0,
