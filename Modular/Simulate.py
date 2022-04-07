@@ -41,11 +41,20 @@ if __name__ == "__main__":
 
 Xbattery BatPos BatNeg BatCase BatteryModule
 
+* Strömmättning batteri i(Vbatpos)  i(Vbatneg)
+VDC_P BatFiltPos BatPos 0 
+VDC_N BatFiltNeg BatNeg 0
+
 Xbatfilt BatPos BatNeg InvPos InvNeg DCFilterModule
 
 Xinverter InvPos InvNeg InvA InvB InvC InvCase InverterModule
 
-Xloadfilter InvA InvB InvC PhA PhB PhC ACFilterModule
+Xloadfilter InvA InvB InvC FiltA FiltB FiltC ACFilterModule
+
+* Strömmätning för faser i(VPhA) i(VPhB) i(VPhC)
+VAC_A PhA FiltA 0
+VAC_B PhB FiltB 0
+VAC_C PhC FiltC 0
 
 Xload PhA PhB PhC LoadCase LoadModule
 
