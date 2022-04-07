@@ -123,7 +123,7 @@ def sum_energy(yf, lower, upper):
         energy += yf[i]
     return energy
 
-# Returns a dictionary with key: first freq in frequency band, value: energy in that frequency band.
+# Returns a 2d array with every row in the format: [flo fhi sum numofpoints].
 def energy_in_interesting_frequencies(xf, yf):
     startLowFreq = 100*10**3
     startHighFreq = 30*10**6
