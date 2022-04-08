@@ -11,8 +11,11 @@ KiCad/*
 # Ignorera outputs från simuleringar
 *.cir
 *.raw
+*.fft
 *.log
 *.zip
+
+*.net
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

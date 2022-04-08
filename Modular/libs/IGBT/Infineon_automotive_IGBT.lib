@@ -1,0 +1,418 @@
+***************************************************************** 
+* Level2 Version of  650V IGBT/Diode Models nov 2012 	*
+*****************************************************************
+* INFINEON TECHNOLOGIES AG      		TRENCHSTOP_H5_650Vauto.lib	*
+*								*
+*  ((V1.1)     	03/15  						*
+*                                                               *
+* Models provided by INFINEON are not warranted by INFINEON as  *
+* fully representing all of the specifications and operating    *
+* characteristics of the semiconductor product to which the     *
+* model relates. The model describe the characteristics of a    * 
+* typical device.                                               * 
+* In all cases, the current data sheet information for a given  *
+* device is the final design guideline and the only actual      *
+* performance specification.                                    *
+* Altough models can be a useful tool in evaluating device      *
+* performance, they cannot model exact device performance under *
+* all conditions, nor are they intended to replace bread-       *
+* boarding for final verification. INFINEON therefore does not  *
+* assume any liability arising from their use.                  *
+* INFINEON reserves the right to change models without prior    * 
+* notice.                                                       *
+*                                                               *
+* This library contains Level 2 models for the following	* 
+* INFINEON Technologies 650 V TRENCHSTOP_H5A 					*
+* 								*
+* RECOMMENDED OPTION SETTINGS:	*
+*	ABSTOL > 10n				*
+*	RELTOL > 1m					*
+*	ITL4 > 30					*
+*								*
+* devices/chip-models lead inductances related			*
+* to packages are  included:					*
+* type				BV/V	Ice/A			*	
+* TRENCHSTOP_H5								*
+* 								*	
+* IKW40N60H5 		650	 40			*			
+* IKW50N60H5 		650	 50			*		
+* 								*
+*								*
+* SUPPORTemail:	simulate@infineon.com		
+*****************************************************************
+* Funktioner för kompatibilitet med LTSpice etc.
+*.func if(a,b,c) 'ternary_fcn( a , b , c )'
+.func arctan(a) 'atan(a)'
+
+.SUBCKT IKW40N65H5A_L2 anol gate katl PARAMS: TJ = 27
+* 
+LANO anol ano 3n
+RANO anol ano 1k
+LKAT kat katl 5n
+RKAT kat katl 1k
+RKONV ano 0 100meg
+XL73xxH5 ano gate kat igbt_H5_v2A_L2 PARAMS: TJ = {TJ} A = 0.0967 Rg = .5
+XDIO kat ano L40ZZDH5A_L2 PARAMS: TJ = {TJ} A = 0.02936 N_ideal = 1.0
+.ENDS
+*
+*****************************************************************
+.SUBCKT IKW50N65H5A_L2 anol gate katl PARAMS: TJ = 27
+* 
+LANO anol ano 3n
+RANO anol ano 1k
+LKAT kat katl 5n
+RKAT kat katl 1k
+RKONV ano 0 100meg
+XL73xxH5 ano gate kat igbt_H5_v2A_L2 PARAMS: TJ = {TJ} A = 0.121 Rg = .5
+XDIO kat ano L40ZZDH5A_L2 PARAMS: TJ = {TJ} A = 0.03901 N_ideal = 1.0
+.ENDS
+*
+*****************************************************************
+.SUBCKT igbt_H5_v2A_L2 ano gate kat PARAMS: TJ = 25 A = 1 Rg = 1m
+.PARAM q = 1.6E-19
+.PARAM eps0 = 8.85E-14
+.PARAM epsi = 11.8
+.PARAM eox = 3.8
+.PARAM t0 = 273
+.PARAM k = 1.381e-23
+.PARAM ni0 = 1.45e10
+.PARAM un = 1350
+.PARAM up = 450
+.PARAM u_surf = 600
+.PARAM EMU = -1.5
+.PARAM pi = 3.1416
+.PARAM WX0 = 46e-4
+.PARAM LX0 = 3.047e-4
+.PARAM LX1 = 0.7e-4
+.PARAM TX0 = 0.100e-4
+.PARAM NX0 = 7.59e14
+.PARAM NX1 = 1.17e17
+.PARAM NX2 = 3.853e13
+.PARAM TX1 = 1u 
+.PARAM ETX1 = 2 
+.PARAM VX0 = 8e6
+.PARAM vsw = 0.0
+.PARAM WX1 = 3.29354m
+.PARAM LX2 = {sqrt(A)} 
+.PARAM NX3 = {LX2*1562}
+.PARAM WX2 = {NX3*2*LX2}
+.PARAM CX0 = {NX3*LX2*4.708p }
+.PARAM CX1 = {NX3*LX2*6.053p + 1.121n*A}
+.PARAM AX0 = {NX3*LX2*1.4e-4}
+.PARAM AX1 = {NX3*LX2*2.4e-4}
+.PARAM AX2 = {NX3*LX2*2.58m}
+.PARAM CX2 = {AX2*33.63n}
+.PARAM AX3 = {NX3*LX2*8.6e-4}
+.PARAM CX3 = {AX3*33.63n}
+.PARAM AX4 = {NX3*LX2*1.0e-4}
+.PARAM CX4 = {AX4*33.63n}
+.PARAM AX5 = {NX3*LX2*3e-4}
+.PARAM CX5 = {AX5*33.63n}
+.PARAM D = 17.55
+.PARAM L = 4.189m
+.PARAM IX0 = {AX1*144.6p}
+.PARAM Cje = {A *18.93n}
+.PARAM IX1 = {A*855.2p} 
+.PARAM IX2 = {A*1.091p} 
+.PARAM IX3 = {A*12.98u} 
+.PARAM IX4 = {A*2.136e-19} 
+.PARAM Q0 = {A*28.4n}
+.PARAM Rs = 500u
+.PARAM a_norm = 1e15 b1 = {1e-4/sqrt(0.5)} b2 = {1e-4/sqrt(2)} b3 = {1e-4/sqrt(5)} b4 = {1e-4/sqrt(5)}
+.PARAM Npk1 = 4.1e15 wpk1 = {WX0 - 4e-4}
+.PARAM Npk2 = 1.01e15 wpk2 = {WX0 - 12.5e-4}
+.PARAM Npk3 = 0.442e15 wpk3 = {WX0 - 18.5e-4}
+.PARAM Npk4 = 0.214e15 wpk4 = {WX0 - 24e-4}
+RK1 gi kat 100meg
+RK2 gi ano 100meg
+RS si kat {Rs}
+RG gate gi {Rg}
+CGS gi kat {CX0 + CX1 }
+XCHANN di_v gi si channel_igbtH5A PARAMS: TJ = {TJ} WX2 = {WX2} LX1 = {LX1} TX0 = {TX0} NX1 = {NX1}
+VINC di di_v 0
+DS si di D2 
+.MODEL D2 D (IS = {IX0} BV = 650 )
+VIPC ds si 0
+GIC di ds VALUE = {LIMIT(IPC(I(VINC),V(b),V(xj1,0),V(d_xj),TJ),-1e12,1e12)}
+EIQDS qdsa 0 VALUE = {LIMIT(AX1*QTOT1(V(xj1),V(ncurr1)),-1e12,1e12)}
+VIQDS qdsa qdsa_r 0
+RIQDS qdsa_r qdsa_v 1m
+CIQDS qdsa_v 0 1u
+EXJ1 xj1 0 VALUE = {MAX(V(xxj0),0)}
+XDXJ xj1 d_xj D_diff_H5
+GXXJ0 0 xxj0 VALUE {flog1(xj(V(vj20) ,V(xxj1),V(ncurr1))) - V(xxj0)}
+RXXJ0 xxj0 0 100meg
+GVJ0 0 vj0 VALUE { MAX(V(di,kat),0) - V(vj20)}
+RVJ0 vj0 0 100meg
+GVJ20 0 vj20 VALUE {MAX(VS(V(xxj0),V(ncurr1)),0) - V(vj0)}
+RVJ20 vj20 0 100meg
+GXXJ1 0 xxj1 VALUE {flog1(xj(V(di,kat) - MAX(AX5*QTOT1(V(xxj1),V(ncurr1))/CX5,0) -V(vfb),V(xxj1),V(ncurr1))) - V(xxj1)}
+RXXJ1 xxj1 0 100meg
+GVJ1 0 vj1 VALUE { IF(V(di,kat) > MAX(AX5*QTOT1(V(xxj1),V(ncurr1))/CX5,0) + V(vfb), V(di,kat) - MAX(AX5*QTOT1(V(xxj1),V(ncurr1))/CX5 - V(vfb),0),0) - V(vj2)}
+RVJ1 vj1 0 100meg
+GVJ2 0 vj2 VALUE {MAX(VS(V(xxj1),V(ncurr1)),0) - V(vfb) - V(vj1)}
+RVJ2 vj2 0 100meg
+GXXJ11 0 xxj11 VALUE {flog1(xj(V(di,gi) - MAX(AX4*QTOT1(V(xxj11),V(ncurr1))/CX4 - V(vfb),0),V(xxj11),V(ncurr1))) - V(xxj11)}
+RXXJ11 xxj11 0 100meg
+GVJ11 0 vj11 VALUE { IF(V(di,gi) > MAX(AX4*QTOT1(V(xxj11),V(ncurr1))/CX4 + V(vfb),0), V(di,gi) - MAX(AX4*QTOT1(V(xxj11),V(ncurr1))/CX4 - V(vfb),0),0) - V(vj21)}
+RVJ11 vj11 0 100meg
+GVJ21 0 vj21 VALUE {MAX(VS(V(xxj11),V(ncurr1)),0) - V(vfb) - V(vj11)}
+RVJ21 vj21 0 100meg
+EQDG qdg 0 VALUE {LIMIT((CX4 + 0.5*(1+ tanh(-100*(V(di,gi))))*CX3*0.65 + CX3*0.1)*(V(di,gi) - V(vj11)) ,-1e12,1e12)}
+RDQDG qdg qdg_v 1m
+VDQDG qdg_v qdg_r 0
+CDQDG qdg_r 0 1u
+EQDG2 qdg2 0 VALUE {LIMIT( MAX(AX4*QTOT1(V(xxj11),V(ncurr1)),0) ,-1e12,1e12)}
+RDQDG2 qdg2 qdg_v2 1m
+VDQDG2 qdg_v2 qdg_r2 0
+CDQDG2 qdg_r2 0 1u
+EQDS qds 0 VALUE {LIMIT((CX5*MIN(V(di,kat) - V(vj1),V(di,kat))) ,-1e12,1e12)}
+RDQDS qds qds_v 1m
+VDQDS qds_v qds_r 0
+CDQGS qds_r 0 1u
+GIDS di kat VALUE {LIMIT(1e6*(I(VDQDS) + I(VIQDS)),-1e12,1e12)}
+GIDG di gi VALUE {LIMIT(1e6*(I(VDQDG) ),-1e12,1e12)}
+CKONV ano e1 {Cje}
+GDE ano e1 VALUE = {Isx2(TJ)*(LIMEXP(q/k/(t0 + TJ)*V(ano,e1)) - 1) + V(ano,e1)/100meg }
+VIA e1 e 0
+EGIA e di VALUE = {LIMIT(I(VIA)*Rb(V(b),TJ),-1e12,1e12)}
+CQB b 0 1u,IC = 0
+RHELP b 0 1meg
+GRQB b 0 VALUE {LIMIT(1u*V(b,0)*(1/TAU_X(TJ)) + INE(I(VINC),V(b,0),V(xj1,0),V(d_xj),TJ) - I(VINC),-1e12,1e12)}
+ENCURR1  ncurr1  0 VALUE = {LIMIT(Nmod1(I(VIPC)),-1e12,1e12) }
+RNCURR1 ncurr1 0 1meg
+EVFB vfb 0 VALUE {vfb(TJ)}
+RVFB vfb 0 1
+.FUNC THYP(X) {1 + tanh(X)}
+.FUNC LIMHYP(X,UG,OG) {if(X >= UG ,IF(X <= OG , X , OG*THYP((X - OG)/OG ) ) ,UG*THYP((X - UG)/(UG)) )}
+.FUNC LIMEXP(X) {if(X >= 0,if(X > 100,(X-99)*exp(100) ,exp(X)) ,if(abs(X) > 100,1/((abs(X)-99)*exp(100)) ,1/exp(abs(X))))}
+.PARAM ffx1 = 100k
+.PARAM eex1 = 0.5
+.FUNC flog1(X) {if(X*ffx1/eex1 < log(100) ,log(( 1+ exp(X*ffx1/eex1))**eex1)/ffx1, X )}
+.FUNC Nmod(Y) {LIMIT(MAX(Y,0)/(AX1)/VX0,-1e12,1e12)}
+.FUNC Nmod1(Y) {LIMIT(MAX(Y,0)/(A)/VX0,-1e12,1e12)}
+.FUNC N1(X) {LIMIT((q*NX2 )*X,-1e12,1e12)}
+.FUNC N11(X,Y) {LIMIT((q*NX2 + Y)*X ,-1e12,1e12)}
+.FUNC N2(X) {LIMIT(q*NX0*LX0*(LIMEXP(((X-WX0)/LX0) ) - exp(-WX0/LX0) ),-1e12,1e12)}
+.FUNC  N31(X) {sqrt(q*q*a_norm*Npk1*b1*b1)*(arctan(sqrt(Npk1/a_norm/b1/b1)*(X - wpk1))  
++ + arctan(sqrt(Npk1/a_norm/b1/b1)*wpk1 ))}
+.FUNC  N32(X) {sqrt(q*q*a_norm*Npk2*b2*b2)*(arctan(sqrt(Npk2/a_norm/b2/b2)*(X - wpk2))  
++ + arctan(sqrt(Npk2/a_norm/b2/b2)*wpk2 ))}
+.FUNC  N33(X) {sqrt(q*q*a_norm*Npk3*b3*b3)*(arctan(sqrt(Npk3/a_norm/b3/b3)*(X - wpk3))  
++ + arctan(sqrt(Npk3/a_norm/b3/b3)*wpk3 ))}
+.FUNC  N34(X) {sqrt(q*q*a_norm*Npk4*b4*b4)*(arctan(sqrt(Npk4/a_norm/b4/b4)*(X - wpk4))  
++ + arctan(sqrt(Npk4/a_norm/b4/b4)*wpk4 ))}
+*.FUNC QTOT(X) {LIMIT( N1(X) + N2(X) ,1p,1e0)}
+.FUNC QTOT1(X,Y) {LIMIT((N11(X,Y) + N2(X) + N31(X) +N32(X) + N33(X) + N34(X) ),1p,1e0)}
+.FUNC EG(T) {LIMIT(1.16 - 7.02e-4*(T+t0)**2/(T+t0 + 1108),-1e12,1e12)}
+.FUNC vfb(T) {LIMIT(k/q*(T + t0)*log(NX2/ni0/ni(T)) - EG(T)/2 + 0.28,-1e12,1e12)}
+.FUNC ni(T) {LIMIT(((T+t0)/300)**1.5*exp(1/(2*8.61e-5)*(-300*EG(T)+(t0+T)*EG(27))/(T+t0)/300),-1e12,1e12)}
+.FUNC TAU_X(T) {LIMIT((TX1*((T+t0)/300)**{ETX1}),-1e12,1e12)}
+.FUNC DA(T) {LIMIT(2*k*un*up/q/(un + up)*(T + t0)*(((T + t0)/300)**EMU),-1e12,1e12)}
+.FUNC LA(T) {LIMIT(sqrt(DA(T) * TAU_X(T)) ,-1e12,1e12)}
+.FUNC Isx2(T) {LIMIT((ni0*IX2)*(ni0*k)*(t0+T)*(un - up)*(((T + t0)/300)**EMU)*ni(T)*ni(T),-1e12,1e12)}
+.FUNC Isx1(T) {LIMIT((ni0*IX4) * sqrt(DA(T)/TAU_X(T))*ni(T),-1e12,1e12)}
+.FUNC Rb(X,T) {LIMIT((WX1)*(WX1)/(un*(Q0)*(((T + t0)/300)**EMU) + (un + up)*MAX(X,0)*1e-6*(((T + t0)/300)**EMU)),-1e12,1e12)}
+.FUNC   ATX31(X) {(q*0.5*a_norm*b1*b1)*(2*ARCTAN((X-wpk1)*sqrt((Npk1/a_norm/b1/b1)))*sqrt(Npk1*wpk1*wpk1/a_norm/b1/b1) 
++ +2*ARCTAN(sqrt(((wpk1)**2)*(Npk1/a_norm/b1/b1)))*sqrt(Npk1*wpk1*wpk1/a_norm/b1/b1) 
++ + log(((a_norm/Npk1)*b1*b1+(X-wpk1)**2)/((a_norm/Npk1)*b1*b1+(wpk1)**2)))/eps0/epsi}	
+.FUNC   ATX32(X) {(q*0.5*a_norm*b2*b2)*(2*ARCTAN((X-wpk2)*sqrt((Npk2/a_norm/b2/b2)))*sqrt(Npk2*wpk2*wpk2/a_norm/b2/b2) 
++ +2*ARCTAN(sqrt(((wpk2)**2)*(Npk2/a_norm/b2/b2)))*sqrt(Npk2*wpk2*wpk2/a_norm/b2/b2) 
++ + log(((a_norm/Npk2)*b2*b2+(X-wpk2)**2)/((a_norm/Npk2)*b2*b2+(wpk2)**2)))/eps0/epsi}	
+.FUNC   ATX33(X) {(q*0.5*a_norm*b3*b3)*(2*ARCTAN((X-wpk3)*sqrt((Npk3/a_norm/b3/b3)))*sqrt(Npk3*wpk3*wpk3/a_norm/b3/b3) 
++ +2*ARCTAN(sqrt(((wpk3)**2)*(Npk3/a_norm/b3/b3)))*sqrt(Npk3*wpk3*wpk3/a_norm/b3/b3) 
++ + log(((a_norm/Npk3)*b3*b3+(X-wpk3)**2)/((a_norm/Npk3)*b3*b3+(wpk3)**2)))/eps0/epsi}	
+.FUNC   ATX34(X) {(q*0.5*a_norm*b4*b4)*(2*ARCTAN((X-wpk4)*sqrt((Npk4/a_norm/b4/b4)))*sqrt(Npk4*wpk4*wpk4/a_norm/b4/b4) 
++ +2*ARCTAN(sqrt(((wpk4)**2)*(Npk4/a_norm/b4/b4)))*sqrt(Npk4*wpk4*wpk4/a_norm/b4/b4) 
++ + log(((a_norm/Npk4)*b4*b4+(X-wpk4)**2)/((a_norm/Npk4)*b4*b4+(wpk4)**2)))/eps0/epsi}	
+.FUNC	ATX31_abl(X) {q/eps0/epsi*Npk1*X/(1 + Npk1/a_norm/b1/b1*(X-wpk1)**2)}
+.FUNC	ATX32_abl(X) {q/eps0/epsi*Npk2*X/(1 + Npk2/a_norm/b2/b2*(X-wpk2)**2)}
+.FUNC	ATX33_abl(X) {q/eps0/epsi*Npk3*X/(1 + Npk3/a_norm/b3/b3*(X-wpk3)**2)}
+.FUNC	ATX34_abl(X) {q/eps0/epsi*Npk4*X/(1 + Npk4/a_norm/b4/b4*(X-wpk4)**2)}
+.FUNC V0(X,Y) {LIMIT(0.5*X*X*((q*NX2/eps0/epsi) + MAX(Y,0)/eps0/epsi ),-1e12,1e12)} 
+.FUNC V0abl(X,Y) {LIMIT(X*((q*NX2/eps0/epsi) + MAX(Y,0)/eps0/epsi ),-1e12,1e12)} 
+.FUNC V1(X) {LIMIT(q*LX0**2*NX0*( exp( -WX0/LX0) - (LX0-X)/LX0*LIMEXP(-(WX0-X)/LX0))/eps0/epsi,-1e12,1e12)}
+.FUNC V1abl(X) {LIMIT(q*NX0*X/eps0/epsi*LIMEXP(-(WX0-X)/LX0),-1e12,1e12)}
+.FUNC VS(X,Y) {LIMIT(V0(X,Y) + V1(X) + ATX31(X) + ATX32(X)+ ATX33(X) + ATX34(X),-1e12,1e12)}
+.FUNC VSabl(X,Y) {LIMIT(V0abl(X,Y) + V1abl(X) + ATX31_abl(X) + ATX32_abl(X) + ATX33_abl(X) + ATX34_abl(X),-1e12,1e12)}
+.FUNC xj(V,X,Y) {LIMIT((V - VS(X,Y) + X*VSabl(X,Y))/MAX(VSabl(X,Y),1u) ,0.01m,.1)}
+*.FUNC xj(V,X,Y) {LIMIT((V - VS(X,Y) + xj0(V,X,Y)*VSabl(X,Y))/VSabl(X,Y),0.01m,.1)}
+.FUNC FDX(V,X,T) {LIMIT(TANH(MAX(WX0-V,.1m)*1e6*MAX(X,0)/(24*DA(T))),-1e12,1e12)}
+.FUNC Td(V,X,T) {LIMIT((0.1/DA(T))*MAX(WX0 - V,.1m)*MAX(WX0-V,.1m)*(1-FDX(V,X,T)),-1e12,1e12)}
+.FUNC F1(V,T) {LIMIT(TAU_X(T)*(COSH(MAX(WX0-V,0.25*LA(T))/LA(T))-1),-1e12,1e12)}
+.FUNC F2(V,X,T) {LIMIT(0.5*(1+2*FDX(V,X,T)/(1+FDX(V,X,T)*FDX(V,X,T))),-1e12,1e12)}
+.FUNC F3(V,X,T) {LIMIT(1+Td(V,X,T)/(TAU_X(T)),-1e12,1e12)}
+.FUNC QS0(V,T) {LIMIT((ni0*q)*A*LA(T)*ni(T)*TANH(0.5*MAX(WX0-V,0.25*LA(T))/LA(T)),-1e12,1e12)}
+.FUNC Qbd(Y,Z,V,X,T) {LIMIT(MAX(Z,0)*1e-6 + Td(V,X,T)*Y,-1e12,1e12)}
+.FUNC Qb0(Y,Z,V,X,T) {LIMIT(2*Qbd(Y,Z,V,X,T)/(F3(V,X,T)+SQRT(F3(V,X,T)*F3(V,X,T) 
++ + Td(V,X,T)*3*IQR(V,T)*Qbd(Y,Z,V,X,T)/QS0(V,T))),-1e12,1e12)}
+.FUNC INE(Y,Z,V,X,T) {LIMIT(0.75*IQR(V,T)*Qb0(Y,Z,V,X,T)**2/QS0(V,T),-1e12,1e12)}
+.FUNC IPC(Y,Z,V,X,T) {LIMIT((1/3)*Y+(4/3)*(Qb0(Y,Z,V,X,T)/F1(V,T)
++ +MAX(Qb0(Y,Z,V,X,T)/TAU_X(T)+INE(Y,Z,V,X,T)-Y,0)*F2(V,X,T)),-1e12,1e12)}
+.FUNC IQR(V,T) {LIMIT(Isx2(T)/QS0(V,T),-1e12,1e12)}
+.ENDS
+*$
+*******************************************************************************************************
+.SUBCKT channel_igbtH5A d g s PARAMS: TJ = 27 WX2 = 1 LX1 = 2e-4 TX0 = 110e-7 NX1 = 2e17
+.PARAM 
++q = 1.6E-19 eps0 = 8.85E-14 epsi = 11.8 eox = 3.8 
++t0 = 273 kb = 1.381e-23 ni0 = 1.45e10
++un = 1350 up = 450 u_surf = 300 
++pi = 3.1416 vsat = 1.75e7 EMU = -1.5
+.PARAM Ngate = 3.216e11
+.PARAM Nss = 2.48e11
+.PARAM theta = 0.05
+EVGS vgs 0 VALUE = {MAX(V(g,s) - V(vth),0) }
+RGVGS vgs 0 1meg
+EVDS vds 0 VALUE = {MAX(V(dr,s),0)}
+RGVDS vds 0 1meg
+GIMOS dr s VALUE = {imos(V(vgs),V(vds),TJ)}
+RGIMOS d dr 1n
+REGS g s 1meg
+CGS g s 0.1p
+CGD d g 0.1p
+CDS d s 0.1p
+EVTH vth 0 VALUE = {vto(TJ)}
+.FUNC EG(T) {1.16 - 7.02e-4*(T+t0)**2/(T+t0 + 1108)}
+.FUNC ni(T) {((T+t0)/300)**1.5*exp(1/(2*8.61e-5)*(-300*EG(T)+(t0+T)*EG(27))/(T+t0)/300)}
+.FUNC phi_ms(T) {kb*(T + t0)/q*log(NX1/Ngate)- q*Nss*TX0/eps0/eox}
+.FUNC psi2(T) {2.0*kb/q*(T + t0)*log((NX1/ni0)/ni(T))}
+.FUNC vto(T) {phi_ms(T) + psi2(T) + TX0*sqrt(abs(2.0*eps0*epsi*q*NX1*psi2(T)))/eps0/eox}
+.FUNC mu(VG,T) {(u_surf*((T + t0)/300.0)**EMU)/(1 + VG*theta)}
+.FUNC Vb(VG,T) {vsat*LX1/mu(VG,T)}
+.FUNC vd_sat(VG,T) {MAX(VG + Vb(VG,T) - sqrt(abs(VG**2.0 + Vb(VG,T)**2.0)),0)}
+.FUNC vmos(VG,VD,T) {MIN(vd_sat(VG,T),VD )}
+.FUNC kp(VG,VD,T) {mu(VG,T)*(WX2/LX1)*eox*eps0/TX0/(1.0 + MAX(vmos(VG,VD,T)/Vb(VG,T),0))}
+.FUNC imos(VG,VD,T) {LIMIT(kp(VG,VD,T)*(VG*MIN(vmos(VG,VD,T),VG)
++ -0.5*MIN(vmos(VG,VD,T),VG)*MIN(vmos(VG,VD,T),VG)),0,1e6)}
+.ENDS
+*$
+**************************************************************************************************************
+.SUBCKT L40ZZDH5A_L2 anode kath PARAMS: TJ = 27 A = 1 N_ideal = 1
+.PARAM q = 1.602e-19
+.PARAM eps0 = 8.85e-14
+.PARAM epsi = 11.8
+.PARAM kb = 1.38e-23
+.PARAM T0 = 273
+.PARAM ni0 = 1.45e10
+.PARAM un = 1350 up = 450 u_v = {up/un} Ecp = 11000 Ecn = 4200
+.PARAM Nem = 2e17 wem = 2.5e-4 Nem1 = 2e16 wem1 = 2.5e-4 wb = {50e-4 - wem1} 
+.PARAM NX0 = 5e9
+.PARAM Loffs = 2.5e-7
+.PARAM a_norm = 1e15 b1 = {1e-4/sqrt(5)} b2 = {1e-4/sqrt(1)} b3 = {1e-4/sqrt(0.5)}
+.PARAM Npk1 = 4e15
+.PARAM wpk1 = 12m
+.PARAM Npk2 = 2e15
+.PARAM wpk2 = 7.3m
+.PARAM Npk3 = 4e15
+.PARAM wpk3 = 3.33m
+.PARAM TX1 = 0.07u 
+.PARAM Nd = {1/(q*un*120)} 
+.PARAM pi = 3.1416
+.PARAM ETX1 = 1.5
+.PARAM BV = 650
+.PARAM VX0 = 7.5e7
+.PARAM Ut = 23.534m
+.PARAM D = 15.8854
+.PARAM L = 3.5649m
+.PARAM Ise_g = {A/Nem/wem}
+.PARAM IX0 = {Ise_g*kb*(TJ + t0)*un*ni0**2}
+.PARAM Ism_g = {A*3.204e-19}
+.PARAM Ism0 = {Ism_g*ni0*sqrt(2.0*kb*un*up/q/(un + up)*(TJ + t0)/TX1)}
+.PARAM CJ0 = {A*sqrt(eps0 * epsi * q * Nd/ 2 / 0.7 )}
+.PARAM QN = {A*q*Nd*wb}
+.PARAM Ra = {wem1/Nem1/up/q/A} 
+RSERIE anode ano {Ra/(((TJ + t0)/300)**-1.5)}
+CKONV ano mi 10p
+RKONV ano mi 1meg
+GDE ano mi VALUE = {ISE(TJ)*(LIMEXP(q/kb/(t0 + TJ)/1.0*V(ano,mi)) - 1)}
+GJK mi ano VALUE = {LIMIT( 1meg*A*V(d_jct),-1e12,1e12)}
+EANOI anoi 0 VALUE = {LIMIT(V(ano,mi),-1e12,1e12)}
+GD0 anoi mi1 VALUE = {ISM(TJ)*(LIMEXP(q/kb/(t0 + TJ)/2*V(anoi,mi1)) - 1)}
+VID0 mi1 0 0
+VITOT kat kath 0
+EGIR mi kat VALUE = {I(VITOT)*Rd(V(q,0),TJ)}
+VGID ano ano_x 0
+GID ano_x mi VALUE = {LIMIT(IQ(V(xj1,0),I(VID0),V(q,0),V(d_xj),TJ) ,-1e12,1e12)}
+CQB q 0 1u
+RHELP q 0 1meg
+GRQB q 0 VALUE = {LIMIT(1u*V(q,0)/TAU_X(TJ) - IQ(V(xj1,0),I(VID0),V(q,0),V(d_xj),TJ) - I(VID0),-1e12,1e12)}
+EXJ xj1 0 VALUE = {V(xxj1)}
+XDXJ xj1 d_xj D_diff_H5
+GXXJ1 0 xxj1 VALUE {MAX(xj(MAX(V(vj2),0.001m),V(ncurr),MAX(V(xxj1),0.001m)),0.001m) - V(xxj1)}
+RXXJ1 xxj1 0 1meg
+GVJ1 0 vj1 VALUE { IF(V(mi,ano) >= 0.001m, V(mi,ano) - MAX(QTOT1(V(xxj1),V(ncurr))/CJ0,0),0) - V(vj2)}
+RVJ1 vj1 0 1meg
+GVJ2 0 vj2 VALUE {MAX(VS(V(xxj1),V(ncurr)),0) - V(vj1)}
+RVJ2 vj2 0 1meg
+EJUNCT jct 0 VALUE = {QTOT1(V(xj1,0),V(ncurr))}
+XDVJCT jct d_jct D_diff_H5
+EVDRIFT vdrift 0 VALUE = {EVS(V(efld),TJ)}
+EEFLD efld 0 VALUE = {V(jct)/epsi/eps0}
+ENCURR ncurr 0 VALUE = {LIMIT(ABS(I(VGID))/A/V(vdrift) - V(ncurr),-1e12,1e12)}
+RNCURR ncurr 0 1meg
+.FUNC LIMEXP(X) {if(X >= 0,if(X > 100,(X-99)*exp(100) ,exp(X)) ,if(abs(X) > 100,1/((abs(X)-99)*exp(100)) ,1/exp(abs(X))))}
+.PARAM ffx1 = 1meg
+.PARAM eex1 = 0.1
+.FUNC flog1(X) {if(X*ffx1/eex1 < log(100) ,log(( 1+ exp(X*ffx1/eex1))**eex1)/ffx1, X )}
+.FUNC N11(X,Y) {(q*Nd + Y)*X }
+.FUNC N1(X) {q*Nd *X}
+.FUNC N2(X) {q*NX0*Loffs*(exp((X-wb)/Loffs ) - exp(-wb/Loffs) )}
+.FUNC N31(X) {sqrt(q*q*a_norm*Npk1*b1*b1)*(arctan(sqrt(Npk1/a_norm/b1/b1)*(X - wpk1)) 
++ + arctan(sqrt(Npk1/a_norm/b1/b1)*wpk1 ))}
+.FUNC N32(X) {sqrt(q*q*a_norm*Npk2*b2*b2)*(arctan(sqrt(Npk2/a_norm/b2/b2)*(X - wpk2)) 
++ + arctan(sqrt(Npk2/a_norm/b2/b2)*wpk2 ))}
+.FUNC N33(X) {sqrt(q*q*a_norm*Npk3*b3*b3)*(arctan(sqrt(Npk3/a_norm/b3/b3)*(X - wpk3)) 
++ + arctan(sqrt(Npk3/a_norm/b3/b3)*wpk3 ))}
+.FUNC QTOT(X) {N1(X) + N2(X) + N31(X)+ N32(X)+ N33(X)}
+.FUNC QTOT1(X,Y) {N11(X,Y) + N2(X) + N31(X)+ N32(X)+ N33(X)}
+.FUNC EFLD(X) {MAX(QTOT(X)/epsi/eps0,0)}
+.FUNC EFLD1(X,Y) {MAX(QTOT1(X,Y)/epsi/eps0,0)}
+.FUNC EVS(EX,T) {1.5*up*(((T + t0)/300)**-1.5)*EX*(1 + EX/Ecp)}
+.FUNC TAU_X(T) {TX1*((T+t0)/300)**{ETX1}}
+.FUNC EG(T) {1.16 - 7.02e-4*(T + t0)**2/(T + t0 + 1108)}
+.FUNC ni(T) {((T+t0)/300)**1.5*exp(1/(2*8.61e-5)*(-300*EG(T)+(t0+T)*EG(27))/(T+t0)/300)}
+.FUNC DA(T) {2*kb*un*up/q/(un + up)*(T + t0)*(((T + t0)/300)**-1.5)}
+.FUNC LA(T) {sqrt(DA(T) * TAU_X(T)) }
+.FUNC a0(T) {-0.75*tanh(0.5*wpk3/LA(T))}
+.FUNC a1(T) {(up/un)*(1 + a0(T))/(1 - a0(T))}
+.FUNC a2(T) {0.1/((1 - 0.5*(1 - a1(T)*a1(T))*(1 - a0(T))) )}
+.FUNC ISE(T) {LIMIT((ni0*kb)*(T + t0)*un*(((T + t0)/300)**-1.5)*(ni0*ise_g)*ni(T)*ni(T),-1e12,1e12)}
+.FUNC ISM(T) {LIMIT((ni0*Ism_g)*ni(T)*sqrt(DA(T)/Tau_X(T)),-1e12,1e12)}
+.FUNC ATX1(X,Y) {LIMIT(0.5*X*X*((q*Nd/eps0/epsi) +Y/eps0/epsi ),-1e12,1e12)} 
+.FUNC ATX2(X) {LIMIT(q*Loffs**2*NX0*( exp( -wb/Loffs) - (Loffs-X)/Loffs*exp(-(wb-X)/Loffs))/eps0/epsi,-1e12,1e12)}
+.FUNC ATX1abl(X,Y) {LIMIT(X*((q*Nd/eps0/epsi) + MAX(Y,0)/eps0/epsi ),-1e12,1e12)} 
+.FUNC ATX2abl(X) {LIMIT(q*NX0*X/eps0/epsi*exp(-(wb-X)/Loffs),-1e12,1e12)}
+.FUNC ATX31(X) {LIMIT((q*0.5*a_norm*b1*b1)*(2*ARCTAN((X-wpk1)*sqrt((Npk1/a_norm/b1/b1)))*sqrt(Npk1*wpk1*wpk1/a_norm/b1/b1) 
++ +2*ARCTAN(sqrt(((wpk1)**2)*(Npk1/a_norm/b1/b1)))*sqrt(Npk1*wpk1*wpk1/a_norm/b1/b1) 
++ + log(((a_norm/Npk1)*b1*b1+(X-wpk1)**2)/((a_norm/Npk1)*b1*b1+(wpk1)**2)))/eps0/epsi,-1e12,1e12)} 
+.FUNC ATX32(X) {LIMIT((q*0.5*a_norm*b2*b2)*(2*ARCTAN((X-wpk2)*sqrt((Npk2/a_norm/b2/b2)))*sqrt(Npk2*wpk2*wpk2/a_norm/b2/b2) 
++ +2*ARCTAN(sqrt(((wpk2)**2)*(Npk2/a_norm/b2/b2)))*sqrt(Npk2*wpk2*wpk2/a_norm/b2/b2) 
++ + log(((a_norm/Npk2)*b2*b2+(X-wpk2)**2)/((a_norm/Npk2)*b2*b2+(wpk2)**2)))/eps0/epsi,-1e12,1e12)} 
+.FUNC ATX33(X) {LIMIT((q*0.5*a_norm*b3*b3)*(2*ARCTAN((X-wpk3)*sqrt((Npk3/a_norm/b3/b3)))*sqrt(Npk3*wpk3*wpk3/a_norm/b3/b3) 
++ +2*ARCTAN(sqrt(((wpk3)**2)*(Npk3/a_norm/b3/b3)))*sqrt(Npk3*wpk3*wpk3/a_norm/b3/b3) 
++ + log(((a_norm/Npk3)*b3*b3+(X-wpk3)**2)/((a_norm/Npk3)*b3*b3+(wpk3)**2)))/eps0/epsi,-1e12,1e12)} 
+.FUNC ATX31_abl(X) {LIMIT(q/eps0/epsi*Npk1*X/(1 + Npk1/a_norm/b1/b1*(X-wpk1)**2),-1e12,1e12)}
+.FUNC ATX32_abl(X) {LIMIT(q/eps0/epsi*Npk2*X/(1 + Npk2/a_norm/b2/b2*(X-wpk2)**2),-1e12,1e12)}
+.FUNC ATX33_abl(X) {LIMIT(q/eps0/epsi*Npk3*X/(1 + Npk3/a_norm/b3/b3*(X-wpk3)**2),-1e12,1e12)}
+.FUNC V0(X,Y) {LIMIT(ATX1(X,Y),-1e12,1e12)}
+.FUNC V1(X) {LIMIT(ATX2(X) + ATX31(X) + ATX32(X)+ ATX33(X),-1e12,1e12)}
+.FUNC VS(X,Y) {LIMIT(V0(X,Y) + V1(X),-1e12,1e12)}
+.FUNC VSabl(X,Y) {LIMIT(ATX1abl(X,Y) + ATX2abl(X) + ATX31_abl(X) + ATX32_abl(X) + ATX33_abl(X),-1e12,1e12)}
+.FUNC xj(V,Y,X) {LIMIT((V - VS(X,Y)+ X*VSabl(X,Y))/MAX(VSabl(X,Y),1n),.01m,.1 )}
+.FUNC w(T,V) {MAX(wb - V*(1 + a1(T)),.1m)}
+.FUNC Rd(Z,T) {wb*wb/(un*QN*(((T + t0)/300)**-1.5) + (un + up)*MAX(Z,0)*1e-6*(((T + t0)/300)**-1.5))}
+.FUNC Td(U,V,T) {LIMIT(a2(T)*w(T,V)*w(T,V)/DA(T)/(1 + w(T,V)*1e6*MAX(U,0)/4/DA(T)),-1e6,1e6)}
+.FUNC IQ(V,Y,Z,U,T) {(Tau_X(T)*MAX(Y,0) - 1e-6*MAX(Z,0))/MAX(Td(U,V,T),10p)}
+.ENDS
+*$
+****************************************************************
+.SUBCKT D_diff_H5 in out  PARAMS: Cdiff = 1u t_au = .1n Rfb = 10
+Cx in inr  {Cdiff/Rfb} IC = 0
+Rx inr neg {t_au*Rfb/Cdiff}
+Rref sig neg {Rfb}
+Cref sig neg {t_au/Rfb} IC = 0
+E_OPV sig 0 VALUE = {-V(neg)*1meg}
+E_OUT out 0 VALUE = {if(time >0,-V(sig),0)}
+.ENDS
+**************************************************************************************************************
