@@ -193,6 +193,27 @@ def energyInAllBands(xf, yf):
 
     return energy
 
+# Returns a 2d array with every row in the format: [flo fhi sum numofpoints]. 
+# From 1Hz to 400MHz (temporarily from 100Hz)
+# Used on rawfile
+def energyFromFile(filename: str, *variables:str):
+    [time, data] = readVariables(filename, *variables)
+    uniVariables = {}
+    uniTime: Any
+    for index, var in enumerate(variables):
+        [uniTime, uniData] = uniformResample(time,data[index],10**(-9))
+        uniVariables[var] = uniData
+    
+    N = len(uniTime)
+    tf = fftfreq(N, uniTime[1]-uniTime[0])[0:N//2]
+
+    energies = {}
+    for var in variables:
+        yf = 2.0/N * np.abs(fft(uniVariables[var])[0:N//2])
+        energies[var] = energyInAllBands(tf,yf)
+    return energies
+    
+
 def saveSim(filename: str, modules: list, simParams: dict, results: dict):
     """ Sparar ned simuleringens parametrar till en JSON-fil, lägger till simuleringen om filen redan existerar """
 

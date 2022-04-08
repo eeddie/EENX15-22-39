@@ -45,7 +45,7 @@ Xbattery BatPos BatNeg BatCase BatteryModule
 VDC_P BatFiltPos BatPos 0 
 VDC_N BatFiltNeg BatNeg 0
 
-Xbatfilt BatPos BatNeg InvPos InvNeg DCFilterModule
+Xbatfilt BatFiltPos BatFiltNeg InvPos InvNeg DCFilterModule
 
 Xinverter InvPos InvNeg InvA InvB InvC InvCase InverterModule
 
@@ -72,9 +72,13 @@ XloadGnd LoadCase 0 LoadGroundModule
 .options gmin=1e-10    ;        "Minimum conductance"
 .options cshunt=1e-15  ;        "Capacitance added from each node to ground"
 
-.options savecurrents
+*.options savecurrents
 
-.save i(l.xload.l1)
+.save i(VAC_A)
+.save i(VAC_B)
+.save i(VAC_C)
+.save i(VDC_P)
+.save i(VDC_N)
 
 .save i(l.xbatgnd.c1)
 .save i(l.xinvgnd.c1)
