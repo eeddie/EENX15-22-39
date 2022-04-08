@@ -12,11 +12,6 @@ import sys
 sys.path.append('./Modular/')
 from Functions import *
 
-# def multiprocessTest():
-#     with multiprocessing.Pool(processes=multiprocessing.cpu_count()) as pool:
-#         func_arg_tuple = tuple((param1, param2, ratio) for ratio in np.arange(0.3, 1.4, 0.1))
-#         results = pool.starmap(data_generation, func_arg_tuple)
-
 
 def runIGBTSim(
     R_Gate = 1.0,
@@ -55,11 +50,6 @@ X1 Drain Gate 0 {IGBTType}
 
     batchNetlist(netlist, filePath)
     return filePath + ".raw"
-
-def runparallellSims():
-    with multiprocessing.Pool(processes=multiprocessing.cpu_count()) as pool:
-        func_arg_tuple = tuple((param1, param2, ratio) for ratio in np.arange(0.3, 1.4, 0.1))
-        return pool.starmap(data_generation, func_arg_tuple)
 
 def compareGateDrainSource():
     """ Plottar frekvens- och tidsdomän för gate-spänning och drain-source-ström för en krets """
