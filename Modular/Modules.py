@@ -79,7 +79,7 @@ class MosfetModule(Module):
         return f""".subckt {self.name} Drain Gate Source
 M1 Drain Gate Source Source {self.params["MOSType"]}
 .ends {self.name}
-.lib /Modular/libs/MOS.lib"""
+.lib /Modular/libs/MOSFET/MOS.lib"""
 
 
 class IGBTModule(Module):
