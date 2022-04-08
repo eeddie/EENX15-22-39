@@ -109,7 +109,7 @@ def energyInFrequencyBand(data: list, lower: float, upper: float, fs=10**9):
     return sp.trapz(Pxx[ind_min: ind_max], f[ind_min: ind_max])
 
 # Finds the frequency closest to a specified frequency, in a sorted np array of frequencies
-def find_nearest_freqency(array,value):
+def find_nearest_frequency(array,value):
     index = np.searchsorted(array, value, side="left")
     if index > 0 and (index == len(array) or math.fabs(value - array[index-1]) < math.fabs(value - array[index])):
         return index - 1
@@ -146,23 +146,51 @@ def energy_in_interesting_frequencies(xf, yf):
 
     energy=[]
     for freq in lowFrequencies:
-        lower = find_nearest_freqency(array=xf, value=freq)
+        lower = find_nearest_frequency(array=xf, value=freq)
         hfreq = startHighFreq
         if freq + LFbw < startHighFreq:
             hfreq = freq + LFbw
-        upper=find_nearest_freqency(array=xf, value=hfreq)
+        upper=find_nearest_frequency(array=xf, value=hfreq)
         numOfPoints = upper - lower + 1
         bandEnergy = sum_energy(yf=yf, lower=lower, upper=upper)
         energy.append([freq, hfreq, bandEnergy, numOfPoints])
     
     for freq in highFrequencies:
-        lower = find_nearest_freqency(array=xf, value=freq)
+        lower = find_nearest_frequency(array=xf, value=freq)
         hfreq = freq + HFbw
-        upper=find_nearest_freqency(array=xf, value=hfreq)
+        upper=find_nearest_frequency(array=xf, value=hfreq)
         numOfPoints = upper - lower + 1
         bandEnergy = sum_energy(yf=yf, lower=lower, upper=upper)
         energy.append([freq, hfreq, bandEnergy, numOfPoints])
     
+    return energy
+
+
+# Returns a 2d array with every row in the format: [flo fhi sum numofpoints]. 
+# From 1Hz to 400MHz (temporarily from 100Hz)
+def energyInAllBands(xf, yf):
+    limits = [1, 10, 100, 10000, 150000, 30000000, 400000000]
+    bandwidths = [10**p for p in range(6)]
+    frequencies = []
+    for i in range(2,len(limits)-1):
+        for j in range(limits[i],limits[i+1],bandwidths[i]):
+            frequencies.append(j)
+    frequencies.append(limits[-1])
+    
+    energy=[]
+    for index, startFreq in enumerate(frequencies):
+        if startFreq == frequencies[-1]:
+            break
+        endFreq = frequencies[index + 1]
+
+        lo = find_nearest_frequency(array=xf, value=startFreq)
+        hi = find_nearest_frequency(array=xf, value=endFreq)
+        numOfPoints = hi - lo + 1
+
+        bandEnergy = sum_energy(yf=yf, lower=lo, upper=hi)
+
+        energy.append([startFreq, endFreq, bandEnergy, numOfPoints])
+
     return energy
 
 def saveSim(filename: str, modules: list, simParams: dict, results: dict):
