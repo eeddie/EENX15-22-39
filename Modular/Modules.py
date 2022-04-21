@@ -15,8 +15,6 @@ class Module:
     def getNetlist(self): ""
 
 
-
-
 class InverterControlModule(Module):
     
     def __init__(self,
@@ -48,18 +46,12 @@ BE_PWM_A_n  PWM_A_n 0 V= 15*tanh({self.params["Gain"]}*(V(Ph_A)+{self.params["Ov
 BE_PWM_B_n  PWM_B_n 0 V= 15*tanh({self.params["Gain"]}*(V(Ph_B)+{self.params["OverlapProtection"]}-V(Triangle)))
 BE_PWM_C_n  PWM_C_n 0 V= 15*tanh({self.params["Gain"]}*(V(Ph_C)+{self.params["OverlapProtection"]}-V(Triangle)))
 BTri Triangle 0 V= (2/Pi)*asin(sin(2*Pi*{self.params["Fs"]}*Time))
-EDr1 N001 E1 PWM_A 0 1
-EDr3 N003 E3 PWM_B 0 1
-EDr5 N005 E5 PWM_C 0 1
-EDr2 N002 E2 0 PWM_A_n 1
-EDr4 N004 E4 0 PWM_B_n 1
-EDr6 N006 E6 0 PWM_C_n 1
-Rg1 N001 G1 {self.params["Rg"]}
-Rg2 N002 G2 {self.params["Rg"]}
-Rg3 N003 G3 {self.params["Rg"]}
-Rg4 N004 G4 {self.params["Rg"]}
-Rg5 N005 G5 {self.params["Rg"]}
-Rg6 N006 G6 {self.params["Rg"]}
+EDr1 G1 E1 PWM_A 0 1
+EDr3 G3 E3 PWM_B 0 1
+EDr5 G5 E5 PWM_C 0 1
+EDr2 G2 E2 0 PWM_A_n 1
+EDr4 G4 E4 0 PWM_B_n 1
+EDr6 G6 E6 0 PWM_C_n 1
 E1 Frq 0 Freq 0 1
 E2 M 0 Mod 0 1
 .ends {self.name}"""
@@ -72,6 +64,8 @@ class MosfetModule(Module):
         name = "MOSFETModule",
         MOSType = "IPI200N25N3"
         ):
+
+        return NotImplementedError("MOSFETModule gate resistance was previously implemented in InverterControlModule but is removed and should be implemented in MOSFETModule before use.")
         self.name = name
         self.params = {"MOSType": MOSType}
 
@@ -89,6 +83,7 @@ class IGBTModule(Module):
         IGBTType = "rgw00ts65chr"
         ):
         
+        return NotImplementedError("IGBTModule gate resistance was previously implemented in InverterControlModule but is removed and should be implemented in IGBTModule before use.")
         self.name = name
         self.params = {"IGBTType": IGBTType}
 
@@ -100,15 +95,30 @@ X1 Collector Gate Emitter {self.params["IGBTType"]}
 .lib /Modular/libs/IGBT/{self.params["IGBTType"]}.lib"""
 
 
+class SwitchModule(Module):
+        
+        def __init__(self,
+            name = "SwitchModule",
+            v_t = "0",
+            r_on = "20m",
+            r_off= "130k"):
+
+            self.name = name
+            self.params = {"v_t": v_t, "r_on": r_on, "r_off": r_off}
+    
+        def getNetlist(self):
+            return f""".subckt {self.name} Source Gate Drain
+            S1 Drain Source Gate Drain swmod
+            .model swmod sw vt={self.params["v_t"]} ron={self.params["r_on"]} roff={self.params["r_off"]}
+            .ends {self.name}"""
+
 class InverterModule(Module):
 
-    invConModName = "InverterControlModule"
-    tranModName = "MOSFETModule"
     
     def __init__(self,
         name = "InverterModule",
         invConModName = "InverterControlModule",    # Inverter controller module name
-        tranModName = "MOSFETModule",               # Transistor subcircuit name
+        tranModName = "SwitchModule",               # Transistor subcircuit name
         Mod = 1,
         Freq = 100,
         ParCapA = 1.4*(10**-12),       # Parasiterande kapacitans fas A till hölje. 
@@ -119,11 +129,11 @@ class InverterModule(Module):
         ):
         
         self.name = name
-        self.invConModName = invConModName
-        self.tranModName = tranModName
         self.params = {
             "Mod": Mod, 
             "Freq": Freq,
+            "InvConModName": invConModName,
+            "TranModName": tranModName,
             "ParCapA": ParCapA,       
             "ParCapB": ParCapB,       
             "ParCapC": ParCapC,       
@@ -134,13 +144,13 @@ class InverterModule(Module):
     def getNetlist(self) -> str: return f""".subckt {self.name} Pos Neg A B C Case
 V_mod N005 0 {self.params["Mod"]}
 V_freq N003 0 {self.params["Freq"]}
-X1 Pos G1 A {self.tranModName}
-X2 A G2 Neg {self.tranModName}
-X3 Pos G3 B {self.tranModName}
-X4 B G4 Neg {self.tranModName}
-X5 Pos G5 C {self.tranModName}
-X6 C G6 Neg {self.tranModName}
-XPWM1 N003 N005 A Neg B Neg C Neg G1 G2 G3 G4 G5 G6 {self.invConModName}
+X1 Pos G1 A {self.params["TranModName"]}
+X2 A G2 Neg {self.params["TranModName"]}
+X3 Pos G3 B {self.params["TranModName"]}
+X4 B G4 Neg {self.params["TranModName"]}
+X5 Pos G5 C {self.params["TranModName"]}
+X6 C G6 Neg {self.params["TranModName"]}
+XPWM1 N003 N005 A Neg B Neg C Neg G1 G2 G3 G4 G5 G6 {self.params["InvConModName"]}
 C1 A Case {self.params["ParCapA"]}
 C2 B Case {self.params["ParCapB"]}
 C3 C Case {self.params["ParCapC"]}

@@ -79,9 +79,9 @@ def repairRaw(*filenames: str):
         # Open the file as binary
         with open(filename, "rb") as f:
             # Split the data into ascii header and binary data 
-            header, data = f.read().split(b'\0',1)
+            header, data = f.read().split(bytearray("Binary:", "utf-8"),1)
             # Convert the header to a string
-            header = header.decode('utf-8')
+            header = header.decode('utf-8') + "Binary:"
             
             # Check if the header contains a line "Variables:"
             if "\nVariables:" not in header:
@@ -91,7 +91,6 @@ def repairRaw(*filenames: str):
             # Write the header and data to the file
             with open(filename, "wb") as f:
                 f.write(header.encode('utf-8'))
-                f.write(b'\0')
                 f.write(data)
                 
 
@@ -124,7 +123,7 @@ def plotFourierFromVector(time: list, data: list, label="", formatString="-", al
     plt.grid()
 
 def plotFourierFromFile(filename: str, variableName: str, label="", formatString="-", alpha=0.5, linewidth=0.5, resampleTime=1*10**-9):
-    """ Plotta fourier för en variabel från en och samma raw-fil i den aktiva ploten  """
+    """ Plotta fourier för en variabel från en och samma raw-fil i den aktiva ploten"""
     
     raw = Ltspice(filename)
     raw._x_dtype = np.float64
@@ -238,7 +237,7 @@ def energyInAllBands(xf, *yf):
 def energyFromFile(filename: str, *variables:str):
     [time, data] = readVariables(filename, *variables)
     uniVariables = {}
-    uniTime: Any
+    uniTime = None
     for index, var in enumerate(variables):
         [uniTime, uniData] = uniformResample(time,data[index],10**(-9))
         uniVariables[var] = uniData
