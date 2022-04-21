@@ -31,6 +31,7 @@ def batchNetlist(netlist: str, name = 'tmp', log=False, removeNetlist=True):
         netlist_file.close()
         os.system(f'ngspice_con.exe -b -r {name}.raw {"-o " + name + ".log" if log else ""} {name}.net')   # NOTE: Lägg till mappen med ngspice i systemvariablerna istället så slipper vi byta
         if removeNetlist: os.remove(f"{name}.net")
+        repairRaw(f"{name}.raw")
 
 
 def uniformResample(time: list, values: list, timeStep=10**-9, interpKind="cubic"):
@@ -41,6 +42,17 @@ def uniformResample(time: list, values: list, timeStep=10**-9, interpKind="cubic
     uniVal = f(uniTime)                                         # Fill the array uniVal with interpolated numbers for all the evenly spaced timesteps
 
     return [uniTime, uniVal]
+
+# A function which returns the vectors in the specified window from xMin to xMax
+def window(time: list, *values: list, xMin, xMax):
+    """ Kortar ner de angivna vektorerna inom xMin och xMax """
+
+    # Find the index in time which is closest to xMin
+    xMinIndex = np.argmin(np.abs(time - xMin)) - 1
+    # Find the index in time which is the closest to xMax plus one
+    xMaxIndex = np.argmin(np.abs(time - xMax)) + 1
+
+    return [time[xMinIndex:xMaxIndex], [value[xMinIndex:xMaxIndex] for value in values]]
 
 
 def readVariables(filename: str, *variables: str):
@@ -58,6 +70,30 @@ def readVariables(filename: str, *variables: str):
     
     return [time, data]
 
+
+def repairRaw(*filenames: str):
+    """ Reparera en raw-fil """
+
+    for filename in filenames:
+
+        # Open the file as binary
+        with open(filename, "rb") as f:
+            # Split the data into ascii header and binary data 
+            header, data = f.read().split(b'\0',1)
+            # Convert the header to a string
+            header = header.decode('utf-8')
+            
+            # Check if the header contains a line "Variables:"
+            if "\nVariables:" not in header:
+                # Find the line in the header which ends with "Variables:" and add a newline before "Variables:"
+                header = header.replace("Variables:", "\nVariables:").replace("\nVariables:", "Variables:", 1)
+
+            # Write the header and data to the file
+            with open(filename, "wb") as f:
+                f.write(header.encode('utf-8'))
+                f.write(b'\0')
+                f.write(data)
+                
 
 def plotTimeDiff(filename: str):
     """ Plotta storleken på tidsstegen över tid i den aktiva plotten """
