@@ -152,7 +152,7 @@ def find_nearest_frequency(array,value):
     else:
         return index
 
-# Sums the 'energy' in a frequency band. Needs arrays of frequencies and associated frequency response.    
+# Sums the 'energy' in a frequency band. Needs indices of first and last frequency in a band, and vector containing the absolute values of an FFT
 def sum_energy(yf, lower, upper):
     energy = 0
     for i in range(lower, upper + 1):
@@ -160,6 +160,7 @@ def sum_energy(yf, lower, upper):
     return energy
 
 # Returns a 2d array with every row in the format: [flo fhi sum numofpoints].
+# Deprecated
 def energy_in_interesting_frequencies(xf, yf):
     startLowFreq = 100*10**3
     startHighFreq = 30*10**6
@@ -202,13 +203,15 @@ def energy_in_interesting_frequencies(xf, yf):
     return energy
 
 
-# Returns a 2d array with every row in the format: [flo fhi sum numofpoints]. 
-# From 1Hz to 400MHz (temporarily from 100Hz)
-def energyInAllBands(xf, yf):
-    limits = [1, 10, 100, 10000, 150000, 30000000, 400000000]
-    bandwidths = [10**p for p in range(6)]
+# Returns a 2d array with every row in the format: [flo fhi numofpoints *sums] where sums is the sum for several variables
+# From 100Hz to 400MHz
+# xf is a vector with the frequencies for one or more FFTs
+# *yf is a tuple of vectors containing the absolute values of an FFT
+def energyInAllBands(xf, *yf):
+    limits = [0, 10000, 150000, 30000000, 400000000]
+    bandwidths = [100*10**p for p in range(5)]
     frequencies = []
-    for i in range(2,len(limits)-1):
+    for i in range(len(limits)-1):
         for j in range(limits[i],limits[i+1],bandwidths[i]):
             frequencies.append(j)
     frequencies.append(limits[-1])
@@ -223,14 +226,14 @@ def energyInAllBands(xf, yf):
         hi = find_nearest_frequency(array=xf, value=endFreq)
         numOfPoints = hi - lo + 1
 
-        bandEnergy = sum_energy(yf=yf, lower=lo, upper=hi)
+        bandEnergy = [sum_energy(yf=entry, lower=lo, upper=hi) for entry in yf]
 
-        energy.append([startFreq, endFreq, bandEnergy, numOfPoints])
+        energy.append([startFreq, endFreq, numOfPoints, *bandEnergy])
 
     return energy
 
 # Returns a 2d array with every row in the format: [flo fhi sum numofpoints]. 
-# From 1Hz to 400MHz (temporarily from 100Hz)
+# From 100Hz to 400MHz
 # Used on rawfile
 def energyFromFile(filename: str, *variables:str):
     [time, data] = readVariables(filename, *variables)
@@ -242,13 +245,9 @@ def energyFromFile(filename: str, *variables:str):
     
     N = len(uniTime)
     tf = fftfreq(N, uniTime[1]-uniTime[0])[0:N//2]
+    yfs = [2.0/N * np.abs(fft(uniVariables[var])[0:N//2]) for var in variables]
 
-    energies = {}
-    for var in variables:
-        yf = 2.0/N * np.abs(fft(uniVariables[var])[0:N//2])
-        energies[var] = energyInAllBands(tf,yf)
-    return energies
-    
+    return energyInAllBands(tf, *yfs)
 
 def saveSim(filename: str, modules: list, simParams: dict, results: dict):
     """ Sparar ned simuleringens parametrar till en JSON-fil, lägger till simuleringen om filen redan existerar """
