@@ -234,7 +234,7 @@ def energyInAllBands(xf, yf):
 def energyFromFile(filename: str, *variables:str):
     [time, data] = readVariables(filename, *variables)
     uniVariables = {}
-    uniTime
+    uniTime = None
     for index, var in enumerate(variables):
         [uniTime, uniData] = uniformResample(time,data[index],10**(-9))
         uniVariables[var] = uniData
