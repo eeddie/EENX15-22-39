@@ -223,7 +223,7 @@ def energyInAllBands(xf, *yf):
         endFreq = frequencies[index + 1]
 
         lo = find_nearest_frequency(array=xf, value=startFreq)
-        hi = find_nearest_frequency(array=xf, value=endFreq)
+        hi = find_nearest_frequency(array=xf, value=endFreq) - 1
         numOfPoints = hi - lo + 1
 
         bandEnergy = [sum_energy(yf=entry, lower=lo, upper=hi) for entry in yf]
