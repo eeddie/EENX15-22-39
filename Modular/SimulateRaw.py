@@ -3,13 +3,9 @@
 #
 #   Innehåller en main-funktion för simulering av drivlinan
 #
-
-import os
 from Modules import *
 from Functions import *
-import random as r
-from multiprocessing import Process, cpu_count
-
+import inspect, sys, random as r
 
 def createNetlist(modules, simParams):
     return f""".title drivlina
@@ -63,59 +59,77 @@ def rand(start: float, slut: float):
     return start + r.random() * (slut - start)
 
 
-import sys
-
-
 def percentDiff(percent: float):
     return rand(1 - percent, 1 + percent)
 
 
+def get_default_args(func):
+    signature = inspect.signature(func)
+    return {
+        k: v.default
+        for k, v in signature.parameters.items()
+        if v.default is not inspect.Parameter.empty
+    }
+
+
 if __name__ == "__main__":
-    inverterControlModuleGain = percentDiff(0.1) * 1000
-    inverterControlModuleFs = percentDiff(0.1) * 1000
 
-    inverterModuleMod = percentDiff(0.1) * 1
-    inverterModuleFreq = percentDiff(0.1) * 100
-    inverterModuleParCapA = percentDiff(0.10) * (1.4 * (10 ** -12))
-    inverterModuleParCapB = percentDiff(0.10) * (2.0 * (10 ** -12))
-    inverterModuleParCapC = percentDiff(0.10) * (0.7 * (10 ** -12))
-    inverterModuleParCapP = percentDiff(0.10) * (1.1 * (10 ** -12))
-    inverterModuleParCapN = percentDiff(0.10) * (2.0 * (10 ** -12))
+    inverterControlModule = get_default_args(InverterControlModule)
+    inverterModule = get_default_args(InverterModule)
+    staticLoadModule = get_default_args(StaticLoadModule)
+    simpleBatteryModule = get_default_args(SimpleBatteryModule)
+    xCapModule = get_default_args(XCapModule)
+    dCCommonModeChokeModule = get_default_args(DCCommonModeChokeModule)
+    aCCommonModeChokeModule = get_default_args(ACCommonModeChokeModule)
+    loadGroundModule = get_default_args(LoadGroundModule)
+    inverterGroundModule = get_default_args(InverterGroundModule)
+    batteryGroundModule = get_default_args(BatteryGroundModule)
 
-    staticLoadModuleR_load = percentDiff(0.10) * 1.09
-    staticLoadModuleL_load = percentDiff(0.10) * 20 * (10 ** -3)
-    staticLoadModuleParCapA = percentDiff(0.10) * 12 * (10 ** -12)
-    staticLoadModuleParCapB = percentDiff(0.10) * 15 * (10 ** -12)
-    staticLoadModuleParCapC = percentDiff(0.10) * 18 * (10 ** -12)
-    staticLoadModuleParCapN = percentDiff(0.10) * 55 * (10 ** -12)
+    inverterControlModuleGain = percentDiff(0.1) * inverterControlModule["Gain"]
+    inverterControlModuleFs = percentDiff(0.1) * inverterControlModule["Fs"]
 
-    simpleBatteryModuleR_self = percentDiff(0.10) * 0.1
-    simpleBatteryModuleL_self = percentDiff(0.10) * 500 * (10 ** -9)
-    simpleBatteryModuleParCapP = percentDiff(0.10) * 52 * (10 ** -12)
-    simpleBatteryModuleParCapN = percentDiff(0.10) * 48 * (10 ** -12)
+    inverterModuleMod = percentDiff(0.1) * inverterModule["Mod"]
+    inverterModuleFreq = percentDiff(0.1) * inverterModule["Freq"]
+    inverterModuleParCapA = percentDiff(0.10) * inverterModule["ParCapA"]
+    inverterModuleParCapB = percentDiff(0.10) * inverterModule["ParCapB"]
+    inverterModuleParCapC = percentDiff(0.10) * inverterModule["ParCapC"]
+    inverterModuleParCapP = percentDiff(0.10) * inverterModule["ParCapP"]
+    inverterModuleParCapN = percentDiff(0.10) * inverterModule["ParCapN"]
 
-    xCapModuleC_self = percentDiff(0.10) * 500 * 10 ** -6
-    xCapModuleR_self = percentDiff(0.10) * 1.9 * 10 ** -3
+    staticLoadModuleR_load = percentDiff(0.10) * staticLoadModule["R_load"]
+    staticLoadModuleL_load = percentDiff(0.10) * staticLoadModule["L_load"]
+    staticLoadModuleParCapA = percentDiff(0.10) * staticLoadModule["ParCapA"]
+    staticLoadModuleParCapB = percentDiff(0.10) * staticLoadModule["ParCapB"]
+    staticLoadModuleParCapC = percentDiff(0.10) * staticLoadModule["ParCapC"]
+    staticLoadModuleParCapN = percentDiff(0.10) * staticLoadModule["ParCapN"]
 
-    dCCommonModeChokeModuleR_ser = percentDiff(0.10) * 20 * 10 ** -3
-    dCCommonModeChokeModuleL_choke = percentDiff(0.10) * 51 * 10 ** -3
-    dCCommonModeChokeModuleCoupling = percentDiff(0.10) * 0.95
+    simpleBatteryModuleR_self = percentDiff(0.10) * simpleBatteryModule["R_self"]
+    simpleBatteryModuleL_self = percentDiff(0.10) * simpleBatteryModule["L_self"]
+    simpleBatteryModuleParCapP = percentDiff(0.10) * simpleBatteryModule["ParCapP"]
+    simpleBatteryModuleParCapN = percentDiff(0.10) * simpleBatteryModule["ParCapN"]
 
-    aCCommonModeChokeModuleR_ser = percentDiff(0.10) * 0.02
-    aCCommonModeChokeModuleL_choke = percentDiff(0.10) * 51 * (10 ** -3)
-    aCCommonModeChokeModuleCoupling = percentDiff(0.10) * 0.95
+    xCapModuleC_self = percentDiff(0.10) * xCapModule["C_self"]
+    xCapModuleR_self = percentDiff(0.10) * xCapModule["R_self"]
 
-    loadGroundModuleR = percentDiff(0.10) * 1.59 * (10 ** (-3))
-    loadGroundModuleC = percentDiff(0.10) * 8.96 * (10 ** (-9))
-    loadGroundModuleL = percentDiff(0.10) * 800.0 * (10 ** (-9))
+    dCCommonModeChokeModuleR_ser = percentDiff(0.10) * dCCommonModeChokeModule["R_ser"]
+    dCCommonModeChokeModuleL_choke = percentDiff(0.10) * dCCommonModeChokeModule["L_choke"]
+    dCCommonModeChokeModuleCoupling = percentDiff(0.10) * dCCommonModeChokeModule["Coupling"]
 
-    inverterGroundModuleR = percentDiff(0.10) * 1.59 * (10 ** (-3))
-    inverterGroundModuleC = percentDiff(0.10) * 4.48 * (10 ** (-9))
-    inverterGroundModuleL = percentDiff(0.10) * 400.0 * (10 ** (-9))
+    aCCommonModeChokeModuleR_ser = percentDiff(0.10) * aCCommonModeChokeModule["R_ser"]
+    aCCommonModeChokeModuleL_choke = percentDiff(0.10) * aCCommonModeChokeModule["L_choke"]
+    aCCommonModeChokeModuleCoupling = percentDiff(0.10) * aCCommonModeChokeModule["Coupling"]
 
-    batteryGroundModuleR = percentDiff(0.10) * 1.59 * (10 ** (-3))
-    batteryGroundModuleC = percentDiff(0.10) * 3.36 * (10 ** (-9))
-    batteryGroundModuleL = percentDiff(0.10) * 300.0 * (10 ** (-9))
+    loadGroundModuleR = percentDiff(0.10) * loadGroundModule["R"]
+    loadGroundModuleC = percentDiff(0.10) * loadGroundModule["C"]
+    loadGroundModuleL = percentDiff(0.10) * loadGroundModule["L"]
+
+    inverterGroundModuleR = percentDiff(0.10) * inverterGroundModule["R"]
+    inverterGroundModuleC = percentDiff(0.10) * inverterGroundModule["C"]
+    inverterGroundModuleL = percentDiff(0.10) * inverterGroundModule["L"]
+
+    batteryGroundModuleR = percentDiff(0.10) * batteryGroundModule["R"]
+    batteryGroundModuleC = percentDiff(0.10) * batteryGroundModule["C"]
+    batteryGroundModuleL = percentDiff(0.10) * batteryGroundModule["L"]
 
     modules = [
         InverterControlModule(Gain=inverterControlModuleGain, Fs=inverterControlModuleFs),
