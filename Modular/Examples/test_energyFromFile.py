@@ -4,9 +4,9 @@ sys.path.append('./Modular/')
 from Modules import *
 from Functions import *
 def test_energyFromFile():
-    energies = energyFromFile("test.raw","i(vac_a)", "i(vac_b)", "i(vdc_p)")
+    variables = ["i(vac_a)", "i(vac_b)", "i(vdc_p)"]
+    energies = energyFromFile("test.raw", *variables)
     # [time, data] = readVariables("test.raw","i(vac_a)", "i(vac_b)", "i(vdc_p)")
-    phaseEnergy = energies["i(vac_a)"]
     freq = [row[0] for row in phaseEnergy]
     value = [row[2]/row[3] for row in phaseEnergy]
     plt.plot(freq,value,'-', linewidth=1,alpha=0.5, label="i(phA) avg:d")
