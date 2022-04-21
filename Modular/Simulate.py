@@ -17,7 +17,7 @@ if __name__ == "__main__":
     # Vill man seriekoppla XCap och CMC får man sätta in unika namn för de två modulerna i denna listan, ha dem båda i listan nedan och ändra netlistan för drivlinan med de två nya namnen.
     modules = [
         InverterControlModule(),
-        MosfetModule(),
+        SwitchModule(),
         InverterModule(),
         InverterGroundModule(),
         StaticLoadModule(),
@@ -66,11 +66,11 @@ XloadGnd LoadCase 0 LoadGroundModule
 .ic v(InvA)=0 v(InvB)=0 v(InvC)=0
 .option method={simParams["method"]}
 
-.options reltol=1e-3   ; > 1ms  "Never larger than 0.003!"
-.options abstol=10e-9  ; > 10ns
-.options itl4=30       ; > 30
-.options gmin=1e-10    ;        "Minimum conductance"
-.options cshunt=1e-15  ;        "Capacitance added from each node to ground"
+*.options reltol=1e-3   ; > 1ms  "Never larger than 0.003!"
+*.options abstol=10e-9  ; > 10ns
+*.options itl4=30       ; > 30
+*.options gmin=1e-10    ;        "Minimum conductance"
+*.options cshunt=1e-15  ;        "Capacitance added from each node to ground"
 
 *.options savecurrents
 
