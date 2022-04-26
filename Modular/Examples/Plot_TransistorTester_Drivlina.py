@@ -2,7 +2,7 @@
 # Plot_TransistorTester_Drivlina.py
 #
 # Skapar fyra plots som används i rapporten för transistortesterna i drivlinan
-# Kräver tre färdiga drivline-simuleringar: "Strömbrytare.raw", "Inbyggd MOSFET.raw", "Subcircuit MOSFET.raw"
+# Kräver tre färdiga drivline-simuleringar: "Strömbrytare.raw", "Inb. MOSFET.raw", "Sub. MOSFET.raw"
 # 
 
 
