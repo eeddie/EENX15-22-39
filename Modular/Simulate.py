@@ -9,12 +9,8 @@ from Modules import *
 from Functions import *
 
 
-if __name__ == "__main__":
+def getSimulation()-> list[str, list[Module], dict]:
 
-    # Mata in parametrarna till modulerna här i modulens constructor
-    # Varje modul har sitt netlist-namn från vilken plats den har i den hela drivlinan. ex. XCapModule och DCCommonModeChokeModule har båda namnet DCFilterModule i netlisten.
-    # Vill man byta ut ex. XCapModule med DCCommonModeChokeModule byter man ut dem i denna listan.
-    # Vill man seriekoppla XCap och CMC får man sätta in unika namn för de två modulerna i denna listan, ha dem båda i listan nedan och ändra netlistan för drivlinan med de två nya namnen.
     modules = [
         InverterControlModule(),
         SwitchModule(),
@@ -23,7 +19,8 @@ if __name__ == "__main__":
         StaticLoadModule(),
         LoadGroundModule(),
         XCapModule(),
-        ACCommonModeChokeModule(),
+        DCCommonModeChokeModule(),  # Or NoDCCommonModeChokeModule()
+        ACCommonModeChokeModule(),  # or NoACCommonModeChokeModule()
         BatteryGroundModule(),
         SimpleBatteryModule()
     ]
@@ -42,19 +39,21 @@ if __name__ == "__main__":
 Xbattery BatPos BatNeg BatCase BatteryModule
 
 * Strömmättning batteri i(Vbatpos)  i(Vbatneg)
-VDC_P BatPos BatFiltPos 0 
-VDC_N BatNeg BatFiltNeg  0
+VDC_P BatPos CMCPos 0 
+VDC_N BatNeg CMCNeg  0
 
-Xbatfilt BatFiltPos BatFiltNeg InvPos InvNeg DCFilterModule
+Xxcap CMCPos CMCNeg XCapModule
+
+Xdccmc CMCPos CMCNeg InvPos InvNeg DCCommonModeChokeModule
 
 Xinverter InvPos InvNeg InvA InvB InvC InvCase InverterModule
 
-Xloadfilter InvA InvB InvC FiltA FiltB FiltC ACFilterModule
+Xaccmc InvA InvB InvC CMCA CMCB CMCC ACCommonModeChokeModule
 
 * Strömmätning för faser i(VPhA) i(VPhB) i(VPhC)
-VAC_A FiltA PhA 0
-VAC_B FiltB PhB 0
-VAC_C FiltC PhC 0
+VAC_A CMCA PhA 0
+VAC_B CMCB PhB 0
+VAC_C CMCC PhC 0
 
 Xload PhA PhB PhC LoadCase LoadModule
 
@@ -72,19 +71,25 @@ XloadGnd LoadCase 0 LoadGroundModule
 *.options gmin=1e-10    ;        "Minimum conductance"
 *.options cshunt=1e-15  ;        "Capacitance added from each node to ground"
 
-
 .save i(VAC_A)
 .save i(VAC_B)
 .save i(VAC_C)
 .save i(VDC_P)
 .save i(VDC_N)
 
-.save i(l.xbatgnd.c1)
-.save i(l.xinvgnd.c1)
-.save i(l.xloadgnd.c1)
+.save i(xinvgnd.l1)
+.save i(xbatgnd.l1)
+.save i(xloadgnd.l1)
 
 .tran {simParams["tstep"]} {simParams["tstop"]} {simParams["tstart"]}
 .end"""
+
+    return netlist, modules, simParams
+
+
+
+if __name__ == "__main__":
+    netlist, modules, simParams = getSimulation()
 
     # Simulera netlisten och outputta till en .raw fil
     batchNetlist(netlist, f"out",  log=False)
@@ -95,32 +100,3 @@ XloadGnd LoadCase 0 LoadGroundModule
         simParams = simParams,
         results = {}            # Beräknar inget resultat för tillfället.
         )
-
-    
-
-
-# .options savecurrents
-
-# .save i(l.xload.l1)
-# .save i(l.xload.l2)
-# .save i(l.xload.l3)
-# .save v(pha)
-# .save v(phb)
-# .save v(phc)
-# .save i(l.xbatgnd.c1)
-# .save i(l.xinvgnd.c1)
-# .save i(l.xloadgnd.c1)
-
-# .save i(l.xbatgnd.c1)
-# .save i(l.xinvgnd.c1)
-# .save i(l.xloadgnd.c1)
-
-# .save i(@c.xinverter.c1[i])
-# .save i(@c.xinverter.c2[i])
-# .save i(@c.xinverter.c3[i])
-# .save i(@c.xinverter.c4[i])
-# .save i(@c.xinverter.c5[i])
-
-# .save i(l.xload.l1)
-# .save i(l.xload.l2)
-# .save i(l.xload.l3)

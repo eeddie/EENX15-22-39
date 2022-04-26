@@ -1,7 +1,7 @@
 # 
 #   Modules.py
 #
-#   Innehåller funktioner för att hämta netlists på de olika krets-modulerna
+#   Innehåller klasser för varje modul
 #
 
 
@@ -250,27 +250,11 @@ C2 Neg Case {self.params["ParCapN"]}
 .ends {self.name}"""
 
 
-
-# Inget filter mellan batteri och inverter. 0 V mellan de två
-class NoDCFilterModule(Module):
-    
-    def __init__(self,
-        name = "DCFilterModule"
-        ):
-        self.name = name
-        self.params = {}
-
-    def getNetlist(self):
-        return f""".subckt {self.name} BatPos BatNeg InvPos InvNeg
-V0 BatPos InvPos 0V
-V1 BatNeg InvNeg 0V
-.ends {self.name}"""
-
 # X-cap mellan node och inverter
 class XCapModule(Module):
     
     def __init__(self,
-        name = "DCFilterModule",
+        name = "XCapModule",
         C_self = 500*10**-6,
         R_self = 1.9*10**-3
         ):
@@ -282,18 +266,29 @@ class XCapModule(Module):
         }
 
     def getNetlist(self):
-        return f""".subckt {self.name} BatPos BatNeg InvPos InvNeg
-V0 BatPos InvPos 0V
-V1 BatNeg InvNeg 0V
-C1 BatPos Node {self.params["C_self"]}
-R1 Node BatNeg {self.params["R_self"]}
+        return f""".subckt {self.name} Pos Neg
+C1 Pos Node {self.params["C_self"]}
+R1 Node Neg {self.params["R_self"]}
 .ends {self.name}"""
+
+class NoDCCommonModeChokeModule(Module):
+
+    def __init__(self,
+        name = "DCCommonModeChokeModule"
+    ):
+        self.params = {}
+
+    def getNetlist(self):
+        return f""".subckt {self.name} BatPos BatNeg InvPos InvNeg
+        V0 BatPos InvPos 0V
+        V1 BatNeg InvNeg 0V
+        .ends {self.name}"""
 
 # common mode choke på DC-sidan
 class DCCommonModeChokeModule(Module):
 
     def __init__(self,
-        name = "DCFilterModule",
+        name = "DCCommonModeChokeModule",
         R_ser       = 20    *10**-3,
         L_choke     = 51    *10**-3,
         Coupling    = 0.95
@@ -315,10 +310,10 @@ K12 L1 L2 {self.params["Coupling"]}
 .ends {self.name}"""
 
 # Ingen common-mode choke eller annat filter, 0 V mellan inverter och last
-class NoLoadFilterModule(Module):
+class NoACCommonModeChokeModule(Module):
 
     def __init__(self,
-        name = "ACFilterModule"):
+        name = "ACCommonModeChokeModule"):
         self.name = name,
         self.params = {}
     
@@ -332,7 +327,7 @@ V2 InC OutC 0V
 class ACCommonModeChokeModule(Module):
 
     def __init__(self,
-        name = "ACFilterModule",                           
+        name = "ACCommonModeChokeModule",                           
         R_ser        = 0.02,           # Serieresistans
         L_choke      = 51*(10**-3),    # Chokens induktans
         Coupling     = 0.95,           # Kopplingsfaktor mellan induktanserna, 0 < Coupling <= 1
