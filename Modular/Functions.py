@@ -4,7 +4,6 @@
 #   Innehåller funktioner som vi använder
 #
 
-from tracemalloc import start
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy as sp
@@ -103,7 +102,7 @@ def plotTimeDiff(filename: str):
     plt.plot(time[0:time.size-2], diffTime, linewidth=1)
 
 
-def plotVars(filename: str, *variables: str, label: str, alpha=0.5):
+def plotVars(filename: str, *variables: str, label="", alpha=0.5):
     """ Plotta en variabel från en datafil i den aktiva ploten """
 
     [time, data] = readVariables(filename, *variables)
