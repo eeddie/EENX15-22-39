@@ -58,28 +58,51 @@ E2 M 0 Mod 0 1
 
 
 
-class MosfetModule(Module):
+class InternalMosfetModule(Module):
     
     def __init__(self, 
-        name = "MOSFETModule",
-        MOSType = "IPI200N25N3"
+        name = "TransistorModule",
+        MOSType = "IPI200N25N3",
+        Rg = 1.5,
         ):
 
-        return NotImplementedError("MOSFETModule gate resistance was previously implemented in InverterControlModule but is removed and should be implemented in MOSFETModule before use.")
         self.name = name
-        self.params = {"MOSType": MOSType}
+        self.params = {"MOSType": MOSType, "Rg": Rg}
 
     def getNetlist(self):
         return f""".subckt {self.name} Drain Gate Source
-M1 Drain Gate Source Source {self.params["MOSType"]}
+Rg Gate MGate {self.params["Rg"]}
+M1 Drain MGate Source Source {self.params["MOSType"]}
 .ends {self.name}
 .lib /Modular/libs/MOSFET/MOS.lib"""
+
+
+class SubcircuitMosfetModule(Module):
+    
+    def __init__(self, 
+        name = "TransistorModule",
+        MOSType = "IPWS65R022CFD7A_L0",
+        MOSLib = "IFX_CFD7A_650V.lib",
+        Rg = 1.5,
+        ):
+
+        self.name = name
+        self.params = {"MOSType": MOSType, "MOSLib": MOSLib, "Rg": Rg}
+
+    def getNetlist(self):
+        return f""".subckt {self.name} Drain Gate Source
+Rg Gate MGate {self.params["Rg"]}
+X1 Drain MGate Source {self.params["MOSType"]}
+.ends {self.name}
+.lib /Modular/libs/MOSFET/{self.params["MOSLib"]}"""
+
+
 
 
 class IGBTModule(Module):
     
     def __init__(self,
-        name = "IGBTModule",
+        name = "TransistorModule",
         IGBTType = "rgw00ts65chr"
         ):
         
@@ -98,7 +121,7 @@ X1 Collector Gate Emitter {self.params["IGBTType"]}
 class SwitchModule(Module):
         
         def __init__(self,
-            name = "SwitchModule",
+            name = "TransistorModule",
             v_t = "0",
             r_on = "20m",
             r_off= "130k"):
@@ -109,16 +132,17 @@ class SwitchModule(Module):
         def getNetlist(self):
             return f""".subckt {self.name} Source Gate Drain
             S1 Drain Source Gate Drain swmod
+            D1 Drain Source dmod
+            .model dmod d
             .model swmod sw vt={self.params["v_t"]} ron={self.params["r_on"]} roff={self.params["r_off"]}
             .ends {self.name}"""
 
 class InverterModule(Module):
 
-    
     def __init__(self,
         name = "InverterModule",
         invConModName = "InverterControlModule",    # Inverter controller module name
-        tranModName = "SwitchModule",               # Transistor subcircuit name
+        tranModName = "TransistorModule",               # Transistor subcircuit name
         Mod = 1,
         Freq = 100,
         ParCapA = 1.4*(10**-12),       # Parasiterande kapacitans fas A till hölje. 

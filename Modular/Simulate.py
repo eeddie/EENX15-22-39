@@ -42,8 +42,8 @@ if __name__ == "__main__":
 Xbattery BatPos BatNeg BatCase BatteryModule
 
 * Strömmättning batteri i(Vbatpos)  i(Vbatneg)
-VDC_P BatFiltPos BatPos 0 
-VDC_N BatFiltNeg BatNeg 0
+VDC_P BatPos BatFiltPos 0 
+VDC_N BatNeg BatFiltNeg  0
 
 Xbatfilt BatFiltPos BatFiltNeg InvPos InvNeg DCFilterModule
 
@@ -52,27 +52,26 @@ Xinverter InvPos InvNeg InvA InvB InvC InvCase InverterModule
 Xloadfilter InvA InvB InvC FiltA FiltB FiltC ACFilterModule
 
 * Strömmätning för faser i(VPhA) i(VPhB) i(VPhC)
-VAC_A PhA FiltA 0
-VAC_B PhB FiltB 0
-VAC_C PhC FiltC 0
+VAC_A FiltA PhA 0
+VAC_B FiltB PhB 0
+VAC_C FiltC PhC 0
 
 Xload PhA PhB PhC LoadCase LoadModule
 
-XbatGnd BatCase 0 BatteryGroundModule
-XinvGnd InvCase 0 InverterGroundModule
+XbatGnd   BatCase 0 BatteryGroundModule
+XinvGnd   InvCase 0 InverterGroundModule
 XloadGnd LoadCase 0 LoadGroundModule
 
 
 .ic v(InvA)=0 v(InvB)=0 v(InvC)=0
 .option method={simParams["method"]}
 
-*.options reltol=1e-3   ; > 1ms  "Never larger than 0.003!"
-*.options abstol=10e-9  ; > 10ns
-*.options itl4=30       ; > 30
+.options reltol=1e-3   ; > 1ms  "Never larger than 0.003!"
+.options abstol=10e-9  ; > 10ns
+.options itl4=30       ; > 30
 *.options gmin=1e-10    ;        "Minimum conductance"
 *.options cshunt=1e-15  ;        "Capacitance added from each node to ground"
 
-*.options savecurrents
 
 .save i(VAC_A)
 .save i(VAC_B)
