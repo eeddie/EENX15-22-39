@@ -1,3 +1,8 @@
+import json
+from typing import Any
+
+from ltspice import FileSizeNotMatchException
+
 from Simulate import *
 import sys
 
@@ -6,15 +11,68 @@ def np_encoder(obj):
     if isinstance(obj, np.generic):
         return obj.item()
 
+def energyFromFile(filename: str, dcI: list[str], *variables: str):
+    [time, data] = readVariables(filename, *variables)
+    uniVariables = {}
+    uniTime: Any
+    for index, var in enumerate(variables):
+        [uniTime, uniData] = uniformResample(time, data[index], 10 ** (-9))
+        uniVariables[var] = uniData
 
-def saveAllBands(filename: str):
-    [time0, data0] = readVariables(filename, "i(l.xload.l1)")
-    [uniTime0, uniData0] = uniformResample(time0, data0, timeStep=10 ** (-9))
-    N = len(uniTime0)
-    fftcurrent = 2.0 / N * np.abs(fft(uniData0)[0, 0:N // 2])
-    tf = fftfreq(N, uniTime0[1] - uniTime0[0])[0:N // 2]
+    N = len(uniTime)
+    tf = fftfreq(N, uniTime[1] - uniTime[0])[0:N // 2]
+    yfs = [2.0 / N * np.abs(fft(uniVariables[var])[0:N // 2]) for var in variables]
 
-    return json.dumps(energyInAllBands(tf, fftcurrent), default=np_encoder)
+    energy = energyInAllBands(tf, *yfs)
+    Bfalt = processedEnergyFromFile(filename, dcI[0], dcI[1])
+
+    assert len(energy) == len(Bfalt)
+    for i in range(len(energy)):
+        energy[i].append(Bfalt[i])
+
+    return json.dumps(energy, default=np_encoder)
+
+
+def energyInDCBands(xf, *yf):
+    limits = [0, 10000, 150000, 30000000, 400000000]
+    bandwidths = [100 * 10 ** p for p in range(5)]
+    frequencies = []
+    for i in range(len(limits) - 1):
+        for j in range(limits[i], limits[i + 1], bandwidths[i]):
+            frequencies.append(j)
+    frequencies.append(limits[-1])
+
+    energy = []
+    for index, startFreq in enumerate(frequencies):
+        if startFreq == frequencies[-1]:
+            break
+        endFreq = frequencies[index + 1]
+
+        lo = find_nearest_frequency(array=xf, value=startFreq)
+        hi = find_nearest_frequency(array=xf, value=endFreq)
+
+        bandEnergy = [sum_energy(yf=entry, lower=lo, upper=hi) for entry in yf]
+
+        energy.append([*bandEnergy])
+    return energy
+
+
+from Bfalt import getBfaltAmplitude
+
+
+def processedEnergyFromFile(filename: str, *variables: str):
+    [time, data] = readVariables(filename, *variables)
+    uniVariables = {}
+    uniTime: Any
+    for index, var in enumerate(variables):
+        [uniTime, uniData] = uniformResample(time, data[index], 10 ** (-9))
+        uniVariables[var] = uniData
+
+    N = len(uniTime)
+    tf = fftfreq(N, uniTime[1] - uniTime[0])[0:N // 2]
+    yfs = [2.0 / N * np.abs(fft(uniVariables[var])[0:N // 2]) for var in variables]
+
+    return getBfaltAmplitude(energyInDCBands(tf, *yfs)).tolist()
 
 
 def saveModifiedSim(filename: str, modules: list, simParams: dict, results: dict):
@@ -38,16 +96,24 @@ def saveModifiedSim(filename: str, modules: list, simParams: dict, results: dict
 
 
 if __name__ == "__main__":
-    file = "simResults\\params" + str(sys.argv[1]) + ".json"
+    parameterFile = "simResults\\params" + str(sys.argv[1]) + ".json"
+    simFile = "sim" + str(sys.argv[1]) + ".raw"
 
-    with open(file) as f:
+    with open(parameterFile) as f:
         data = json.load(f)
-    os.remove(file)
 
+    result: Any
+    try:
+        result = energyFromFile(simFile,["i(VDC_P)", "i(VDC_N)"], "i(l.xload.l1)","i(VDC_P)", "i(VDC_N)")
+    except Exception and UnicodeDecodeError:
+        result = None
     saveModifiedSim("simResults\\sim" + str(sys.argv[1]) + ".json",
                     modules=data[0]["modules"],
                     simParams=data[0]["simParams"],
-                    results={"energies": saveAllBands("sim" + str(sys.argv[1]) + ".raw")}
+                    results={
+                        "energies": result
+                    }
                     )
 
-    os.remove("sim" + str(sys.argv[1]) + ".raw")
+    os.remove(parameterFile)
+    os.remove(simFile)

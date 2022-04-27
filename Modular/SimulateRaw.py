@@ -3,15 +3,9 @@
 #
 #   Innehåller en main-funktion för simulering av drivlinan
 #
-
-import os
 from Modules import *
 from Functions import *
 import inspect, sys, random as r
-
-
-from multiprocessing import Process, cpu_count
-
 
 def createNetlist(modules, simParams):
     return f""".title drivlina
@@ -49,13 +43,10 @@ XloadGnd LoadCase 0 LoadGroundModule
 .options gmin=1e-10    ;        "Minimum conductance"
 .options cshunt=1e-15  ;        "Capacitance added from each node to ground"
 
-.options savecurrents
-
 .save i(l.xload.l1)
 
-.save i(l.xbatgnd.c1)
-.save i(l.xinvgnd.c1)
-.save i(l.xloadgnd.c1)
+.save i(VDC_P)
+.save i(VDC_N)
 
 .tran {simParams["tstep"]} {simParams["tstop"]} {simParams["tstart"]}
 .end"""
