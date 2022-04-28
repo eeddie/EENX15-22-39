@@ -1,3 +1,4 @@
+
 import numpy as np
 import matplotlib.pyplot as plt
 from biot_savart import computeBMagMtx
@@ -16,31 +17,25 @@ rSrcMtx = np.array([[-0.01, 0.01],
 lSrcVtr = np.array([1.0, 1.0])
 
 # Amplitudes of line currents at 5 different frequencies
-iSrcMtx = np.array([[1.0, 0.9, 0.8, 0.7, 0.6, 0.5],
+iSrcMtx = np.array([[ 1.0,  0.9,  0.8,  0.7,  0.6,  0.5],
                     [-1.0, -0.9, -0.8, -0.7, -0.6, -0.5]])
 
 # Compute magnitude of B-field at field points
 bMagMtx = computeBMagMtx(rFldMtx, rSrcMtx, lSrcVtr, iSrcMtx)
-print(bMagMtx)
-for freqIdx in range(iSrcMtx.shape[1]):
-    print(1e6 * bMagMtx[:, freqIdx])
-
-currScale = 2
+currScale=2
 for freqIdx in range(iSrcMtx.shape[1]):
     # Initialize figure
-    fig, ax = plt.subplots(figsize=(6, 6))
+    fig, ax = plt.subplots(figsize=(6,6))
 
     # Draw line sources and currents
     for i in range(rSrcMtx.shape[1]):
-        ax.plot([rSrcMtx[0, i]] * 2, rSrcMtx[2, i] + np.array([-lSrcVtr[i] / 2, lSrcVtr[i] / 2]), color='black',
-                zorder=1)
+        ax.plot([rSrcMtx[0, i]]*2, rSrcMtx[2, i] + np.array([-lSrcVtr[i]/2, lSrcVtr[i]/2]), color='black', zorder=1)
 
     # Draw currents
-    ax.quiver(rSrcMtx[0, :], rSrcMtx[2, :], np.array([0.0, 0.0]), iSrcMtx[:, freqIdx], color='red', scale_units='xy',
-              scale=currScale, label='Current', zorder=2)
+    ax.quiver(rSrcMtx[0, :], rSrcMtx[2, :], np.array([0.0, 0.0]), iSrcMtx[:, freqIdx], color='red', scale_units='xy', scale=currScale, label='Current', zorder=2)
 
     # Draw B-field magnitudes at field points
-    c = ax.scatter(rFldMtx[0, :], rFldMtx[2, :], c=1e6 * bMagMtx[:, freqIdx])
+    c = ax.scatter(rFldMtx[0, :], rFldMtx[2, :], c=1e6*bMagMtx[:, freqIdx])
     plt.colorbar(c, label=r'$|\mathbf{B}|$ [µT]')
 
     ax.set_xlabel('x [m]')

@@ -4,7 +4,6 @@
 #   Innehåller funktioner som vi använder
 #
 
-from tracemalloc import start
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy as sp
@@ -25,13 +24,14 @@ def simulateNetlist(netlist: str, name='tmp', removeNetlist=True):
     if removeNetlist: os.remove(f"{name}.net")
 
 
-def batchNetlist(netlist: str, name='tmp', log=False, removeNetlist=True):
-    netlist_file = open(f'C:\\EENX15\\Modular\\{name}.net', 'w')
-    netlist_file.write(netlist)
-    netlist_file.close()
-    os.system(
-        f'C:\\Spice64\\bin\\ngspice_con.exe -b -r {name}.raw {"-o " + name + ".log" if log else ""} {name}.net')  # NOTE: Lägg till mappen med ngspice i systemvariablerna istället så slipper vi byta
-    if removeNetlist: os.remove(f'C:\\EENX15\\Modular\\{name}.net')
+
+def batchNetlist(netlist: str, name = 'tmp', log=False, removeNetlist=True):
+        netlist_file = open(f'{name}.net', 'w')
+        netlist_file.write(netlist)
+        netlist_file.close()
+        os.system(f'ngspice_con.exe -b -r {name}.raw {"-o " + name + ".log" if log else ""} {name}.net')   # NOTE: Lägg till mappen med ngspice i systemvariablerna istället så slipper vi byta
+        if removeNetlist: os.remove(f"{name}.net")
+        repairRaw(f"{name}.raw")
 
 
 def uniformResample(time: list, values: list, timeStep=10 ** -9, interpKind="cubic"):
@@ -44,6 +44,17 @@ def uniformResample(time: list, values: list, timeStep=10 ** -9, interpKind="cub
     uniVal = f(uniTime)  # Fill the array uniVal with interpolated numbers for all the evenly spaced timesteps
 
     return [uniTime, uniVal]
+
+# A function which returns the vectors in the specified window from xMin to xMax
+def window(time: list, *values: list, xMin, xMax):
+    """ Kortar ner de angivna vektorerna inom xMin och xMax """
+
+    # Find the index in time which is closest to xMin
+    xMinIndex = np.argmin(np.abs(time - xMin)) - 1
+    # Find the index in time which is the closest to xMax plus one
+    xMaxIndex = np.argmin(np.abs(time - xMax)) + 1
+
+    return [time[xMinIndex:xMaxIndex], [value[xMinIndex:xMaxIndex] for value in values]]
 
 
 def readVariables(filename: str, *variables: str):
@@ -62,6 +73,29 @@ def readVariables(filename: str, *variables: str):
     return [time, data]
 
 
+def repairRaw(*filenames: str):
+    """ Reparera en raw-fil """
+
+    for filename in filenames:
+
+        # Open the file as binary
+        with open(filename, "rb") as f:
+            # Split the data into ascii header and binary data 
+            header, data = f.read().split(bytearray("Binary:", "utf-8"),1)
+            # Convert the header to a string
+            header = header.decode('utf-8') + "Binary:"
+            
+            # Check if the header contains a line "Variables:"
+            if "\nVariables:" not in header:
+                # Find the line in the header which ends with "Variables:" and add a newline before "Variables:"
+                header = header.replace("Variables:", "\nVariables:").replace("\nVariables:", "Variables:", 1)
+
+            # Write the header and data to the file
+            with open(filename, "wb") as f:
+                f.write(header.encode('utf-8'))
+                f.write(data)
+                
+
 def plotTimeDiff(filename: str):
     """ Plotta storleken på tidsstegen över tid i den aktiva plotten """
 
@@ -71,7 +105,7 @@ def plotTimeDiff(filename: str):
     plt.plot(time[0:time.size - 2], diffTime, linewidth=1)
 
 
-def plotVars(filename: str, *variables: str, label: str, alpha=0.5):
+def plotVars(filename: str, *variables: str, label="", alpha=0.5):
     """ Plotta en variabel från en datafil i den aktiva ploten """
 
     [time, data] = readVariables(filename, *variables)
@@ -92,10 +126,9 @@ def plotFourierFromVector(time: list, data: list, label="", formatString="-", al
     plt.grid()
 
 
-def plotFourierFromFile(filename: str, variableName: str, label="", formatString="-", alpha=0.5, linewidth=0.5,
-                        resampleTime=1 * 10 ** -9):
-    """ Plotta fourier för en variabel från en och samma raw-fil i den aktiva ploten  """
-
+def plotFourierFromFile(filename: str, variableName: str, label="", formatString="-", alpha=0.5, linewidth=0.5, resampleTime=1*10**-9):
+    """ Plotta fourier för en variabel från en och samma raw-fil i den aktiva ploten"""
+    
     raw = Ltspice(filename)
     raw._x_dtype = np.float64
     raw._y_dtype = np.float64
@@ -125,7 +158,7 @@ def find_nearest_frequency(array, value):
         return index
 
 
-# Sums the 'energy' in a frequency band. Needs arrays of frequencies and associated frequency response.
+# Sums the 'energy' in a frequency band. Needs indices of first and last frequency in a band, and vector containing the absolute values of an FFT
 def sum_energy(yf, lower, upper):
     energy = 0
     for i in range(lower, upper + 1):
@@ -134,6 +167,7 @@ def sum_energy(yf, lower, upper):
 
 
 # Returns a 2d array with every row in the format: [flo fhi sum numofpoints].
+# Deprecated
 def energy_in_interesting_frequencies(xf, yf):
     startLowFreq = 100 * 10 ** 3
     startHighFreq = 30 * 10 ** 6
@@ -175,15 +209,16 @@ def energy_in_interesting_frequencies(xf, yf):
 
     return energy
 
-
-# Returns a 2d array with every row in the format: [flo fhi sum numofpoints]. 
-# From 1Hz to 400MHz (temporarily from 100Hz)
+# Returns a 2d array with every row in the format: [flo fhi numofpoints *sums] where sums is the sum for several variables
+# From 100Hz to 400MHz
+# xf is a vector with the frequencies for one or more FFTs
+# *yf is a tuple of vectors containing the absolute values of an FFT
 def energyInAllBands(xf, *yf):
     limits = [0, 10000, 150000, 30000000, 400000000]
-    bandwidths = [100 * 10 ** p for p in range(5)]
+    bandwidths = [100*10**p for p in range(5)]
     frequencies = []
-    for i in range(len(limits) - 1):
-        for j in range(limits[i], limits[i + 1], bandwidths[i]):
+    for i in range(len(limits)-1):
+        for j in range(limits[i],limits[i+1],bandwidths[i]):
             frequencies.append(j)
     frequencies.append(limits[-1])
 
@@ -203,9 +238,22 @@ def energyInAllBands(xf, *yf):
     return energy
 
 
+# Returns a 2d array with every row in the format: [flo fhi sum numofpoints]. 
+# From 100Hz to 400MHz
+# Used on rawfile
+def energyFromFile(filename: str, *variables:str):
+    [time, data] = readVariables(filename, *variables)
+    uniVariables = {}
+    uniTime = None
+    for index, var in enumerate(variables):
+        [uniTime, uniData] = uniformResample(time,data[index],10**(-9))
+        uniVariables[var] = uniData
+    
+    N = len(uniTime)
+    tf = fftfreq(N, uniTime[1]-uniTime[0])[0:N//2]
+    yfs = [2.0/N * np.abs(fft(uniVariables[var])[0:N//2]) for var in variables]
 
-
-
+    return energyInAllBands(tf, *yfs)
 
 def saveSim(filename: str, modules: list, simParams: dict, results: dict):
     """ Sparar ned simuleringens parametrar till en JSON-fil, lägger till simuleringen om filen redan existerar """

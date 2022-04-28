@@ -1,7 +1,7 @@
 # 
 #   Modules.py
 #
-#   Innehåller funktioner för att hämta netlists på de olika krets-modulerna
+#   Innehåller klasser för varje modul
 #
 
 
@@ -48,45 +48,66 @@ BE_PWM_A_n  PWM_A_n 0 V= 15*tanh({self.params["Gain"]}*(V(Ph_A)+{self.params["Ov
 BE_PWM_B_n  PWM_B_n 0 V= 15*tanh({self.params["Gain"]}*(V(Ph_B)+{self.params["OverlapProtection"]}-V(Triangle)))
 BE_PWM_C_n  PWM_C_n 0 V= 15*tanh({self.params["Gain"]}*(V(Ph_C)+{self.params["OverlapProtection"]}-V(Triangle)))
 BTri Triangle 0 V= (2/Pi)*asin(sin(2*Pi*{self.params["Fs"]}*Time))
-EDr1 N001 E1 PWM_A 0 1
-EDr3 N003 E3 PWM_B 0 1
-EDr5 N005 E5 PWM_C 0 1
-EDr2 N002 E2 0 PWM_A_n 1
-EDr4 N004 E4 0 PWM_B_n 1
-EDr6 N006 E6 0 PWM_C_n 1
-Rg1 N001 G1 {self.params["Rg"]}
-Rg2 N002 G2 {self.params["Rg"]}
-Rg3 N003 G3 {self.params["Rg"]}
-Rg4 N004 G4 {self.params["Rg"]}
-Rg5 N005 G5 {self.params["Rg"]}
-Rg6 N006 G6 {self.params["Rg"]}
+EDr1 G1 E1 PWM_A 0 1
+EDr3 G3 E3 PWM_B 0 1
+EDr5 G5 E5 PWM_C 0 1
+EDr2 G2 E2 0 PWM_A_n 1
+EDr4 G4 E4 0 PWM_B_n 1
+EDr6 G6 E6 0 PWM_C_n 1
 E1 Frq 0 Freq 0 1
 E2 M 0 Mod 0 1
 .ends {self.name}"""
 
 
-class MosfetModule(Module):
 
-    def __init__(self,
-                 name="MOSFETModule",
-                 MOSType="IPI200N25N3"
-                 ):
+
+class InternalMosfetModule(Module):
+    
+    def __init__(self, 
+        name = "TransistorModule",
+        MOSType = "IPI200N25N3",
+        Rg = 1.5,
+        ):
+
         self.name = name
-        self.params = {"MOSType": MOSType}
+        self.params = {"MOSType": MOSType, "Rg": Rg}
 
     def getNetlist(self):
         return f""".subckt {self.name} Drain Gate Source
-M1 Drain Gate Source Source {self.params["MOSType"]}
+Rg Gate MGate {self.params["Rg"]}
+M1 Drain MGate Source Source {self.params["MOSType"]}
 .ends {self.name}
-.lib C:\\EENX15\\Modular\\libs\\MOS.lib"""
+.lib /Modular/libs/MOSFET/MOS.lib"""
+
+
+class SubcircuitMosfetModule(Module):
+    
+    def __init__(self, 
+        name = "TransistorModule",
+        MOSType = "IPWS65R022CFD7A_L0",
+        MOSLib = "IFX_CFD7A_650V.lib",
+        Rg = 1.5,
+        ):
+
+        self.name = name
+        self.params = {"MOSType": MOSType, "MOSLib": MOSLib, "Rg": Rg}
+
+    def getNetlist(self):
+        return f""".subckt {self.name} Drain Gate Source
+Rg Gate MGate {self.params["Rg"]}
+X1 Drain MGate Source {self.params["MOSType"]}
+.ends {self.name}
+.lib /Modular/libs/MOSFET/{self.params["MOSLib"]}"""
 
 
 class IGBTModule(Module):
 
     def __init__(self,
-                 name="IGBTModule",
-                 IGBTType="rgw00ts65chr"
-                 ):
+        name = "TransistorModule",
+        IGBTType = "rgw00ts65chr"
+        ):
+        
+        return NotImplementedError("IGBTModule gate resistance was previously implemented in InverterControlModule but is removed and should be implemented in IGBTModule before use.")
         self.name = name
         self.params = {"IGBTType": IGBTType}
 
@@ -97,45 +118,63 @@ X1 Collector Gate Emitter {self.params["IGBTType"]}
 .lib /Modular/libs/IGBT/{self.params["IGBTType"]}.lib"""
 
 
+class SwitchModule(Module):
+        
+        def __init__(self,
+            name = "TransistorModule",
+            v_t = "0",
+            r_on = "20m",
+            r_off= "130k"):
+
+            self.name = name
+            self.params = {"v_t": v_t, "r_on": r_on, "r_off": r_off}
+    
+        def getNetlist(self):
+            return f""".subckt {self.name} Source Gate Drain
+            S1 Drain Source Gate Drain swmod
+            D1 Drain Source dmod
+            .model dmod d
+            .model swmod sw vt={self.params["v_t"]} ron={self.params["r_on"]} roff={self.params["r_off"]}
+            .ends {self.name}"""
+
 class InverterModule(Module):
-    invConModName = "InverterControlModule"
-    tranModName = "MOSFETModule"
 
     def __init__(self,
-                 name="InverterModule",
-                 invConModName="InverterControlModule",  # Inverter controller module name
-                 tranModName="MOSFETModule",  # Transistor subcircuit name
-                 Mod=1,
-                 Freq=100,
-                 ParCapA=1.4 * (10 ** -12),  # Parasiterande kapacitans fas A till hölje.
-                 ParCapB=2.0 * (10 ** -12),  # Parasiterande kapacitans fas B till hölje.
-                 ParCapC=0.7 * (10 ** -12),  # Parasiterande kapacitans fas C till hölje.
-                 ParCapP=1.1 * (10 ** -12),  # Parasiterande kapacitans positiv till hölje.
-                 ParCapN=2.0 * (10 ** -12),  # Parasiterande kapacitans negativ till hölje.
-                 ):
+        name = "InverterModule",
+        invConModName = "InverterControlModule",    # Inverter controller module name
+        tranModName = "TransistorModule",               # Transistor subcircuit name
+        Mod = 1,
+        Freq = 100,
+        ParCapA = 1.4*(10**-12),       # Parasiterande kapacitans fas A till hölje. 
+        ParCapB = 2.0*(10**-12),       # Parasiterande kapacitans fas B till hölje. 
+        ParCapC = 0.7*(10**-12),       # Parasiterande kapacitans fas C till hölje. 
+        ParCapP = 1.1*(10**-12),       # Parasiterande kapacitans positiv till hölje. 
+        ParCapN = 2.0*(10**-12),       # Parasiterande kapacitans negativ till hölje. 
+        ):
+        
         self.name = name
-        self.invConModName = invConModName
-        self.tranModName = tranModName
         self.params = {
             "Mod": Mod,
             "Freq": Freq,
-            "ParCapA": ParCapA,
-            "ParCapB": ParCapB,
-            "ParCapC": ParCapC,
-            "ParCapP": ParCapP,
-            "ParCapN": ParCapN,
-        }
+            "InvConModName": invConModName,
+            "TranModName": tranModName,
+            "ParCapA": ParCapA,       
+            "ParCapB": ParCapB,       
+            "ParCapC": ParCapC,       
+            "ParCapP": ParCapP,       
+            "ParCapN": ParCapN,       
+    }
 
     def getNetlist(self) -> str: return f""".subckt {self.name} Pos Neg A B C Case
 V_mod N005 0 {self.params["Mod"]}
 V_freq N003 0 {self.params["Freq"]}
-X1 Pos G1 A {self.tranModName}
-X2 A G2 Neg {self.tranModName}
-X3 Pos G3 B {self.tranModName}
-X4 B G4 Neg {self.tranModName}
-X5 Pos G5 C {self.tranModName}
-X6 C G6 Neg {self.tranModName}
-XPWM1 N003 N005 A Neg B Neg C Neg G1 G2 G3 G4 G5 G6 {self.invConModName}
+X1 Pos G1 A {self.params["TranModName"]}
+X2 A G2 Neg {self.params["TranModName"]}
+X3 Pos G3 B {self.params["TranModName"]}
+X4 B G4 Neg {self.params["TranModName"]}
+X5 Pos G5 C {self.params["TranModName"]}
+X6 C G6 Neg {self.params["TranModName"]}
+XPWM1 N003 N005 A Neg B Neg C Neg G1 G2 G3 G4 G5 G6 {self.params["InvConModName"]}
 C1 A Case {self.params["ParCapA"]}
 C2 B Case {self.params["ParCapB"]}
 C3 C Case {self.params["ParCapC"]}
@@ -213,55 +252,47 @@ C2 Neg Case {self.params["ParCapN"]}
 .ends {self.name}"""
 
 
-# Inget filter mellan batteri och inverter. 0 V mellan de två
-class NoDCFilterModule(Module):
+
+# X-cap mellan node och inverter
+class XCapModule(Module):
+    
+    def __init__(self,
+        name = "XCapModule",
+        C_self = 500*10**-6,
+        R_self = 1.9*10**-3
+        ):
+
+    def getNetlist(self):
+        return f""".subckt {self.name} Pos Neg
+C1 Pos Node {self.params["C_self"]}
+R1 Node Neg {self.params["R_self"]}
+.ends {self.name}"""
+
+
+class NoDCCommonModeChokeModule(Module):
 
     def __init__(self,
-                 name="DCFilterModule"
-                 ):
-        self.name = name
+        name = "DCCommonModeChokeModule"
+    ):
         self.params = {}
 
     def getNetlist(self):
         return f""".subckt {self.name} BatPos BatNeg InvPos InvNeg
-V0 BatPos InvPos 0V
-V1 BatNeg InvNeg 0V
-.ends {self.name}"""
-
-
-# X-cap mellan node och inverter
-class XCapModule(Module):
-
-    def __init__(self,
-                 name="DCFilterModule",
-                 C_self=500 * 10 ** -6,
-                 R_self=1.9 * 10 ** -3
-                 ):
-        self.name = name
-        self.params = {
-            "C_self": C_self,
-            "R_self": R_self
-        }
-
-    def getNetlist(self):
-        return f""".subckt {self.name} BatPos BatNeg InvPos InvNeg
-V0 BatPos InvPos 0V
-V1 BatNeg InvNeg 0V
-C1 BatPos Node {self.params["C_self"]}
-R1 Node BatNeg {self.params["R_self"]}
-.ends {self.name}"""
+        V0 BatPos InvPos 0V
+        V1 BatNeg InvNeg 0V
+        .ends {self.name}"""
 
 
 # common mode choke på DC-sidan
 class DCCommonModeChokeModule(Module):
 
     def __init__(self,
-                 name="DCFilterModule",
-                 R_ser=20 * 10 ** -3,
-                 L_choke=51 * 10 ** -3,
-                 Coupling=0.95
-                 ):
-        self.name = name,
+        name = "DCCommonModeChokeModule",
+        R_ser       = 20    *10**-3,
+        L_choke     = 51    *10**-3,
+        Coupling    = 0.95
+    ):
+        self.name = name
         self.params = {
             "R_ser": R_ser,
             "L_choke": L_choke,
@@ -279,10 +310,10 @@ K12 L1 L2 {self.params["Coupling"]}
 
 
 # Ingen common-mode choke eller annat filter, 0 V mellan inverter och last
-class NoLoadFilterModule(Module):
+class NoACCommonModeChokeModule(Module):
 
     def __init__(self,
-                 name="ACFilterModule"):
+        name = "ACCommonModeChokeModule"):
         self.name = name,
         self.params = {}
 
@@ -297,11 +328,11 @@ V2 InC OutC 0V
 class ACCommonModeChokeModule(Module):
 
     def __init__(self,
-                 name="ACFilterModule",
-                 R_ser=0.02,  # Serieresistans
-                 L_choke=51 * (10 ** -3),  # Chokens induktans
-                 Coupling=0.95,  # Kopplingsfaktor mellan induktanserna, 0 < Coupling <= 1
-                 ):
+        name = "ACCommonModeChokeModule",                           
+        R_ser        = 0.02,           # Serieresistans
+        L_choke      = 51*(10**-3),    # Chokens induktans
+        Coupling     = 0.95,           # Kopplingsfaktor mellan induktanserna, 0 < Coupling <= 1
+    ):
         self.name = name
         self.params = {
             "R_ser": R_ser,

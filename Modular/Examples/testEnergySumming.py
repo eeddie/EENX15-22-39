@@ -1,4 +1,6 @@
 import os
+import sys
+sys.path.append('./Modular/')
 from Modules import *
 from Functions import *
 def test_energyInAllBands():

@@ -1,7 +1,6 @@
 # from biot_savart import getI2bMtx
 import numpy as np
 
-
 def getI2bMtx(rFldMtx, rSrcMtx, lSrcVtr):
     """
     Parameters:
@@ -64,7 +63,6 @@ def computeBMagMtx(rFldMtx, rSrcMtx, lSrcVtr, iSrcMtx):
         bMagMtx[idxFld] = np.sqrt(np.sum(np.square(np.abs(bFldMtx[3 * idxFld + np.arange(3), :])), axis=0))
 
     return bMagMtx
-
 
 if __name__ == '__main__':
     mdict = np.load('testcase.npz')

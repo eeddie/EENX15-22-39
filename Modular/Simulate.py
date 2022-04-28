@@ -5,10 +5,14 @@
 #
 
 import os
+import sys
 from Modules import *
 from Functions import *
 import random as r
 from multiprocessing import Process, cpu_count
+import subprocess
+import multiprocessing
+
 
 
 def createNetlist(modules, simParams):
@@ -17,25 +21,30 @@ def createNetlist(modules, simParams):
     
 Xbattery BatPos BatNeg BatCase BatteryModule
     
-VDC_P BatFiltPos BatPos 0 
-VDC_N BatFiltNeg BatNeg 0
+* Strömmättning batteri i(Vbatpos)  i(Vbatneg)
+VDC_P BatPos CMCPos 0 
+VDC_N BatNeg CMCNeg  0
+
+Xdccmc CMCPos CMCNeg InvPos InvNeg DCCommonModeChokeModule
+
+Xxcap InvPos InvNeg XCapModule
 
 Xbatfilt BatPos BatNeg InvPos InvNeg DCFilterModule
     
 Xinverter InvPos InvNeg InvA InvB InvC InvCase InverterModule
     
-Xloadfilter InvA InvB InvC FiltA FiltB FiltC ACFilterModule
+Xaccmc InvA InvB InvC CMCA CMCB CMCC ACCommonModeChokeModule
 
-VAC_A PhA FiltA 0
-VAC_B PhB FiltB 0
-VAC_C PhC FiltC 0
+* Strömmätning för faser i(VPhA) i(VPhB) i(VPhC)
+VAC_A CMCA PhA 0
+VAC_B CMCB PhB 0
+VAC_C CMCC PhC 0
     
 Xload PhA PhB PhC LoadCase LoadModule
     
-XbatGnd BatCase 0 BatteryGroundModule
-XinvGnd InvCase 0 InverterGroundModule
+XbatGnd   BatCase 0 BatteryGroundModule
+XinvGnd   InvCase 0 InverterGroundModule
 XloadGnd LoadCase 0 LoadGroundModule
-    
     
 .ic v(InvA)=0 v(InvB)=0 v(InvC)=0
 .option method={simParams["method"]}
@@ -44,16 +53,23 @@ XloadGnd LoadCase 0 LoadGroundModule
 .options reltol=1e-3   ; > 1ms  "Never larger than 0.003!"
 .options abstol=10e-9  ; > 10ns
 .options itl4=30       ; > 30
-.options gmin=1e-10    ;        "Minimum conductance"
-.options cshunt=1e-15  ;        "Capacitance added from each node to ground"
-    
-.options savecurrents
-    
-.save i(l.xload.l1)
-    
-.save i(l.xbatgnd.c1)
-.save i(l.xinvgnd.c1)
-.save i(l.xloadgnd.c1)
+
+.save i(VAC_A)
+.save i(VAC_B)
+.save i(VAC_C)
+.save i(VDC_P)
+.save i(VDC_N)
+
+.save i(l.xinvgnd.l1)
+.save i(l.xbatgnd.l1)
+.save i(l.xloadgnd.l1)
+
+.save v(batCase)
+.save v(invCase)
+.save v(loadCase)
+
+.save v(CMCPos)
+.save v(CMCNeg)
     
 .tran {simParams["tstep"]} {simParams["tstop"]} {simParams["tstart"]}
 .end"""
@@ -113,19 +129,17 @@ def cluster_code():
                 )
 
 
-import sys
-
-
 def one_cluster_code():
     modules = [
         InverterControlModule(),
-        MosfetModule(),
+        SwitchModule(),
         InverterModule(),
         InverterGroundModule(),
         StaticLoadModule(),
         LoadGroundModule(),
         XCapModule(),
-        ACCommonModeChokeModule(Coupling=float(sys.argv[2]), L_choke=float(sys.argv[3])),
+        DCCommonModeChokeModule(),  # Or NoDCCommonModeChokeModule()
+        ACCommonModeChokeModule(Coupling=float(sys.argv[2]), L_choke=float(sys.argv[3])),  # or NoACCommonModeChokeModule()
         BatteryGroundModule(),
         SimpleBatteryModule()
     ]
@@ -140,7 +154,8 @@ def one_cluster_code():
 
     netlist = createNetlist(modules, simParams)
 
-    batchNetlist(netlist, "sim" + str(sys.argv[1]), removeNetlist=True)
+    batchNetlist(netlist, "sim" + str(sys.argv[1]))
+
 
     # Spara datan från den genomförda simuleringen
     saveSim("simResults\\params" + str(sys.argv[1]) + ".json",
@@ -152,8 +167,6 @@ def one_cluster_code():
 
     os.remove("sim" + str(sys.argv[1]) + ".raw")
 
-import subprocess
-import multiprocessing
 
 
 def np_encoder(object):
@@ -174,6 +187,7 @@ def saveBandEnergies(filename: str, energies: list):
             file_data.append(energies[i])  # Lägg till en ny dict, som innehåller datan från simuleringen, i listan
         file.seek(0)  # Börja om filen från början så vi skriver över filen med den nya datan
 
+
         return json.dumps(file_data, default=np_encoder)
 
 
@@ -190,44 +204,4 @@ def saveAllBands(filename: str):
 
 
 if __name__ == "__main__":
-    # cluster_code()
-
     one_cluster_code()
-
-    # plt.figure(4)
-    # freq = [row[0] for row in energy]
-    # value = [row[2]/row[3] for row in energy]
-    # plt.plot(tf, fftcurrent, "-", linewidth=1, alpha=0.5, label=f"i(L1)")
-    # plt.plot(freq,value, '-', linewidth=1,alpha=0.5, label="i(L1) avg:d")
-    # plt.legend()
-    # plt.loglog()
-    # plt.grid()
-    # plt.show()
-
-#    energyInAllBands("tmp_10000.raw")
-
-# .options savecurrents
-
-# .save i(l.xload.l1)
-# .save i(l.xload.l2)
-# .save i(l.xload.l3)
-# .save v(pha)
-# .save v(phb)
-# .save v(phc)
-# .save i(l.xbatgnd.c1)
-# .save i(l.xinvgnd.c1)
-# .save i(l.xloadgnd.c1)
-
-# .save i(l.xbatgnd.c1)
-# .save i(l.xinvgnd.c1)
-# .save i(l.xloadgnd.c1)
-
-# .save i(@c.xinverter.c1[i])
-# .save i(@c.xinverter.c2[i])
-# .save i(@c.xinverter.c3[i])
-# .save i(@c.xinverter.c4[i])
-# .save i(@c.xinverter.c5[i])
-
-# .save i(l.xload.l1)
-# .save i(l.xload.l2)
-# .save i(l.xload.l3)
