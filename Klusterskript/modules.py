@@ -279,7 +279,7 @@ class NoDCCommonModeChokeModule(Module):
     def __init__(self,
         name = "DCCommonModeChokeModule"
     ):
-        self.params = {}
+        self.name = name
 
     def getNetlist(self):
         return f""".subckt {self.name} BatPos BatNeg InvPos InvNeg
@@ -319,8 +319,7 @@ class NoACCommonModeChokeModule(Module):
 
     def __init__(self,
         name = "ACCommonModeChokeModule"):
-        self.name = name,
-        self.params = {}
+        self.name = name
 
     def getNetlist(self):
         return f""".subckt {self.name} InA InB InC OutA OutB OutC
