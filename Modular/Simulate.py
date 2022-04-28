@@ -9,9 +9,6 @@ import sys
 from Modules import *
 from Functions import *
 import random as r
-from multiprocessing import Process, cpu_count
-import subprocess
-import multiprocessing
 
 
 
@@ -74,106 +71,6 @@ XloadGnd LoadCase 0 LoadGroundModule
 .tran {simParams["tstep"]} {simParams["tstop"]} {simParams["tstart"]}
 .end"""
 
-
-def rand(start: float, slut: float):
-    return start + r.random() * (slut - start)
-
-
-def batch(netlist, s, log):
-    # Simulera netlisten och outputta till en .raw fil
-    batchNetlist(netlist, s, log=log)
-
-
-def cluster_code():
-    numberOfSimulations = 1
-    CouplingValues = [rand(0.5, 1) for _ in range(numberOfSimulations)]
-    L_chokeValues = [rand(20, 80) * (10 ** -3) for _ in range(numberOfSimulations)]
-    print(CouplingValues)
-    print(L_chokeValues)
-
-    # Mata in parametrarna till modulerna här i modulens constructor
-    # Varje modul har sitt netlist-namn från vilken plats den har i den hela drivlinan. ex. XCapModule och DCCommonModeChokeModule har båda namnet DCFilterModule i netlisten.
-    # Vill man byta ut ex. XCapModule med DCCommonModeChokeModule byter man ut dem i denna listan.
-    # Vill man seriekoppla XCap och CMC får man sätta in unika namn för de två modulerna i denna listan, ha dem båda i listan nedan och ändra netlistan för drivlinan med de två nya namnen.
-    for i in range(numberOfSimulations):
-        modules = [
-            InverterControlModule(),
-            MosfetModule(),
-            InverterModule(),
-            InverterGroundModule(),
-            StaticLoadModule(),
-            LoadGroundModule(),
-            XCapModule(),
-            ACCommonModeChokeModule(L_choke=L_chokeValues[i], Coupling=CouplingValues[i]),
-            BatteryGroundModule(),
-            SimpleBatteryModule()
-        ]
-
-        # Simuleringsparametrar
-        simParams = {
-            "tstep": "1ns",
-            "tstart": "0us",
-            "tstop": "1us",
-            "method": "trap"
-        }
-
-        netlist = createNetlist(modules, simParams)
-
-        batchNetlist(netlist, "sim" + str(i) + ".raw", removeNetlist=False)
-
-        # Spara datan från den genomförda simuleringen
-        saveSim("params.json",
-                modules=modules,
-                simParams=simParams,
-                results={}  # Beräknar inget resultat för tillfället.
-                )
-
-
-def one_cluster_code():
-    modules = [
-        InverterControlModule(),
-        SwitchModule(),
-        InverterModule(),
-        InverterGroundModule(),
-        StaticLoadModule(),
-        LoadGroundModule(),
-        XCapModule(),
-        DCCommonModeChokeModule(),  # Or NoDCCommonModeChokeModule()
-        ACCommonModeChokeModule(Coupling=float(sys.argv[2]), L_choke=float(sys.argv[3])),  # or NoACCommonModeChokeModule()
-        BatteryGroundModule(),
-        SimpleBatteryModule()
-    ]
-
-    # Simuleringsparametrar
-    simParams = {
-        "tstep": "1ns",
-        "tstart": "0us",
-        "tstop": "1us",
-        "method": "trap"
-    }
-
-    netlist = createNetlist(modules, simParams)
-
-    batchNetlist(netlist, "sim" + str(sys.argv[1]))
-
-
-    # Spara datan från den genomförda simuleringen
-    saveSim("simResults\\params" + str(sys.argv[1]) + ".json",
-            modules=modules,
-            simParams=simParams,
-            results={"energies": saveAllBands("sim" + str(sys.argv[1]) + ".raw")}
-            # Beräknar inget resultat för tillfället.
-            )
-
-    os.remove("sim" + str(sys.argv[1]) + ".raw")
-
-
-
-def np_encoder(object):
-    if isinstance(object, np.generic):
-        return object.item()
-
-
 def saveBandEnergies(filename: str, energies: list):
     """ Sparar ned simuleringens parametrar till en JSON-fil, lägger till simuleringen om filen redan existerar """
 
@@ -201,7 +98,3 @@ def saveAllBands(filename: str):
     energy = energyInAllBands(tf, fftcurrent)
 
     return saveBandEnergies("C:\\EENX15\\Modular\\bandEnergies.json", energy)
-
-
-if __name__ == "__main__":
-    one_cluster_code()

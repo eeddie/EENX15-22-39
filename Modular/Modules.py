@@ -261,6 +261,11 @@ class XCapModule(Module):
         C_self = 500*10**-6,
         R_self = 1.9*10**-3
         ):
+        self.name = name
+        self.params = {
+            "C_self": C_self,
+            "R_self": R_self
+        }
 
     def getNetlist(self):
         return f""".subckt {self.name} Pos Neg
