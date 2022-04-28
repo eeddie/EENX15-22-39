@@ -1,17 +1,17 @@
-# %%
+
 import numpy as np
 import matplotlib.pyplot as plt
 from biot_savart import computeBMagMtx
 
 # Field points
 rFldMtx = np.array([[-0.08, -0.08, -0.08],
-                    [ 0.0,   0.0,   0.0],
-                    [ 0.0,  -0.25, -0.5],])
+                    [0.0, 0.0, 0.0],
+                    [0.0, -0.25, -0.5]])
 
 # Centers of line currents
 rSrcMtx = np.array([[-0.01, 0.01],
-                    [ 0.0,  0.0],
-                    [ 0.0,  0.0]])
+                    [0.0, 0.0],
+                    [0.0, 0.0]])
 
 # Lengths of line currents
 lSrcVtr = np.array([1.0, 1.0])
@@ -22,7 +22,6 @@ iSrcMtx = np.array([[ 1.0,  0.9,  0.8,  0.7,  0.6,  0.5],
 
 # Compute magnitude of B-field at field points
 bMagMtx = computeBMagMtx(rFldMtx, rSrcMtx, lSrcVtr, iSrcMtx)
-
 currScale=2
 for freqIdx in range(iSrcMtx.shape[1]):
     # Initialize figure

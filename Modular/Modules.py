@@ -8,7 +8,7 @@
 class Module:
     name: str
     params: dict
-    
+
     def __init__(self, name):
         self.name = name
 
@@ -16,21 +16,23 @@ class Module:
 
 
 class InverterControlModule(Module):
-    
-    def __init__(self,
-        name = "InverterControlModule",
-        Fs=1000,                # Switchfrekvens
-        Rg=1.5,                 # Gateresistans                                          NOTE: Tagen från extern källa med AN-1001 IGBT:er
-        Gain=1000,              # Switchningens skarphet                                gain på 1000 ger rise-/fall-time på 10 ns
-        OverlapProtection=0.01  # Switchmarginal mellan positiv och negativ transistor   TODO: Välj ett passande default-värde 
-        ):
 
+    def __init__(self,
+                 name="InverterControlModule",
+                 Fs=1000,  # Switchfrekvens
+                 Rg=1.5,
+                 # Gateresistans                                      NOTE: Tagen från extern källa med AN-1001 IGBT:er
+                 Gain=1000,
+                 # Switchningens skarphet                                gain på 1000 ger rise-/fall-time på 10 ns
+                 OverlapProtection=0.01
+                 # Switchmarginal mellan positiv och negativ transistor   TODO: Välj ett passande default-värde
+                 ):
         self.name = name
         self.params = {
-            "Fs": Fs,                
-            "Rg": Rg,                  
-            "Gain": Gain,               
-            "OverlapProtection": OverlapProtection,  
+            "Fs": Fs,
+            "Rg": Rg,
+            "Gain": Gain,
+            "OverlapProtection": OverlapProtection,
         }
 
     def getNetlist(self):
@@ -55,6 +57,7 @@ EDr6 G6 E6 0 PWM_C_n 1
 E1 Frq 0 Freq 0 1
 E2 M 0 Mod 0 1
 .ends {self.name}"""
+
 
 
 
@@ -97,10 +100,8 @@ X1 Drain MGate Source {self.params["MOSType"]}
 .lib /Modular/libs/MOSFET/{self.params["MOSLib"]}"""
 
 
-
-
 class IGBTModule(Module):
-    
+
     def __init__(self,
         name = "TransistorModule",
         IGBTType = "rgw00ts65chr"
@@ -109,7 +110,6 @@ class IGBTModule(Module):
         return NotImplementedError("IGBTModule gate resistance was previously implemented in InverterControlModule but is removed and should be implemented in IGBTModule before use.")
         self.name = name
         self.params = {"IGBTType": IGBTType}
-
 
     def getNetlist(self):
         return f""".subckt {self.name} Collector Gate Emitter
@@ -154,7 +154,7 @@ class InverterModule(Module):
         
         self.name = name
         self.params = {
-            "Mod": Mod, 
+            "Mod": Mod,
             "Freq": Freq,
             "InvConModName": invConModName,
             "TranModName": tranModName,
@@ -182,27 +182,28 @@ C4 Pos Case {self.params["ParCapP"]}
 C5 Neg Case {self.params["ParCapN"]}
 .ends {self.name}"""
 
-class StaticLoadModule(Module):
-    
-    def __init__(self,
-        name = "LoadModule",
-        R_load = 1.09,                 # Lastresistans                                 TODO: 1.09 Ω är resistansen vid DC, kolla Thomas "Circuit Parameters.docx" för frekvensberoende resistans.
-        L_load = 20*(10**-3),          # Lastinduktans
-        ParCapA = 12*(10**-12),        # Parasiterande kapacitans fas A till Hölje
-        ParCapB = 15*(10**-12),        # Parasiterande kapacitans fas B till Hölje
-        ParCapC = 18*(10**-12),        # Parasiterande kapacitans fas C till Hölje
-        ParCapN = 55*(10**-12),        # Parasiterande kapacitans neutral till Hölje
-    ):
-        self.name = name
-        self.params = {                           
-            "R_load": R_load,      
-            "L_load": L_load,          
-            "ParCapA": ParCapA,        
-            "ParCapB": ParCapB,        
-            "ParCapC": ParCapC,        
-            "ParCapN": ParCapN,        
-        }
 
+class StaticLoadModule(Module):
+
+    def __init__(self,
+                 name="LoadModule",
+                 R_load=1.09,
+                 # Lastresistans                                 TODO: 1.09 Ω är resistansen vid DC, kolla Thomas "Circuit Parameters.docx" för frekvensberoende resistans.
+                 L_load=20 * (10 ** -3),  # Lastinduktans
+                 ParCapA=12 * (10 ** -12),  # Parasiterande kapacitans fas A till Hölje
+                 ParCapB=15 * (10 ** -12),  # Parasiterande kapacitans fas B till Hölje
+                 ParCapC=18 * (10 ** -12),  # Parasiterande kapacitans fas C till Hölje
+                 ParCapN=55 * (10 ** -12),  # Parasiterande kapacitans neutral till Hölje
+                 ):
+        self.name = name
+        self.params = {
+            "R_load": R_load,
+            "L_load": L_load,
+            "ParCapA": ParCapA,
+            "ParCapB": ParCapB,
+            "ParCapC": ParCapC,
+            "ParCapN": ParCapN,
+        }
 
     def getNetlist(self): return f""".subckt {self.name} A B C Case
 R1 A N001 {self.params["R_load"]}
@@ -217,18 +218,19 @@ C3 C Case {self.params["ParCapC"]}
 C4 N Case {self.params["ParCapN"]}
 .ends {self.name}"""
 
+
 class SimpleBatteryModule(Module):
-    
-    def __init__(self, 
-        name = "BatteryModule",
-        Voltage     = 400,              # Batterispänning
-        RampTime    = 0.001,            # Upprampningstid
-        R_self      = 0.1,              # Serieresistans batteri                        NOTE: 0.1 Ω är resistansen vid DC, kolla Thomas "Circuit Parameters.docx" för frekvensberoende resistans.
-        L_self      = 500*(10**-9),     # Serieinduktans batteri
-        ParCapP     = 52*(10**-12),     # Parasiterande kapacitans positiv till hölje
-        ParCapN     = 48*(10**-12),      # Parasiterande kapacitans negativ till hölje
-        ):
-        
+
+    def __init__(self,
+                 name="BatteryModule",
+                 Voltage=400,  # Batterispänning
+                 RampTime=0.001,  # Upprampningstid
+                 R_self=0.1,
+                 # Serieresistans batteri                        NOTE: 0.1 Ω är resistansen vid DC, kolla Thomas "Circuit Parameters.docx" för frekvensberoende resistans.
+                 L_self=500 * (10 ** -9),  # Serieinduktans batteri
+                 ParCapP=52 * (10 ** -12),  # Parasiterande kapacitans positiv till hölje
+                 ParCapN=48 * (10 ** -12),  # Parasiterande kapacitans negativ till hölje
+                 ):
         self.name = name
         self.params = {
             "Voltage": Voltage,
@@ -236,18 +238,19 @@ class SimpleBatteryModule(Module):
             "R_self": R_self,
             "L_self": L_self,
             "ParCapP": ParCapP,
-            "ParCapN": ParCapN 
+            "ParCapN": ParCapN
         }
 
     def getNetlist(self):
         return f""".subckt {self.name} Pos Neg Case
 *V1 N001 Neg PULSE(0V {self.params["Voltage"]} 0s {self.params["RampTime"]}) 
-B1 N001 Neg v={self.params["Voltage"]} * tanh({1/self.params["RampTime"]} * time)
+B1 N001 Neg v={self.params["Voltage"]} * tanh({1 / self.params["RampTime"]} * time)
 R1 N001 N002 {self.params["R_self"]}
 L1 N002 Pos {self.params["L_self"]}
 C1 Pos Case {self.params["ParCapP"]}
 C2 Neg Case {self.params["ParCapN"]}
 .ends {self.name}"""
+
 
 
 # X-cap mellan node och inverter
@@ -259,17 +262,12 @@ class XCapModule(Module):
         R_self = 1.9*10**-3
         ):
 
-        self.name = name
-        self.params = {
-            "C_self": C_self,
-            "R_self": R_self
-        }
-
     def getNetlist(self):
         return f""".subckt {self.name} Pos Neg
 C1 Pos Node {self.params["C_self"]}
 R1 Node Neg {self.params["R_self"]}
 .ends {self.name}"""
+
 
 class NoDCCommonModeChokeModule(Module):
 
@@ -283,6 +281,7 @@ class NoDCCommonModeChokeModule(Module):
         V0 BatPos InvPos 0V
         V1 BatNeg InvNeg 0V
         .ends {self.name}"""
+
 
 # common mode choke på DC-sidan
 class DCCommonModeChokeModule(Module):
@@ -299,7 +298,7 @@ class DCCommonModeChokeModule(Module):
             "L_choke": L_choke,
             "Coupling": Coupling
         }
-    
+
     def getNetlist(self):
         return f""".subckt {self.name} BatPos BatNeg InvPos InvNeg
 R1 BatPos PosNode {self.params["R_ser"]}
@@ -309,6 +308,7 @@ L2 NegNode InvNeg {self.params["L_choke"]}
 K12 L1 L2 {self.params["Coupling"]}
 .ends {self.name}"""
 
+
 # Ingen common-mode choke eller annat filter, 0 V mellan inverter och last
 class NoACCommonModeChokeModule(Module):
 
@@ -316,13 +316,14 @@ class NoACCommonModeChokeModule(Module):
         name = "ACCommonModeChokeModule"):
         self.name = name,
         self.params = {}
-    
+
     def getNetlist(self):
         return f""".subckt {self.name} InA InB InC OutA OutB OutC
 V0 InA OutA 0V
 V1 InB OutB 0V
 V2 InC OutC 0V
 .ends {self.name}"""
+
 
 class ACCommonModeChokeModule(Module):
 
@@ -354,13 +355,13 @@ K31 L3 L1 {self.params["Coupling"]}
 
 
 class GroundingModule(Module):
-    
+
     def __init__(self,
-        name,
-        R,
-        C,
-        L,
-    ):
+                 name,
+                 R,
+                 C,
+                 L,
+                 ):
         self.name = name
         self.params = {
             "R": R,
@@ -378,21 +379,25 @@ L1 node ground {self.params["L"]}
 
 class LoadGroundModule(GroundingModule):
 
-    def __init__(self, name = "LoadGroundModule", R = 1.59 * (10 ** (-3)), C = 8.96 * (10 ** (-9)), L = 800.0 * (10 ** (-9))):
+    def __init__(self, name="LoadGroundModule", R=1.59 * (10 ** (-3)), C=8.96 * (10 ** (-9)), L=800.0 * (10 ** (-9))):
         super().__init__(name, R, C, L)
 
     def getNetlist(self):
         return super().getNetlist()
+
 
 class InverterGroundModule(GroundingModule):
-    def __init__(self, name = "InverterGroundModule", R =  1.59 * (10 ** (-3)), C = 4.48 * (10 ** (-9)), L = 400.0 * (10 ** (-9))):
+    def __init__(self, name="InverterGroundModule", R=1.59 * (10 ** (-3)), C=4.48 * (10 ** (-9)),
+                 L=400.0 * (10 ** (-9))):
         super().__init__(name, R, C, L)
 
     def getNetlist(self):
         return super().getNetlist()
 
+
 class BatteryGroundModule(GroundingModule):
-    def __init__(self, name = "BatteryGroundModule", R = 1.59 * (10 ** (-3)), C = 3.36 * (10 ** (-9)), L = 300.0 * (10 ** (-9))):
+    def __init__(self, name="BatteryGroundModule", R=1.59 * (10 ** (-3)), C=3.36 * (10 ** (-9)),
+                 L=300.0 * (10 ** (-9))):
         super().__init__(name, R, C, L)
 
     def getNetlist(self):
