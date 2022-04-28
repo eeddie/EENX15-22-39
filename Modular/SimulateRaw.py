@@ -133,7 +133,7 @@ if __name__ == "__main__":
 
     modules = [
         InverterControlModule(Gain=inverterControlModuleGain, Fs=inverterControlModuleFs),
-        MosfetModule(),
+        SwitchModule(),
         InverterModule(Mod=inverterModuleMod, Freq=inverterModuleFreq,
                        ParCapA=inverterModuleParCapA, ParCapB=inverterModuleParCapB,
                        ParCapC=inverterModuleParCapC, ParCapP=inverterModuleParCapP, ParCapN=inverterModuleParCapN),
