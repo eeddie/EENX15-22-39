@@ -293,7 +293,7 @@ class DCCommonModeChokeModule(Module):
         L_choke     = 51    *10**-3,
         Coupling    = 0.95
     ):
-        self.name = name,
+        self.name = name
         self.params = {
             "R_ser": R_ser,
             "L_choke": L_choke,

@@ -42,9 +42,9 @@ Xbattery BatPos BatNeg BatCase BatteryModule
 VDC_P BatPos CMCPos 0 
 VDC_N BatNeg CMCNeg  0
 
-Xxcap CMCPos CMCNeg XCapModule
-
 Xdccmc CMCPos CMCNeg InvPos InvNeg DCCommonModeChokeModule
+
+Xxcap InvPos InvNeg XCapModule
 
 Xinverter InvPos InvNeg InvA InvB InvC InvCase InverterModule
 
@@ -77,9 +77,17 @@ XloadGnd LoadCase 0 LoadGroundModule
 .save i(VDC_P)
 .save i(VDC_N)
 
-.save i(xinvgnd.l1)
-.save i(xbatgnd.l1)
-.save i(xloadgnd.l1)
+.save i(l.xinvgnd.l1)
+.save i(l.xbatgnd.l1)
+.save i(l.xloadgnd.l1)
+
+.save v(batCase)
+.save v(invCase)
+.save v(loadCase)
+
+.save v(CMCPos)
+.save v(CMCNeg)
+
 
 .tran {simParams["tstep"]} {simParams["tstop"]} {simParams["tstart"]}
 .end"""
