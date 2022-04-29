@@ -60,3 +60,4 @@ if __name__ == "__main__":
     # Write the combined json data to results.json
     with open("results.json", "w") as f:
         json.dump(data, f, indent=4)
+        
