@@ -4,9 +4,9 @@ from biot_savart import computeBMagMtx
 
 def getBfaltAmplitude(I_pos, I_neg):
     # Field points
-    rFldMtx = np.array([[-0.08, -0.08, -0.08],
-                        [0.0, 0.0, 0.0],
-                        [0.0, -0.25, -0.5]])
+    rFldMtx = np.array([[-0.08, -0.08, -0.08, -0.08, -0.08],
+                        [0.0, 0.0, 0.0, 0.0, 0.0],
+                        [0.0, -0.125, -0.25, -0.375, -0.5]])
 
     # Centers of line currents
     rSrcMtx = np.array([[-0.01, 0.01],
