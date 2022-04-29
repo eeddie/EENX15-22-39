@@ -6,8 +6,10 @@
 
 import os
 from subprocess import Popen
+import json
+import glob
 
-numberOfSimulations = 16
+numberOfSimulations = 8
 maxConcurrentSims = 16
 maxConcurrentFFT = 4
 
@@ -39,14 +41,22 @@ if __name__ == "__main__":
             for fftSim in fftSims: fftSim.wait()
         doneSimulations += simulationsLeft
 
-    import glob
-
     # Create a .json file by combining the results of the simulations.
-    files = glob.glob(os.path.join("simResults", "*.json"))
+    # Put all json files in simResults in a list
+    files = glob.glob("simResults/*.json")
+
+    # Open results.json and read json data
+    data = None
+    try:
+        with open("results.json", "r") as f:
+            data = json.load(f)
+    except FileNotFoundError:
+        data = []
+    # Add the results of the simulations to the json data
+    for file in files:
+        with open(file, "r") as f:
+            simData = json.load(f)
+            data.append(simData[0])
+    # Write the combined json data to results.json
     with open("results.json", "w") as f:
-        f.write("[\n")
-        for file in files:
-            with open(file, "r") as f2:
-                f.write(f2.read()[1:-1] + ",\n")
-            os.remove(file)
-        f.write("]")
+        json.dump(data, f, indent=4)

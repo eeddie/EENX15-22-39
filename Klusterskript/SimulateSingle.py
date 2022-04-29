@@ -73,8 +73,7 @@ if __name__ == "__main__":
 
     modules: list[Module] = [
         InverterControlModule(
-            Fs=rand(5000,20000), 
-            Rg=rand(0.5, 2.0)),
+            Fs=rand(5000,20000)),
 
         SwitchModule(),
 
