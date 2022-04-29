@@ -7,9 +7,12 @@
 from subprocess import Popen
 import json
 import glob
+import os
 
-numberOfSimulations = 16
+simTime = 24 #Hours
+
 maxConcurrentSims = 16
+numberOfSimulations = int(maxConcurrentSims * simTime * 60 / 55) #55 min per sim
 maxConcurrentFFT = 4
 
 if __name__ == "__main__":
@@ -28,6 +31,8 @@ if __name__ == "__main__":
         for sim in sims:
             sim.wait()
 
+
+
         # Use the .raw files to create new .json files that retrieves modules and simParams from the previous .json file
         # and create a new .json file that includes the results of the simulation as well as the parameters.
         doneFFT = 0
@@ -42,7 +47,7 @@ if __name__ == "__main__":
 
     # Create a .json file by combining the results of the simulations.
     # Put all json files in simResults in a list
-    files = glob.glob("simResults/sim*.json")
+    files = glob.glob("simResults/*.json")
     # Open results.json and read json data
     data = None
     try:
@@ -56,7 +61,7 @@ if __name__ == "__main__":
             simData = json.load(f)[0]
             data.append(simData)
         # Remove the file
-        Popen(["rm", file])
+        os.remove(file)
 
     # Write the combined json data to results.json
     with open("results.json", "w") as f:

@@ -69,6 +69,11 @@ def BfaltFromFile(filename: str, *variables: str):
 def saveModifiedSim(filename: str, modules: list, simParams: dict, variables: list, voltages: list, ACcurrents: list,
                     results: dict):
     """ Sparar ned simuleringens parametrar till en JSON-fil, lägger till simuleringen om filen redan existerar """
+
+    # Create the folders if they don't exist
+    if not os.path.exists(os.path.dirname(filename)):
+        os.makedirs(os.path.dirname(filename))
+
     totalVariables = variables.copy()
     voltages.reverse()
     totalVariables.extend(voltages)

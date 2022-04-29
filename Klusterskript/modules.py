@@ -19,7 +19,7 @@ class InverterControlModule(Module):
 
     def __init__(self,
                  name="InverterControlModule",
-                 Fs=1000,               # Switchfrekvens
+                 Fs=10000,               # Switchfrekvens
                  Gain=1000,             # Switchningens skarphet                                gain på 1000 ger rise-/fall-time på 10 ns
                  OverlapProtection=0.01 # Switchmarginal mellan positiv och negativ transistor   TODO: Välj ett passande default-värde
                  ):

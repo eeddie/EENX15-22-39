@@ -73,69 +73,45 @@ if __name__ == "__main__":
 
     modules: list[Module] = [
         InverterControlModule(
-            Fs=rand(5000,20000)),
+            Fs=rand(8000, 12000)
+        ),
 
         SwitchModule(),
 
-        InverterModule(
-            Freq=100, 
-            Mod=1, 
-            ParCapA=rand(0.1*1e-12, 10*1e-12), 
-            ParCapB=rand(0.1*1e-12, 10*1e-12), 
-            ParCapC=rand(0.1*1e-12, 10*1e-12), 
-            ParCapP=rand(0.1*1e-12, 10*1e-12), 
-            ParCapN=rand(0.1*1e-12, 10*1e-12)),
+        InverterModule(),
 
-        InverterGroundModule(
-            R=rand(1*1e-3, 10*1e-3), 
-            C=rand(1*1e-9, 10*1e-9), 
-            L=rand(100*1e-9, 1000*1e-9)),
+        InverterGroundModule(),
 
         StaticLoadModule(
             R_load =rand(1, 10),
-            L_load =rand(10*1e-3,  100*1e-3),
-            ParCapA=rand(10*1e-12, 100*1e-12),
-            ParCapB=rand(10*1e-12, 100*1e-12),
-            ParCapC=rand(10*1e-12, 100*1e-12),
-            ParCapN=rand(10*1e-12, 100*1e-12)),
+            L_load =rand(10*1e-3,  100*1e-3)),
 
-        LoadGroundModule(
-            R=rand(1*1e-3,   10*1e-3),
-            C=rand(1*1e-9,   10*1e-9),
-            L=rand(100*1e-9, 1000*1e-9)),
+        LoadGroundModule(),
 
         XCapModule(
-            C_self=rand(100*1e-6, 1000*1e-6),
-            R_self=rand(1*1e-3, 10*1e-3)),
+            C_self=rand(100*1e-6, 1000*1e-6)),
         
         DCCommonModeChokeModule(
-            R_ser=rand(1*1e-3, 100*1e-3),
             L_choke=rand(10*1e-3, 100*1e-3),
             Coupling=rand(0.8, 1.0)) if r.random() > 0.5 else NoDCCommonModeChokeModule(),
         
         ACCommonModeChokeModule(
-            R_ser=rand(1*1e-3, 100*1e-3),
             L_choke=rand(10*1e-3, 100*1e-3),
             Coupling=rand(0.8, 1.0)) if r.random() > 0.5 else NoACCommonModeChokeModule(),
 
-        BatteryGroundModule(
-            R=rand(1*1e-3, 10*1e-3), 
-            C=rand(1*1e-9, 10*1e-9),
-            L=rand(100*1e-9, 1000*1e-9)),
+        BatteryGroundModule(),
 
         SimpleBatteryModule(
-            Voltage=rand(400, 800),
+            Voltage=(400 if r.random() > 0.1 else 800),
             R_self=rand(0.01, 1),
-            L_self=rand(100*1e-9, 1000*1e-9),
-            ParCapP=rand(10*1e-12, 100*1e-12),
-            ParCapN=rand(10*1e-12, 100*1e-12))
+            L_self=rand(100*1e-9, 1000*1e-9))
     ]
 
     # Simuleringsparametrar
     simParams = {
         "tstep": "1ns",
-        "tstart": "0us",
-        "tstop": "10ms",
+        "tstart": "100ms",
+        "tstop": "110ms",
         "method": "trap"
     }
 
@@ -143,7 +119,12 @@ if __name__ == "__main__":
 
     # Create the folder tmp/ if it does not exist
     if not os.path.exists("tmp"): os.makedirs("tmp")
-    batchNetlist(netlist, os.path.join("tmp", "sim" + str(sys.argv[1])), log=True)
+    try:
+        batchNetlist(netlist, os.path.join("tmp", "sim" + str(sys.argv[1])), log=True)
+    except ValueError:
+        pass            
+        # En simulering har misslyckats, raw-filen innehåller ingen data, detta skapar error i repairRaw, men då behöver vi inte reparera, utan fortsätter. Tomma raw-filer hanteras senare i ex. FFTRaw
+
 
     saveSim(filename=os.path.join("tmp", "params" + str(sys.argv[1]) + ".json"),
             modules=modules,
