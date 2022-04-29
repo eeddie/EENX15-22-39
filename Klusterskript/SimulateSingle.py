@@ -69,19 +69,6 @@ def rand(start: float, slut: float):
     return start + r.random() * (slut - start)
 
 
-def percentDiff(percent: float):
-    return rand(1 - percent, 1 + percent)
-
-
-def get_default_args(func):
-    signature = inspect.signature(func)
-    return {
-        k: v.default
-        for k, v in signature.parameters.items()
-        if v.default is not inspect.Parameter.empty
-    }
-
-
 if __name__ == "__main__":
 
     modules: list[Module] = [
@@ -149,14 +136,16 @@ if __name__ == "__main__":
     simParams = {
         "tstep": "1ns",
         "tstart": "0us",
-        "tstop": "1us",
+        "tstop": "10ms",
         "method": "trap"
     }
 
     netlist = createNetlist(modules, simParams)
 
-    batchNetlist(netlist, "sim" + str(sys.argv[1]))
+    # Create the folder tmp/ if it does not exist
+    if not os.path.exists("tmp"): os.makedirs("tmp")
+    batchNetlist(netlist, os.path.join("tmp", "sim" + str(sys.argv[1])), log=True)
 
-    saveSim(filename=os.path("simResults", "params" + str(sys.argv[1]) + ".json"),
+    saveSim(filename=os.path.join("tmp", "params" + str(sys.argv[1]) + ".json"),
             modules=modules,
             simParams=simParams)

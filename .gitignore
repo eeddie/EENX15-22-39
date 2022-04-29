@@ -1,5 +1,9 @@
 # Egna tillägg
 
+Klusterskript/simResults/
+Klusterskript/tmp/
+Klusterskript/results.json
+
 .idea
 .json
 # Ignorera PLECS autosave (och eventuellt andra)

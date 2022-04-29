@@ -23,4 +23,4 @@ def getBfaltAmplitude(I_pos, I_neg):
     # Compute magnitude of B-field at field points
     bMagMtx = computeBMagMtx(rFldMtx, rSrcMtx, lSrcVtr, iSrcMtx)
     #print(bMagMtx)
-    return 1e6*np.transpose(bMagMtx)
+    return (bMagMtx)

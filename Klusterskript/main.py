@@ -7,9 +7,9 @@
 import os
 from subprocess import Popen
 
-numberOfSimulations = 128
-maxConcurrentSims = 64
-maxConcurrentFFT = 8
+numberOfSimulations = 16
+maxConcurrentSims = 16
+maxConcurrentFFT = 4
 
 if __name__ == "__main__":
     
@@ -20,7 +20,7 @@ if __name__ == "__main__":
 
         # Run simulations --> create .raw files and save a .json file with the modules and simParams used.
         for i in range(simulationsLeft):
-            sims.append(Popen(["python", "SimulateRaw.py", str(doneSimulations + i)], shell=True))
+            sims.append(Popen(["python", "SimulateSingle.py", str(doneSimulations + i)], shell=True))
             print("Simulation " + str(doneSimulations + i) + " started")
 
         # Wait for simulations to finish
@@ -36,13 +36,13 @@ if __name__ == "__main__":
                 fftSims.append(
                     Popen(["python", "FFTRaw.py", str(doneSimulations + doneFFT)], shell=True))
                 doneFFT += 1
-            [fftSim.wait() for fftSim in fftSims]
+            for fftSim in fftSims: fftSim.wait()
         doneSimulations += simulationsLeft
 
     import glob
 
     # Create a .json file by combining the results of the simulations.
-    files = glob.glob(os.path("simResults", "*.json"))
+    files = glob.glob(os.path.join("simResults", "*.json"))
     with open("results.json", "w") as f:
         f.write("[\n")
         for file in files:
