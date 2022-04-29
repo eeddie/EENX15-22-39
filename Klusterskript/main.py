@@ -45,8 +45,8 @@ if __name__ == "__main__":
     files = glob.glob(os.path.join("simResults", "*.json"))
     with open("results.json", "w") as f:
         f.write("[\n")
-        for file in files:
+        for index, file in enumerate(files):
             with open(file, "r") as f2:
-                f.write(f2.read()[1:-1] + ",\n")
+                f.write(f2.read()[1:-1] + (",\n" if index + 1 < numberOfSimulations else ""))
             os.remove(file)
         f.write("]")
