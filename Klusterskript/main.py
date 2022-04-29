@@ -4,12 +4,11 @@
 # Ingångspunkten för klusterskriptet som mkörs på beräkningsnoder.
 #
 
-import os
 from subprocess import Popen
 import json
 import glob
 
-numberOfSimulations = 8
+numberOfSimulations = 16
 maxConcurrentSims = 16
 maxConcurrentFFT = 4
 
@@ -43,8 +42,7 @@ if __name__ == "__main__":
 
     # Create a .json file by combining the results of the simulations.
     # Put all json files in simResults in a list
-    files = glob.glob("simResults/*.json")
-
+    files = glob.glob("simResults/sim*.json")
     # Open results.json and read json data
     data = None
     try:
@@ -55,8 +53,11 @@ if __name__ == "__main__":
     # Add the results of the simulations to the json data
     for file in files:
         with open(file, "r") as f:
-            simData = json.load(f)
-            data.append(simData[0])
+            simData = json.load(f)[0]
+            data.append(simData)
+        # Remove the file
+        Popen(["rm", file])
+
     # Write the combined json data to results.json
     with open("results.json", "w") as f:
         json.dump(data, f, indent=4)
