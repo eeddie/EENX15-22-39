@@ -4,8 +4,9 @@
 # Ingångspunkten för klusterskriptet som mkörs på beräkningsnoder.
 #
 
-import os
 from subprocess import Popen
+import json
+import glob
 
 numberOfSimulations = 16
 maxConcurrentSims = 16
@@ -39,14 +40,25 @@ if __name__ == "__main__":
             for fftSim in fftSims: fftSim.wait()
         doneSimulations += simulationsLeft
 
-    import glob
-
     # Create a .json file by combining the results of the simulations.
-    files = glob.glob(os.path.join("simResults", "*.json"))
+    # Put all json files in simResults in a list
+    files = glob.glob("simResults/sim*.json")
+    # Open results.json and read json data
+    data = None
+    try:
+        with open("results.json", "r") as f:
+            data = json.load(f)
+    except FileNotFoundError:
+        data = []
+    # Add the results of the simulations to the json data
+    for file in files:
+        with open(file, "r") as f:
+            simData = json.load(f)[0]
+            data.append(simData)
+        # Remove the file
+        Popen(["rm", file])
+
+    # Write the combined json data to results.json
     with open("results.json", "w") as f:
-        f.write("[\n")
-        for index, file in enumerate(files):
-            with open(file, "r") as f2:
-                f.write(f2.read()[1:-1] + (",\n" if index + 1 < numberOfSimulations else ""))
-            os.remove(file)
-        f.write("]")
+        json.dump(data, f, indent=4)
+        

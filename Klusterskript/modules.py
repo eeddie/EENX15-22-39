@@ -19,18 +19,13 @@ class InverterControlModule(Module):
 
     def __init__(self,
                  name="InverterControlModule",
-                 Fs=1000,  # Switchfrekvens
-                 Rg=1.5,
-                 # Gateresistans                                      NOTE: Tagen från extern källa med AN-1001 IGBT:er
-                 Gain=1000,
-                 # Switchningens skarphet                                gain på 1000 ger rise-/fall-time på 10 ns
-                 OverlapProtection=0.01
-                 # Switchmarginal mellan positiv och negativ transistor   TODO: Välj ett passande default-värde
+                 Fs=1000,               # Switchfrekvens
+                 Gain=1000,             # Switchningens skarphet                                gain på 1000 ger rise-/fall-time på 10 ns
+                 OverlapProtection=0.01 # Switchmarginal mellan positiv och negativ transistor   TODO: Välj ett passande default-värde
                  ):
         self.name = name
         self.params = {
             "Fs": Fs,
-            "Rg": Rg,
             "Gain": Gain,
             "OverlapProtection": OverlapProtection,
         }
