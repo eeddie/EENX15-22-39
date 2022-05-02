@@ -10,8 +10,8 @@ def np_encoder(obj):
         return obj.item()
 
 
-def energyAndBfaltFromFile(filename: str, dcI: list[str], voltages: list[str], variables: list[str],
-                           ACcurrents: list[str]):
+def energyAndBfaltFromFile(filename: str, dcI: list, voltages: list, variables: list,
+                           ACcurrents: list):
     vars = variables.copy()
     [time, data] = readVariables(filename, *variables, *ACcurrents, *voltages)
 
@@ -126,7 +126,7 @@ if __name__ == "__main__":
     except Exception as e:
         failed = True
 
-    saveModifiedSim("simResults\\sim" + str(sys.argv[1]) + ".json",
+    saveModifiedSim(os.path.join(os.path.dirname(__file__), "simResults", "sim" + str(sys.argv[1]) + ".json"),
                     modules=data[0]["modules"],
                     simParams=data[0]["simParams"],
                     variables=variables,

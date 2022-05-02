@@ -24,7 +24,7 @@ if __name__ == "__main__":
 
         # Run simulations --> create .raw files and save a .json file with the modules and simParams used.
         for i in range(simulationsLeft):
-            sims.append(Popen(["python", "SimulateSingle.py", str(doneSimulations + i)], shell=True))
+            sims.append(Popen("python3 SimulateSingle.py " + str(doneSimulations + i), shell=True))
             print("Simulation " + str(doneSimulations + i) + " started")
 
         # Wait for simulations to finish
@@ -40,18 +40,19 @@ if __name__ == "__main__":
             fftSims = []
             for j in range(min(simulationsLeft - doneFFT, maxConcurrentFFT)):
                 fftSims.append(
-                    Popen(["python", "FFTRaw.py", str(doneSimulations + doneFFT)], shell=True))
+                    Popen("python3 FFTRaw.py " + str(doneSimulations + doneFFT), shell=True))
                 doneFFT += 1
             for fftSim in fftSims: fftSim.wait()
         doneSimulations += simulationsLeft
 
     # Create a .json file by combining the results of the simulations.
     # Put all json files in simResults in a list
-    files = glob.glob("simResults/*.json")
+    files = glob.glob(os.path.join(os.path.dirname(__file__), "simResults", "*.json"))
+    print("Globbed: " + str(files))
     # Open results.json and read json data
     data = None
     try:
-        with open("results.json", "r") as f:
+        with open(os.path.join(os.path.dirname(__file__), "results.json"), "r") as f:
             data = json.load(f)
     except FileNotFoundError:
         data = []
@@ -64,6 +65,6 @@ if __name__ == "__main__":
         os.remove(file)
 
     # Write the combined json data to results.json
-    with open("results.json", "w") as f:
+    with open(os.path.join(os.path.dirname(__file__), "results.json"), "w") as f:
         json.dump(data, f, indent=4)
         

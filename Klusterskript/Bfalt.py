@@ -1,5 +1,4 @@
 import numpy as np
-import matplotlib.pyplot as plt
 from biot_savart import computeBMagMtx
 
 def getBfaltAmplitude(I_pos, I_neg):

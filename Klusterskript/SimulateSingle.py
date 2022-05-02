@@ -71,7 +71,7 @@ def rand(start: float, slut: float):
 
 if __name__ == "__main__":
 
-    modules: list[Module] = [
+    modules: list = [
         InverterControlModule(
             Fs=rand(8000, 12000)
         ),
@@ -120,12 +120,12 @@ if __name__ == "__main__":
     # Create the folder tmp/ if it does not exist
     if not os.path.exists("tmp"): os.makedirs("tmp")
     try:
-        batchNetlist(netlist, os.path.join("tmp", "sim" + str(sys.argv[1])), log=True)
+        batchNetlist(netlist, os.path.join(os.path.dirname(__file__), "tmp", "sim" + str(sys.argv[1])), log=True)
     except ValueError:
         pass            
         # En simulering har misslyckats, raw-filen innehåller ingen data, detta skapar error i repairRaw, men då behöver vi inte reparera, utan fortsätter. Tomma raw-filer hanteras senare i ex. FFTRaw
 
 
-    saveSim(filename=os.path.join("tmp", "params" + str(sys.argv[1]) + ".json"),
+    saveSim(filename=os.path.join(os.path.dirname(__file__), "tmp", "params" + str(sys.argv[1]) + ".json"),
             modules=modules,
             simParams=simParams)

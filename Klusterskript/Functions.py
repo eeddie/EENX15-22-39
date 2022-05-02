@@ -20,7 +20,7 @@ def batchNetlist(netlist: str, name = 'tmp', log=False, removeNetlist=True):
         netlist_file = open(f'{name}.net', 'w')
         netlist_file.write(netlist)
         netlist_file.close()
-        os.system(f'ngspice_con.exe -b -r {name}.raw {"-o " + name + ".log" if log else ""} {name}.net')   # NOTE: Lägg till mappen med ngspice i systemvariablerna istället så slipper vi byta
+        os.system(f'ngspice -b -r {name}.raw {"-o " + name + ".log" if log else ""} {name}.net')   # NOTE: Lägg till mappen med ngspice i systemvariablerna istället så slipper vi byta
         if removeNetlist: os.remove(f"{name}.net")
         repairRaw(f"{name}.raw")
 
@@ -203,7 +203,7 @@ def energyFromFile(filename: str, *variables:str):
 
     return energyInAllBands(tf, *yfs)
 
-def saveSim(filename: str, modules, simParams: dict, variables: list[str] = None, results: dict = None, log: str = None):
+def saveSim(filename: str, modules, simParams: dict, variables: list = None, results: dict = None, log: str = None):
     """ Sparar ned simuleringens parametrar till en JSON-fil, lägger till simuleringen om filen redan existerar """
 
     # Create the folders if they don't exist
