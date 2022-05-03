@@ -76,7 +76,7 @@ if __name__ == "__main__":
 
     modules: list = [
         InverterControlModule(
-            Fs=randomAroundCenter(10e4)
+            Fs=randomAroundCenter(10**4)
         ),
 
         SwitchModule(),
