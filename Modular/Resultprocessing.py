@@ -1,6 +1,7 @@
 
 import json
 import sys
+import numpy as np
 
 def combineResultFiles(name: str, *files: str):
     """ Reads all json files in files and combines the contents into a new json file named "name" """
@@ -45,11 +46,62 @@ def checkFaulty(file: str):
         print("Sims without either:", sims_without_either)
         print("Total:", len(data))
 
+    import numpy as np
 
+def plotFourierSurface(file: str, module: str, parameter: str, variable: str):
+    """ Plots the fourier surface of the variable in the parameter of the module in the file """
+    with open(file, "r") as f:
+        data = json.load(f)
+
+        # Get all the simulations that contain the module and parameter
+        parameterValues = []
+        variableValues = []
+        middleFrequencies = []
+        for sim in data:
+            if module in sim["modules"] and parameter in sim["modules"][module] and variable in sim["variables"]:
+
+                if "ACCommonModeChokeModule" in sim["modules"] and "DCCommonModeChokeModule" in sim["modules"] and sim["modules"]["BatteryModule"]["Voltage"] == 400:
+                    parameterValues.append([sim["modules"][module][parameter] for i in range(len(sim["results"]["energies"]))])
+                    
+                    # Get the middle frequency from the result file and add it to the middleFrequencies list
+                    middleFrequencies.append([(sim["results"]["energies"][i][0] + sim["results"]["energies"][i][1])/2 for i in range(len(sim["results"]["energies"]))])
+                    # get the variable index from the variable field
+                    variableIndex = sim["variables"].index(variable)
+                    variableValues.append([sim["results"]["energies"][i][3 + variableIndex]/sim["results"]["energies"][i][2] for i in range(len(sim["results"]["energies"]))])
+
+    # Plot a surface plot with parameterValues as x, middlefrequencies as y and the variablevalues as z
+    import matplotlib.pyplot as plt
+
+
+    fig = plt.figure(1, figsize=(6,6))
+    ax = fig.add_subplot(111, projection='3d')
+
+    # Sort parameterValues, middlefrequencies and variableValues by parameterValues
+    parameterValues, middleFrequencies, variableValues = zip(*sorted(zip(parameterValues, middleFrequencies, variableValues)))
+
+    parameterValues = np.array(parameterValues)
+    middleFrequencies = np.log10(np.array(middleFrequencies))
+    variableValues = np.log10(np.array(variableValues))
+
+    parameterValues = np.transpose(parameterValues)
+    middleFrequencies = np.transpose(middleFrequencies)
+    variableValues = np.transpose(variableValues)
+
+    # Plot a 3D surface with the parameterValues as x, middleFrequencies as y and the variableValues as z
+    ax.plot_surface(parameterValues, middleFrequencies, variableValues)
+
+    plt.figure(2)
+
+    # Plot variablevalues transosed as a function of middleFrequencies with the color vector as color
+    plt.plot(middleFrequencies, variableValues, color="black", alpha=0.1)
+
+    #plt.plot(np.transpose(middleFrequencies), np.transpose(variableValues), color=color, alpha=0.1)
+
+    plt.show()
 
 
 
 if __name__ == "__main__":
     #combineResultFiles("Results/results", "Results/results_Eddie0.json", "Results/results_Eddie1.json", "Results/results_simon.json")
     #checkFaulty(sys.argv[1])
-    quit()
+    plotFourierSurface("Results/results.json", "ACCommonModeChokeModule", "L_choke", "i(VAC_A)+i(VAC_B)+i(VAC_C)")
