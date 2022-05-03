@@ -9,7 +9,7 @@ import sys
 import numpy as np
 import gc
 
-sys.path.append('./Modular/')
+sys.path.append('../Modular/')
 from Functions import *
 
 
@@ -308,13 +308,14 @@ if __name__ == "__main__":
     #     names =     ["Strömbrytare",    "Varistor",         "MOSFET1",          "MOSFET2",                      "IGBT"],
     #     filenames = ["bss_switch.raw",  "bss_varistor.raw", "bss_mosfet.raw",   "bss_mosfet_infineon_L0.raw",   "bss_igbt_10.raw"])
 
-    plotOnTopFFTOf(
-        names =     ["IGBT",            "MOSFET1",          "MOSFET2"],
-        filenames = ["bss_igbt_10.raw", "bss_mosfet.raw",   "bss_mosfet_infineon_L0.raw"])
+    # plotOnTopFFTOf(
+    #     names =     ["IGBT",            "MOSFET1",          "MOSFET2"],
+    #     filenames = ["bss_igbt_10.raw", "bss_mosfet.raw",   "bss_mosfet_infineon_L0.raw"])
 
     # plotSideBySideStepOf(
     #     [f"$R_d={i}$" for i in [1,5,10]],
     #     [f"bss_igbt_{i}.raw" for i in [1,5,10]]
     #     )
+    quit()
 
 

@@ -48,7 +48,7 @@ def energyAndBfaltFromFile(filename: str, dcI: list, voltages: list, variables: 
 
     energy = energyInAllBands(tf, *yfs, *Bfalt)
 
-    return json.dumps(energy, default=np_encoder)
+    return energy
 
 
 def BfaltFromFile(filename: str, *variables: str):

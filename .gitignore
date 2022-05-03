@@ -5,7 +5,7 @@ Klusterskript/tmp/
 Klusterskript/results.json
 
 .idea
-.json
+*.json
 # Ignorera PLECS autosave (och eventuellt andra)
 .autosave
 
