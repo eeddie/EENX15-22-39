@@ -61,13 +61,13 @@ def plotFourierSurface(file: str, module: str, parameter: str, variable: str):
             if module in sim["modules"] and parameter in sim["modules"][module] and variable in sim["variables"]:
 
                 if "ACCommonModeChokeModule" in sim["modules"] and "DCCommonModeChokeModule" in sim["modules"] and sim["modules"]["BatteryModule"]["Voltage"] == 400:
-                    parameterValues.append([sim["modules"][module][parameter] for i in range(len(sim["results"]["energies"]))])
+                    parameterValues.append([sim["modules"][module][parameter] for i in range(len(sim["results"]))])
                     
                     # Get the middle frequency from the result file and add it to the middleFrequencies list
-                    middleFrequencies.append([(sim["results"]["energies"][i][0] + sim["results"]["energies"][i][1])/2 for i in range(len(sim["results"]["energies"]))])
+                    middleFrequencies.append([(sim["results"][i][0] + sim["results"][i][1])/2 for i in range(len(sim["results"]))])
                     # get the variable index from the variable field
                     variableIndex = sim["variables"].index(variable)
-                    variableValues.append([sim["results"]["energies"][i][3 + variableIndex]/sim["results"]["energies"][i][2] for i in range(len(sim["results"]["energies"]))])
+                    variableValues.append([sim["results"][i][3 + variableIndex]/sim["results"][i][2] for i in range(len(sim["results"]))])
 
     # Plot a surface plot with parameterValues as x, middlefrequencies as y and the variablevalues as z
     import matplotlib.pyplot as plt

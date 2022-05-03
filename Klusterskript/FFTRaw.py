@@ -66,8 +66,20 @@ def BfaltFromFile(filename: str, *variables: str):
     return getBfaltAmplitude(yfs[0], yfs[1])
 
 
+class NpEncoder(json.JSONEncoder):
+    """ Envoder to encode numpy arrays"""
+    def default(self, obj):
+        if isinstance(obj, np.integer):
+            return int(obj)
+        if isinstance(obj, np.floating):
+            return float(obj)
+        if isinstance(obj, np.ndarray):
+            return obj.tolist()
+        return super(NpEncoder, self).default(obj)
+
+
 def saveModifiedSim(filename: str, modules: list, simParams: dict, variables: list, voltages: list, ACcurrents: list,
-                    results: dict):
+                    results: list = None, log: str = None):
     """ Sparar ned simuleringens parametrar till en JSON-fil, lägger till simuleringen om filen redan existerar """
 
     # Create the folders if they don't exist
@@ -85,19 +97,21 @@ def saveModifiedSim(filename: str, modules: list, simParams: dict, variables: li
         except json.JSONDecodeError:
             file_data = []  # Om filen är tom, skapa en tom lista, i denna hamnar alla utförda simuleringar
 
-        file_data.append(  # Lägg till en ny dict, som innehåller datan från simuleringen, i listan
-            {
-                "modules": modules,
-                # "modules" är en dict med moduler där modulnamn är key och parameterdicten är value
-                "simParams": simParams,  # "simParams" är en dict med simuleringsparametrar ex. tstep, tstart, tstop
+        simDict = {
+                "modules": modules,         # "modules" är en dict med moduler där modulnamn är key och parameterdicten är value
+                "simParams": simParams,     # "simParams" är en dict med simuleringsparametrar ex. tstep, tstart, tstop
                 "variables": totalVariables,
-                "results": results  # Results är en dict med resultat. Ex. {"commonModeCurrent": 50}
-            })
+            }
+        if results != None: simDict["results"] = results            # Results är en lista med resultatvariabler
+        if log != None: simDict["log"] = log                        # Log är en str med loggfilen
+        file_data.append(simDict)  # Lägg till en ny dict, som innehåller datan från simuleringen, i listan
+
         file.seek(0)  # Börja om filen från början så vi skriver över filen med den nya datan
-        json.dump(file_data, file, indent=4)  # Dumpa Python-objektet till JSON-filen igen
+        json.dump(file_data, file, cls=NpEncoder, indent=4)  # Dumpa Python-objektet till JSON-filen igen
 
 
 if __name__ == "__main__":
+
     parameterFile = "tmp/params" + str(sys.argv[1]) + ".json"
     simFile = "tmp/sim" + str(sys.argv[1]) + ".raw"
     logFile = "tmp/sim" + str(sys.argv[1]) + ".log"
@@ -125,7 +139,7 @@ if __name__ == "__main__":
         result = energyAndBfaltFromFile(simFile, ["i(VDC_P)", "i(VDC_N)"], voltages, variables, ACcurr)
     except Exception as e:
         failed = True
-
+    
     saveModifiedSim(os.path.join(os.path.dirname(__file__), "simResults", "sim" + str(sys.argv[1]) + ".json"),
                     modules=data[0]["modules"],
                     simParams=data[0]["simParams"],
@@ -134,7 +148,8 @@ if __name__ == "__main__":
                     ACcurrents=[curr1 + '+' + curr2 + '+' + curr3 for curr1, curr2, curr3 in zip(ACcurr[0::3],
                                                                                                  ACcurr[1::3],
                                                                                                  ACcurr[2::3])],
-                    results={"energies": result} if not failed else {"log": open(logFile, "r").readlines()}
+                    results =   result  if not failed else None,
+                    log =       None    if not failed else open(logFile, "r").readlines()
                     )
 
     os.remove(logFile)

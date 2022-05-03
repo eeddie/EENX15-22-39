@@ -11,9 +11,9 @@ import os
 
 simTime = 24 #Hours
 
-maxConcurrentSims = 64
-numberOfSimulations = int(maxConcurrentSims * simTime * 60 / 55) #55 min per sim
-maxConcurrentFFT = 8
+maxConcurrentSims = 16
+numberOfSimulations = 16 #int(maxConcurrentSims * simTime * 60 / 55) #55 min per sim
+maxConcurrentFFT = 4
 
 if __name__ == "__main__":
     
@@ -48,7 +48,6 @@ if __name__ == "__main__":
     # Create a .json file by combining the results of the simulations.
     # Put all json files in simResults in a list
     files = glob.glob(os.path.join(os.path.dirname(__file__), "simResults", "*.json"))
-    print("Globbed: " + str(files))
     # Open results.json and read json data
     data = None
     try:
