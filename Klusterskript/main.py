@@ -11,9 +11,9 @@ import os
 
 simTime = 24 #Hours
 
-maxConcurrentSims = 16
+maxConcurrentSims = 64
 numberOfSimulations = int(maxConcurrentSims * simTime * 60 / 55) #55 min per sim
-maxConcurrentFFT = 4
+maxConcurrentFFT = 8
 
 if __name__ == "__main__":
     
