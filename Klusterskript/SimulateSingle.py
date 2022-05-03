@@ -65,15 +65,18 @@ XloadGnd LoadCase 0 LoadGroundModule
 .end"""
 
 
-def rand(start: float, slut: float):
-    return start + r.random() * (slut - start)
+def randomInRange(start: float, end: float):
+    return start + r.random() * (end - start)
+
+def randomAroundCenter(center, factor = 0.03):
+    return randomInRange((1-factor) * center, (1+factor) * center)
 
 
 if __name__ == "__main__":
 
     modules: list = [
         InverterControlModule(
-            Fs=rand(8000, 12000)
+            Fs=randomAroundCenter(10e4)
         ),
 
         SwitchModule(),
@@ -83,28 +86,27 @@ if __name__ == "__main__":
         InverterGroundModule(),
 
         StaticLoadModule(
-            R_load =rand(1, 10),
-            L_load =rand(10*1e-3,  100*1e-3)),
+            R_load =randomAroundCenter(1.09),
+            L_load =randomAroundCenter(20e-3)),
 
         LoadGroundModule(),
 
         XCapModule(
-            C_self=rand(100*1e-6, 1000*1e-6)),
+            C_self=randomAroundCenter(500e-6)),
         
         DCCommonModeChokeModule(
-            L_choke=rand(10*1e-3, 100*1e-3),
-            Coupling=rand(0.8, 1.0)) if r.random() > 0.5 else NoDCCommonModeChokeModule(),
+            L_choke=randomAroundCenter(20e-3),
+            Coupling=randomAroundCenter(51e-3)),
         
         ACCommonModeChokeModule(
-            L_choke=rand(10*1e-3, 100*1e-3),
-            Coupling=rand(0.8, 1.0)) if r.random() > 0.5 else NoACCommonModeChokeModule(),
+            L_choke=randomAroundCenter(51e-3),
+            Coupling=randomAroundCenter(0.95)),
 
         BatteryGroundModule(),
 
         SimpleBatteryModule(
-            Voltage=(400 if r.random() > 0.1 else 800),
-            R_self=rand(0.01, 1),
-            L_self=rand(100*1e-9, 1000*1e-9))
+            R_self=randomAroundCenter(0.1),
+            L_self=randomAroundCenter(500e-9))
     ]
 
     # Simuleringsparametrar
