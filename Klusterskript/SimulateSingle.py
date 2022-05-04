@@ -96,7 +96,7 @@ if __name__ == "__main__":
         
         DCCommonModeChokeModule(
             L_choke=randomAroundCenter(20e-3),
-            Coupling=randomAroundCenter(51e-3)),
+            Coupling=randomAroundCenter(0.95)),
         
         ACCommonModeChokeModule(
             L_choke=randomAroundCenter(51e-3),
