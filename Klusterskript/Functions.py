@@ -221,14 +221,8 @@ def saveSim(filename: str, modules, simParams: dict, variables: list = None, res
     # Create the folders if they don't exist
     if not os.path.exists(os.path.dirname(filename)):
         os.makedirs(os.path.dirname(filename))
-
-    # Load the file if it exists
-    if os.path.isfile(filename):
-        file_data = np.append(np.load(filename, allow_pickle=True), simDict, 0)
-    else:
-        file_data = np.array(simDict)
     
-    np.save(filename, file_data) # Lägg till den nya simuleringen i listan, spara sedan listan
+    np.save(filename, simDict) # Lägg till den nya simuleringen i listan, spara sedan listan
 
 
 def saveBandEnergies(filename: str, energies: list):

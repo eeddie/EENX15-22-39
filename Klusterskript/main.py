@@ -57,10 +57,10 @@ if __name__ == "__main__":
     
     # Add the results of the simulations to the npy data
     for file in files:
-        if data is None: 
-            data = np.array(np.load(file, allow_pickle=True))
+        if data  is None: 
+            data = np.array([np.load(file, allow_pickle=True).item])
         else:
-            data = np.append(data, np.load(file, allow_pickle=True), axis=0)
+            data = np.append(data, np.array([np.load(file, allow_pickle=True).item()]), axis=0)
         # Remove the file
         os.remove(file)
 

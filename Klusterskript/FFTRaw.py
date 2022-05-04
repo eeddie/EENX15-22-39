@@ -85,13 +85,7 @@ def saveModifiedSim(filename: str, modules: list, simParams: dict, variables: li
     if results != None: simDict["results"] = results            # Results är en lista med resultatvariabler
     if log != None: simDict["log"] = log                        # Log är en str med loggfilen
 
-    # Load the file if it exists
-    if os.path.isfile(filename):
-        file_data = np.append(np.load(filename, allow_pickle=True), simDict, axis=0)
-    else:
-        file_data = np.array(simDict)
-
-    np.save(filename, file_data)
+    np.save(filename, simDict)
     
 
 
@@ -101,8 +95,7 @@ if __name__ == "__main__":
     simFile = "tmp/sim" + str(sys.argv[1]) + ".raw"
     logFile = "tmp/sim" + str(sys.argv[1]) + ".log"
 
-    
-    data = np.load(parameterFile, allow_pickle=True)
+    data = np.load(parameterFile, allow_pickle=True).item()
 
     variables = ["i(VDC_P)",
             "i(VDC_N)",
@@ -126,8 +119,8 @@ if __name__ == "__main__":
         failed = True
     
     saveModifiedSim(os.path.join(os.path.dirname(__file__), "simResults", "sim" + str(sys.argv[1]) + ".npy"),
-                    modules=data[0]["modules"],
-                    simParams=data[0]["simParams"],
+                    modules=data["modules"],
+                    simParams=data["simParams"],
                     variables=variables,
                     voltages=[voltage1 + '-' + voltage2 for voltage1, voltage2 in zip(voltages[0::2], voltages[1::2])],
                     ACcurrents=[curr1 + '+' + curr2 + '+' + curr3 for curr1, curr2, curr3 in zip(ACcurr[0::3],
