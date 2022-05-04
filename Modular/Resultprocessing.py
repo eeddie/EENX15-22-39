@@ -1,7 +1,8 @@
 
 import json
-import sys
 import numpy as np
+import matplotlib.pyplot as plt
+import os
 
 def combineResultFiles(name: str, *files: str):
     """ Reads all json files in files and combines the contents into a new json file named "name" """
@@ -15,6 +16,16 @@ def combineResultFiles(name: str, *files: str):
 
     with open(name + ".json", "w") as f:
         json.dump(data, f, indent=4)
+
+def combineResultsInDirectory(name: str, directory: str):
+    """ Combines all json files in the directory with subdirectories into a new json file named "name" """
+    files = []
+    for root, dirs, files in os.walk(directory):
+        for file in files:
+            if file.endswith(".json"):
+                files.append(os.path.join(root, file))
+    combineResultFiles(name, *files)
+
 
 
 
@@ -70,7 +81,6 @@ def plotFourierSurface(file: str, module: str, parameter: str, variable: str):
                     variableValues.append([sim["results"][i][3 + variableIndex]/sim["results"][i][2] for i in range(len(sim["results"]))])
 
     # Plot a surface plot with parameterValues as x, middlefrequencies as y and the variablevalues as z
-    import matplotlib.pyplot as plt
 
 
     fig = plt.figure(1, figsize=(6,6))
@@ -103,5 +113,6 @@ def plotFourierSurface(file: str, module: str, parameter: str, variable: str):
 
 if __name__ == "__main__":
     #combineResultFiles("Results/results", "Results/results_Eddie0.json", "Results/results_Eddie1.json", "Results/results_simon.json")
+    combineResultsInDirectory("Modular\\Results\\results", "Modular\\Results\\")
     #checkFaulty(sys.argv[1])
-    plotFourierSurface("Results/results.json", "ACCommonModeChokeModule", "L_choke", "i(VAC_A)+i(VAC_B)+i(VAC_C)")
+    #plotFourierSurface("Results/results.json", "ACCommonModeChokeModule", "L_choke", "i(VAC_A)+i(VAC_B)+i(VAC_C)")
