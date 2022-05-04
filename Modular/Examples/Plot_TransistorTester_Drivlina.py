@@ -24,19 +24,16 @@ def test_energyFromFile(*filenames: str):
     for filename in filenames:
         energies = energyFromFile(filename,"i(vac_a)", "i(vac_b)", "i(vdc_p)")
         
-        phaseEnergy = energies["i(vac_a)"]
-        freq = [row[0] for row in phaseEnergy]
-        value = [row[2]/row[3] for row in phaseEnergy]
-        
-        plt.figure(1)
-        plt.plot(freq,value,'-', linewidth=linewidth,alpha=0.5, label=filename.removesuffix(".raw"))
+        freq = [(row[0]+row[1])/2 for row in energies]
+        vaca = [row[3]/row[2] for row in energies]
 
-        phaseEnergy1 = energies["i(vdc_p)"]
-        freq1 = [row[0] for row in phaseEnergy1]
-        value1 = [row[2]/row[3] for row in phaseEnergy1]
+        plt.figure(1)
+        plt.plot(freq,vaca,'-', linewidth=linewidth,alpha=1, label=filename.removesuffix(".raw"))
+
+        vacp = [row[5]/row[2] for row in energies]
 
         plt.figure(2)
-        plt.plot(freq1,value1,'-', linewidth=linewidth,alpha=0.5, label=filename.removesuffix(".raw"))
+        plt.plot(freq,vacp,'-', linewidth=linewidth,alpha=1, label=filename.removesuffix(".raw"))
     
     plt.figure(1)
     plt.legend()
@@ -47,8 +44,15 @@ def test_energyFromFile(*filenames: str):
     plt.legend()
     plt.loglog()
     plt.grid()
+    plt.show()
 
 if __name__=="__main__":
+
+    plt.rcParams.update({'font.size': 28})
+    test_energyFromFile("Strömbrytare.raw", "Inb. MOSFET.raw", "Sub. MOSFET.raw")
+
+    quit()
+
     plt.rcParams.update({'font.size': 28})
     test_energyFromFile("Strömbrytare.raw", "Inb. MOSFET.raw", "Sub. MOSFET.raw")
     
