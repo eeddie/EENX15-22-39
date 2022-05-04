@@ -11,9 +11,7 @@ from scipy import interpolate
 from scipy.fftpack import fft, fftfreq
 from ltspice import Ltspice
 import json
-import operator
 import math
-from Modules import Module
 
 
 def batchNetlist(netlist: str, name = 'tmp', log=False, removeNetlist=True):
