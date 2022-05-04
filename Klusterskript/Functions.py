@@ -10,9 +10,7 @@ import os
 from scipy import interpolate
 from scipy.fftpack import fft, fftfreq
 from ltspice import Ltspice
-import json
 import math
-
 
 def batchNetlist(netlist: str, name = 'tmp', log=False, removeNetlist=True):
         netlist_file = open(f'{name}.net', 'w')
@@ -203,58 +201,50 @@ def energyFromFile(filename: str, *variables:str):
 
 def saveSim(filename: str, modules, simParams: dict, variables: list = None, results: dict = None, log: str = None):
     """ Sparar ned simuleringens parametrar till en JSON-fil, lägger till simuleringen om filen redan existerar """
+    
+    # Om modules är en modullista och inte en färdig dict, ta bort "virtuella" moduler (ex. NoDCCommonModeChoke) och gör om till dict
+    if isinstance(modules, list):
+        i = len(modules)-1
+        while i > 0:
+            if not hasattr(modules[i], "params"): modules.pop(i)
+            i -= 1
+        modules = {module.name: module.params for module in modules}
+
+    simDict = {
+        "modules": modules, # "modules" är en dict med moduler där modulnamn är key och parameterdicten är value
+        "simParams": simParams,  # "simParams" är en dict med simuleringsparametrar ex. tstep, tstart, tstop   
+    }
+    if variables is not None: simDict["variables"] = variables
+    if results is not None: simDict["results"] = results
+    if log is not None: simDict["log"] = log
 
     # Create the folders if they don't exist
     if not os.path.exists(os.path.dirname(filename)):
         os.makedirs(os.path.dirname(filename))
 
-    with open(filename, "w+") as file:  # Öppna/Skapa json fil
-        try:
-            file_data = json.load(file)  # Ladda in JSON-data som python object (list "[]" eller dict "{}")
-        except json.JSONDecodeError:
-            file_data = []  # Om filen är tom, skapa en tom lista, i denna hamnar alla utförda simuleringar
-
-        # Om modules är en modullista och inte en färdig dict, ta bort "virtuella" moduler (ex. NoDCCommonModeChoke) och gör om till dict
-
-        if isinstance(modules, list):
-            i = len(modules)-1
-            while i > 0:
-                if not hasattr(modules[i], "params"): modules.pop(i)
-                i -= 1
-            modules = {module.name: module.params for module in modules}
-
-        simDict = {
-            "modules": modules, # "modules" är en dict med moduler där modulnamn är key och parameterdicten är value
-            "simParams": simParams,  # "simParams" är en dict med simuleringsparametrar ex. tstep, tstart, tstop   
-        }
-        if variables is not None: simDict["variables"] = variables
-        if results is not None: simDict["results"] = results
-        if log is not None: simDict["log"] = log
-
-        file_data.append(simDict) # Lägg till den nya simuleringen i listan
-        file.seek(0)  # Börja om filen från början så vi skriver över filen med den nya datan
-        json.dump(file_data, file, indent=4)  # Dumpa Python-objektet till JSON-filen igen
-
-
-def np_encoder(object):
-    if isinstance(object, np.generic):
-        return object.item()
+    # Load the file if it exists
+    if os.path.isfile(filename):
+        file_data = np.append(np.load(filename, allow_pickle=True), simDict, 0)
+    else:
+        file_data = np.array(simDict)
+    
+    np.save(filename, file_data) # Lägg till den nya simuleringen i listan, spara sedan listan
 
 
 def saveBandEnergies(filename: str, energies: list):
     """ Sparar ned simuleringens parametrar till en JSON-fil, lägger till simuleringen om filen redan existerar """
 
-    with open(filename, "w+") as file:  # Öppna/Skapa json fil
-        try:
-            file_data = json.load(file)  # Ladda in JSON-data som python object (list "[]" eller dict "{}")
-        except json.JSONDecodeError:
-            file_data = []  # Om filen är tom, skapa en tom lista, i denna hamnar alla utförda simuleringar
+    # Load the file if it exists
+    if os.path.isfile(filename):
+        file_data = np.load(filename, allow_pickle=True)
+    else:
+        file_data = []
+    
 
-        for i in range(len(energies)):
-            file_data.append(energies[i])   # Lägg till en ny dict, som innehåller datan från simuleringen, i listan
-        file.seek(0)  # Börja om filen från början så vi skriver över filen med den nya datan
-
-        json.dump(file_data, file, default=np_encoder)
+    for i in range(len(energies)):
+        file_data.append(energies[i])   # Lägg till en ny dict, som innehåller datan från simuleringen, i listan
+    
+    np.save(filename, file_data) # Spara listan till filen
 
 
 # Returns a list of mosfet models present in MOS.lib

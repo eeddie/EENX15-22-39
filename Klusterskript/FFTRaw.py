@@ -4,10 +4,7 @@ from Functions import *
 from Bfalt import getBfaltAmplitude
 import sys
 
-
-def np_encoder(obj):
-    if isinstance(obj, np.generic):
-        return obj.item()
+import numpy as np
 
 
 def energyAndBfaltFromFile(filename: str, dcI: list, voltages: list, variables: list,
@@ -66,18 +63,6 @@ def BfaltFromFile(filename: str, *variables: str):
     return getBfaltAmplitude(yfs[0], yfs[1])
 
 
-class NpEncoder(json.JSONEncoder):
-    """ Envoder to encode numpy arrays"""
-    def default(self, obj):
-        if isinstance(obj, np.integer):
-            return int(obj)
-        if isinstance(obj, np.floating):
-            return float(obj)
-        if isinstance(obj, np.ndarray):
-            return obj.tolist()
-        return super(NpEncoder, self).default(obj)
-
-
 def saveModifiedSim(filename: str, modules: list, simParams: dict, variables: list, voltages: list, ACcurrents: list,
                     results: list = None, log: str = None):
     """ Sparar ned simuleringens parametrar till en JSON-fil, lägger till simuleringen om filen redan existerar """
@@ -91,33 +76,33 @@ def saveModifiedSim(filename: str, modules: list, simParams: dict, variables: li
     totalVariables.extend(voltages)
     ACcurrents.reverse()
     totalVariables.extend(ACcurrents)
-    with open(filename, "w+") as file:  # Öppna/Skapa json fil
-        try:
-            file_data = json.load(file)  # Ladda in JSON-data som python object (list "[]" eller dict "{}")
-        except json.JSONDecodeError:
-            file_data = []  # Om filen är tom, skapa en tom lista, i denna hamnar alla utförda simuleringar
 
-        simDict = {
-                "modules": modules,         # "modules" är en dict med moduler där modulnamn är key och parameterdicten är value
-                "simParams": simParams,     # "simParams" är en dict med simuleringsparametrar ex. tstep, tstart, tstop
-                "variables": totalVariables,
-            }
-        if results != None: simDict["results"] = results            # Results är en lista med resultatvariabler
-        if log != None: simDict["log"] = log                        # Log är en str med loggfilen
-        file_data.append(simDict)  # Lägg till en ny dict, som innehåller datan från simuleringen, i listan
+    simDict = {
+            "modules": modules,         # "modules" är en dict med moduler där modulnamn är key och parameterdicten är value
+            "simParams": simParams,     # "simParams" är en dict med simuleringsparametrar ex. tstep, tstart, tstop
+            "variables": totalVariables,
+        }
+    if results != None: simDict["results"] = results            # Results är en lista med resultatvariabler
+    if log != None: simDict["log"] = log                        # Log är en str med loggfilen
 
-        file.seek(0)  # Börja om filen från början så vi skriver över filen med den nya datan
-        json.dump(file_data, file, cls=NpEncoder, indent=4)  # Dumpa Python-objektet till JSON-filen igen
+    # Load the file if it exists
+    if os.path.isfile(filename):
+        file_data = np.append(np.load(filename, allow_pickle=True), simDict, axis=0)
+    else:
+        file_data = np.array(simDict)
+
+    np.save(filename, file_data)
+    
 
 
 if __name__ == "__main__":
 
-    parameterFile = "tmp/params" + str(sys.argv[1]) + ".json"
+    parameterFile = "tmp/params" + str(sys.argv[1]) + ".npy"
     simFile = "tmp/sim" + str(sys.argv[1]) + ".raw"
     logFile = "tmp/sim" + str(sys.argv[1]) + ".log"
 
-    with open(parameterFile) as f:
-        data = json.load(f)
+    
+    data = np.load(parameterFile, allow_pickle=True)
 
     variables = ["i(VDC_P)",
             "i(VDC_N)",
@@ -140,7 +125,7 @@ if __name__ == "__main__":
     except Exception as e:
         failed = True
     
-    saveModifiedSim(os.path.join(os.path.dirname(__file__), "simResults", "sim" + str(sys.argv[1]) + ".json"),
+    saveModifiedSim(os.path.join(os.path.dirname(__file__), "simResults", "sim" + str(sys.argv[1]) + ".npy"),
                     modules=data[0]["modules"],
                     simParams=data[0]["simParams"],
                     variables=variables,

@@ -115,4 +115,4 @@ if __name__ == "__main__":
     #combineResultFiles("Results/results", "Results/results_Eddie0.json", "Results/results_Eddie1.json", "Results/results_simon.json")
     combineResultsInDirectory("Modular\\Results\\results", "Modular\\Results\\")
     #checkFaulty(sys.argv[1])
-    #plotFourierSurface("Results/results.json", "ACCommonModeChokeModule", "L_choke", "i(VAC_A)+i(VAC_B)+i(VAC_C)")
+    #plotFourierSurface("Klusterskript/results.json", "ACCommonModeChokeModule", "L_choke", "i(VAC_A)+i(VAC_B)+i(VAC_C)")

@@ -128,6 +128,6 @@ if __name__ == "__main__":
         # En simulering har misslyckats, raw-filen innehåller ingen data, detta skapar error i repairRaw, men då behöver vi inte reparera, utan fortsätter. Tomma raw-filer hanteras senare i ex. FFTRaw
 
 
-    saveSim(filename=os.path.join(os.path.dirname(__file__), "tmp", "params" + str(sys.argv[1]) + ".json"),
+    saveSim(filename=os.path.join(os.path.dirname(__file__), "tmp", "params" + str(sys.argv[1]) + ".npy"),
             modules=modules,
             simParams=simParams)
