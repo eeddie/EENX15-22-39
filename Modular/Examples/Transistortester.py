@@ -8,8 +8,9 @@ import matplotlib.pyplot as plt
 import sys
 import numpy as np
 import gc
+import multiprocessing as mp
 
-sys.path.append('../Modular/')
+sys.path.append('./Modular/')
 from Functions import *
 
 
@@ -111,6 +112,33 @@ X1 Drain Gate 0 {MOSType}_L0
 
 def runParallelIGBTSim(R_Drain):
         runIGBTSim(filename = f"bss_igbt_{R_Drain}", R_Drain = R_Drain)
+
+
+def runSwitchSimWithGain(filename, gain): runSwitchSim(filename = filename, Gain = gain)
+def runVaristorSimWithGain(filename, gain): runVaristorSim(filename = filename, Gain = gain)
+def runMOSFETSimWithGain(filename, gain): runMOSFETSim(filename = filename, Gain = gain)
+def runInfineonMOSFETSimWithGain(filename, gain): runInfineonMOSFETSim(filename = filename, Gain = gain)
+def runIGBTSimWithGain(filename, gain): runIGBTSim(filename = filename, Gain = gain)
+def runParallelGainComparisonSims(*gains):
+    """ Run every simulation with every gain in parallell """
+    processes = []
+    for gain in gains:
+        processes.append(mp.Process(target = runSwitchSimWithGain, args = (f"bss_switch_{gain}", gain)))
+        processes.append(mp.Process(target = runVaristorSimWithGain, args = (f"bss_varistor_{gain}", gain)))
+        processes.append(mp.Process(target = runMOSFETSimWithGain, args = (f"bss_mosfet_{gain}", gain)))
+        processes.append(mp.Process(target = runInfineonMOSFETSimWithGain, args = (f"bss_mosfet_infineon_{gain}", gain)))
+        processes.append(mp.Process(target = runIGBTSimWithGain, args = (f"bss_igbt_{gain}", gain)))
+    for process in processes:
+        process.start()
+    for process in processes:
+        process.join()
+    
+
+
+
+    
+    
+
 
 
 
@@ -290,6 +318,8 @@ def plotOnTopFFTOf(names: list, filenames: list):
 if __name__ == "__main__":
     # Denna funktion ska följa dokumentets disposition
     # Kommentera in varje steg du vill köra
+
+    runParallelGainComparisonSims(10e2, 10e3, 10e4, 10e5)
 
     ## Första steget är att köra alla simuleringar, och skriva ned åtgången tid
     # for f in [runSwitchSim, runVaristorSim, runMOSFETSim, runInfineonMOSFETSim, runIGBTSim]

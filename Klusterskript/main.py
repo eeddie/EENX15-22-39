@@ -12,7 +12,7 @@ import numpy as np
 simTime = 24 #Hours
 
 maxConcurrentSims = 64
-numberOfSimulations = int(maxConcurrentSims * simTime * 60 / 55) #55 min per sim
+numberOfSimulations = 128
 maxConcurrentFFT = 8
 
 if __name__ == "__main__":
@@ -24,7 +24,7 @@ if __name__ == "__main__":
 
         # Run simulations --> create .raw files and save a .npy file with the modules and simParams used.
         for i in range(simulationsLeft):
-            sims.append(Popen("python3 SimulateSingle.py " + str(doneSimulations + i), shell=True))
+            sims.append(Popen(["python", "SimulateSingle.py", str(doneSimulations + i)], shell=False))
             print("Simulation " + str(doneSimulations + i) + " started")
 
         # Wait for simulations to finish
@@ -40,7 +40,7 @@ if __name__ == "__main__":
             fftSims = []
             for j in range(min(simulationsLeft - doneFFT, maxConcurrentFFT)):
                 fftSims.append(
-                    Popen("python3 FFTRaw.py " + str(doneSimulations + doneFFT), shell=True))
+                    Popen(["python", "FFTRaw.py", str(doneSimulations + doneFFT)], shell=False))
                 doneFFT += 1
             for fftSim in fftSims: fftSim.wait()
         doneSimulations += simulationsLeft

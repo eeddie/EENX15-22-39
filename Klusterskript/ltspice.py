@@ -21,9 +21,9 @@ import os
 from typing import List, Union
 import numpy as np
 import re
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 
-from deprecated import deprecated
+#from deprecated import deprecated
 
 class LtspiceException(Exception):
     pass
@@ -304,30 +304,30 @@ class Ltspice:
     def case_count(self):
         return len(self._case_split_point) - 1
 
-    @deprecated(version='1.0.0', reason="use method which follows pep8")
+    #@deprecated(version='1.0.0', reason="use method which follows pep8")
     def getData(self, name, case=0, time=None):
         return self.get_data(name, case, time)
 
-    @deprecated(version='1.0.0', reason="use method which follows pep8")
+    #@deprecated(version='1.0.0', reason="use method which follows pep8")
     def getTime(self,case=0):
         return self.get_time(case)
 
-    @deprecated(version='1.0.0', reason="use method which follows pep8")
+    #@deprecated(version='1.0.0', reason="use method which follows pep8")
     def getFrequency(self, case=0):
         return self.get_frequency(case)
 
-    @deprecated(version='1.0.0', reason="use method which follows pep8")
+    #@deprecated(version='1.0.0', reason="use method which follows pep8")
     def getVariableNames(self, case=0):
         return self._variables
 
-    @deprecated(version='1.0.0', reason="use method which follows pep8")
+    #@deprecated(version='1.0.0', reason="use method which follows pep8")
     def getVariableTypes(self, case=0):
         return self._types
 
-    @deprecated(version='1.0.0', reason="use method which follows pep8")
+    #@deprecated(version='1.0.0', reason="use method which follows pep8")
     def getCaseNumber(self):
         return len(self._case_split_point)
 
-    @deprecated(version='1.0.0', reason="use method which follows pep8")
+    #@deprecated(version='1.0.0', reason="use method which follows pep8")
     def getVariableNumber(self):
         return len(self._variables)
