@@ -101,7 +101,8 @@ if __name__ == "__main__":
     # drop all values where any of the x-variables is nan
     d_XY = pd.concat([d_X, d_Y], axis=1).dropna()
     # drop all values where battery voltage is not 400V
-    d_XY.drop(d_XY[(d_XY['BatteryModule.Voltage'] != 400)].index, inplace=True)
+    if 'BatteryModule.Voltage' in d_XY.columns:
+        d_XY.drop(d_XY[(d_XY['BatteryModule.Voltage'] != 400)].index, inplace=True)
 
     # get the x-variables (that are not nan and battery voltage is 400V)
     X = d_XY[X_variables]
