@@ -4,27 +4,138 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os
 
-def combineResultFiles(name: str, *files: str):
-    """ Reads all json files in files and combines the contents into a new json file named "name" """
-    data = []
-    for file in files:
-        with open(file, "r") as f:
-            # Get all the simulations from the file
-            simulations = json.load(f)
-            # Add the simulations to the data
-            data.extend(simulations)
+import json
+import numpy as np
+import os
+import matplotlib.pyplot as plt
 
-    with open(name + ".json", "w") as f:
-        json.dump(data, f, indent=4)
 
-def combineResultsInDirectory(name: str, directory: str):
-    """ Combines all json files in the directory with subdirectories into a new json file named "name" """
-    files = []
+def convertJSONtoNPY(result_file, directory):
+    # Open all json files in directory and its subdirectories and add all simulations to a list
+    simulations = []
     for root, dirs, files in os.walk(directory):
         for file in files:
             if file.endswith(".json"):
-                files.append(os.path.join(root, file))
-    combineResultFiles(name, *files)
+                print(os.path.join(root, file))
+                # Replace all ccurences of "[[ with [[ and ]]" with ]] in the file
+                with open(os.path.join(root, file), "r") as f:
+                    data = f.read()
+                    data = data.replace("\"[[", "[[")
+                    data = data.replace("]]\"", "]]")
+                    with open(os.path.join(root, file), "w") as f:
+                        f.write(data)
+
+                # Open the file and extend simulations with its contents
+                with open(os.path.join(root, file)) as f:
+                    simulations.extend(json.load(f))
+
+    # Walk through simulations and remove all simulations which do not contain the key "DCCommonModeChoke" in "modules"
+    i = len(simulations) - 1
+    while i >= 0:
+        sim = simulations[i]
+        if "modules" not in sim:
+            simulations.pop(i)
+        elif "DCCommonModeChokeModule" not in sim["modules"]:
+            simulations.pop(i)
+        elif "ACCommonModeChokeModule" not in sim["modules"]:
+            simulations.pop(i)
+        elif sim["modules"]["BatteryModule"]["Voltage"] != 400:
+            simulations.pop(i)
+        elif sim["simParams"]["tstep"] != "1ns":
+            simulations.pop(i)
+        elif sim["simParams"]["tstart"] != "100ms":
+            simulations.pop(i)
+        elif sim["simParams"]["tstop"] != "110ms":
+            simulations.pop(i)
+        if sim["results"] is str:
+            sim["log"] = sim["results"]
+            sim.remove("results")
+        if "energies" in sim["results"]:
+            sim["results"] = sim["results"]["energies"]
+        i -= 1
+
+    # Save simulations to numpy file
+    np.save(result_file, simulations, allow_pickle=True)
+
+def combineAllNPY(result_file, directory, *exclude_files):
+    # Open all npy files in directory and its subdirectories and add all simulations to a list
+    simulations = []
+    for root, dirs, files in os.walk(directory):
+        for file in files:
+            if file.endswith(".npy") and file not in exclude_files:
+                print(os.path.join(root, file))
+                # Open the file and extend simulations with its contents
+                data = np.load(os.path.join(root, file), allow_pickle=True)
+                print(len(data))
+                simulations.extend(data)
+
+    # Walk through simulations and remove all simulations which should be filtered out
+    print(f"{len(simulations)} before filtering")
+
+    i = len(simulations) - 1
+    while i >= 0:
+        sim = simulations[i]
+        
+        # Check if the sim is a dictionary
+
+        if not isinstance(sim, dict):
+            print("Sim not dict but " + str(type(sim)))
+            simulations.pop(i)
+        elif "modules" not in sim:
+            print("modules not in sim")
+            simulations.pop(i)
+        elif "DCCommonModeChokeModule" not in sim["modules"]:
+            print("DCCommonModeChokeModule not in sim")
+            simulations.pop(i)
+        elif "ACCommonModeChokeModule" not in sim["modules"]:
+            print("ACCommonModeChokeModule not in sim")
+            simulations.pop(i)
+        elif sim["modules"]["BatteryModule"]["Voltage"] != 400:
+            print("BatteryModule Voltage != 400")
+            simulations.pop(i)
+        elif sim["simParams"]["tstep"] != "1ns":
+            print("tstep != 1ns")
+            simulations.pop(i)
+        elif sim["simParams"]["tstart"] != "100ms":
+            print("tstart != 100ms")
+            simulations.pop(i)
+        elif sim["simParams"]["tstop"] != "110ms":
+            print("tstop != 110ms")
+            simulations.pop(i)
+        else:
+            if sim["results"] is str:
+                print("results is str, moving results to log and removing results")
+                sim["log"] = sim["results"]
+                sim.remove("results")
+            if "energies" in sim["results"]:
+                print("moving energies to results")
+                sim["results"] = sim["results"]["energies"]
+        i -= 1
+
+    print(f"{len(simulations)} after filtering")
+    # Save simulations to numpy file
+    np.save(result_file, simulations, allow_pickle=True)
+
+def plotAll(result_file, module = "ACCommonModeChokeModule", parameter = "L_choke", variable = "i(VAC_A)+i(VAC_B)+i(VAC_C)"):
+    # Load simulations from numpy file
+    simulations = np.load(result_file, allow_pickle=True)
+    # Get a vector of common mode choke inductance values
+    common_mode_choke_inductance = [sim["modules"][module][parameter] for sim in simulations]
+    
+    # Get the index of the variable
+    index = simulations[0]["variables"].index(variable)
+
+    fouriers = []
+    middleFrequencies = [(simulations[0]["results"][i][0] + simulations[0]["results"][i][1])/2 for i in range(len(simulations[0]["results"]))]
+    for sim in simulations:
+        fouriers.append([sim["results"][i][3 + index]/sim["results"][i][2] for i in range(len(sim["results"]))])
+        
+    # Plot fouriers of all simulations
+    for fourier in fouriers:
+        plt.loglog(middleFrequencies, fourier, color="black", alpha=0.01)
+    plt.xlabel("Frekvens [Hz]")
+    plt.ylabel("Amplitud")
+
 
 
 
@@ -112,7 +223,21 @@ def plotFourierSurface(file: str, module: str, parameter: str, variable: str):
 
 
 if __name__ == "__main__":
-    #combineResultFiles("Results/results", "Results/results_Eddie0.json", "Results/results_Eddie1.json", "Results/results_simon.json")
-    combineResultsInDirectory("Modular\\Results\\results", "Modular\\Results\\")
+    
+    #convertJSONtoNPY("results_v1.npy", ".")
+    #combineAllNPY("results_v4.npy", ".", "results_v1.npy", "results_v4.npy")
+    
+    # plt.rcParams.update({'font.size': 16})
+    # plt.figure(1)
+    # plotAll("results.npy")
+    # plt.title("AC Common mode-ström för alla simuleringar")
+
+    # plt.figure(2)
+    # plotAll("results.npy", variable="i(VAC_A)")
+    # plt.title("Fasström för alla simuleringar")
+    # plt.show()
+
+
     #checkFaulty(sys.argv[1])
     #plotFourierSurface("Klusterskript/results.json", "ACCommonModeChokeModule", "L_choke", "i(VAC_A)+i(VAC_B)+i(VAC_C)")
+    quit()
