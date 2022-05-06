@@ -236,7 +236,6 @@ def plotOnTopStepOf(names: list, filenames: list):
 def plotSideBySideFFTOf(names: list, filenames: list):
     plt.rc('text', usetex=True)
     plt.rc('font', family='serif')
-    plt.rcParams.update({'font.size': 16})
 
     for i in range(len(filenames)):
 
@@ -276,8 +275,6 @@ def plotSideBySideFFTOf(names: list, filenames: list):
 
 
 def plotOnTopFFTOf(names: list, filenames: list):
-    plt.rc('text', usetex=True)
-    plt.rc('font', family='serif')
     plt.rcParams.update({'font.size': 16})
 
     for i in range(len(filenames)):
@@ -316,17 +313,18 @@ def plotOnTopFFTOf(names: list, filenames: list):
 
 
 if __name__ == "__main__":
+    plt.rcParams.update({'font.size': 16})
     # Denna funktion ska följa dokumentets disposition
     # Kommentera in varje steg du vill köra
 
-    runParallelGainComparisonSims(10e2, 10e3, 10e4, 10e5)
+    #runParallelGainComparisonSims(10e2, 10e3, 10e4, 10e5)
 
     ## Första steget är att köra alla simuleringar, och skriva ned åtgången tid
     # for f in [runSwitchSim, runVaristorSim, runMOSFETSim, runInfineonMOSFETSim, runIGBTSim]
     #     f()
     # Eller kör alla parallellt för att få fram raw-filer
     # for f in [runSwitchSim, runVaristorSim, runMOSFETSim, runInfineonMOSFETSim]:  # runIGBTSim
-    #     p = multiprocessing.Process(target=f)
+    #     p = mp.Process(target=f)
     #     p.start()
 
     # run runIGBTSim() in parallel with 10 different R_Drain from 1 to 10
@@ -334,13 +332,27 @@ if __name__ == "__main__":
     #     p = multiprocessing.Process(target=runParallelIGBTSim, args=(R_Drain,))
     #     p.start()
 
+    # Plotta stegsvaret för alla transistorer
     # plotSideBySideStepOf(
-    #     names =     ["Strömbrytare",    "Varistor",         "MOSFET1",          "MOSFET2",                      "IGBT"],
-    #     filenames = ["bss_switch.raw",  "bss_varistor.raw", "bss_mosfet.raw",   "bss_mosfet_infineon_L0.raw",   "bss_igbt_10.raw"])
+    #     names =     ["Strömbrytare",    "Varistor",         "Inb. MOSFET",          "Sub. MOSFET",                      "IGBT"],
+    #     filenames = ["bss_switch_1000.0.raw",  "bss_varistor_1000.0.raw", "bss_mosfet_1000.0.raw",   "bss_mosfet_infineon_1000.0_L0.raw",   "bss_igbt_1000.0.raw"])
 
+    # plt.title(r"Fouriertransform av $I_{ds}$")
+    # plt.xlabel("Frekvens (Hz)")
+    # plt.ylabel("Amplitud")
     # plotOnTopFFTOf(
-    #     names =     ["IGBT",            "MOSFET1",          "MOSFET2"],
-    #     filenames = ["bss_igbt_10.raw", "bss_mosfet.raw",   "bss_mosfet_infineon_L0.raw"])
+    #     names =     ["IGBT",            "Inb.MOSFET",          "Sub. MOSFET"],
+    #     filenames = ["bss_igbt_1000.0.raw", "bss_mosfet_1000.0.raw",   "bss_mosfet_infineon_1000.0_L0.raw"])
+    # plt.show()
+
+    # plt.title(r"Fouriertransform av $I_{ds}$")
+    plt.xlabel("Frekvens (Hz)")
+    plt.ylabel("Amplitud")
+    plotOnTopFFTOf(
+        names =     ["IGBT", "Strömbrytare", "Varistor"],
+        filenames=  ["bss_igbt_1000.0.raw", "bss_switch_1000.0.raw", "bss_varistor_1000.0.raw"])
+    plt.show()
+
 
     # plotSideBySideStepOf(
     #     [f"$R_d={i}$" for i in [1,5,10]],
