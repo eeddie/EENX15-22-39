@@ -8,6 +8,7 @@ import json
 import numpy as np
 import os
 import matplotlib.pyplot as plt
+from MakePredictions import makePrediction
 
 
 def convertJSONtoNPY(result_file, directory):
@@ -116,11 +117,12 @@ def combineAllNPY(result_file, directory, *exclude_files):
     # Save simulations to numpy file
     np.save(result_file, simulations, allow_pickle=True)
 
-def plotAll(result_file, module = "ACCommonModeChokeModule", parameter = "L_choke", variable = "i(VAC_A)+i(VAC_B)+i(VAC_C)"):
+
+def plotAll(result_file, module = "ACCommonModeChokeModule", parameter = "L_choke", variable = "i(VAC_A)+i(VAC_B)+i(VAC_C)", color="black", alpha=0.01, linewidth=1, label=""):
     # Load simulations from numpy file
     simulations = np.load(result_file, allow_pickle=True)
     # Get a vector of common mode choke inductance values
-    common_mode_choke_inductance = [sim["modules"][module][parameter] for sim in simulations]
+    parameterValues = [sim["modules"][module][parameter] for sim in simulations]
     
     # Get the index of the variable
     index = simulations[0]["variables"].index(variable)
@@ -131,10 +133,10 @@ def plotAll(result_file, module = "ACCommonModeChokeModule", parameter = "L_chok
         fouriers.append([sim["results"][i][3 + index]/sim["results"][i][2] for i in range(len(sim["results"]))])
         
     # Plot fouriers of all simulations
-    for fourier in fouriers:
-        plt.loglog(middleFrequencies, fourier, color="black", alpha=0.01)
-    plt.xlabel("Frekvens [Hz]")
-    plt.ylabel("Amplitud")
+    plt.loglog(middleFrequencies, fouriers[0], color=color, alpha=alpha, linewidth=linewidth, label=label)
+    for fourier in fouriers[1:]:
+        plt.loglog(middleFrequencies, fourier, color=color, alpha=alpha, linewidth=linewidth)
+    
 
 
 
@@ -143,32 +145,30 @@ def plotAll(result_file, module = "ACCommonModeChokeModule", parameter = "L_chok
 
 def checkFaulty(file: str):
     # Load file
-    with open(file, "r") as f:
-        data = json.load(f)
+    data = np.load(file, allow_pickle=True)
 
-        # Calculate how many sims in data contain a "results" field, and how many contian a "log" field, how many contain both and how many contain neither
-        sims_with_results = 0
-        sims_with_log = 0
-        sims_with_both = 0
-        sims_without_either = 0
-        for sim in data:
-            if "results" in sim:
-                sims_with_results += 1
-            if "log" in sim:
-                sims_with_log += 1
-            if "results" in sim and "log" in sim:
-                sims_with_both += 1
-            if "results" not in sim and "log" not in sim:
-                sims_without_either += 1
+    # Calculate how many sims in data contain a "results" field, and how many contian a "log" field, how many contain both and how many contain neither
+    sims_with_results = 0
+    sims_with_log = 0
+    sims_with_both = 0
+    sims_without_either = 0
+    for sim in data:
+        if "results" in sim:
+            sims_with_results += 1
+        if "log" in sim:
+            sims_with_log += 1
+        if "results" in sim and "log" in sim:
+            sims_with_both += 1
+        if "results" not in sim and "log" not in sim:
+            sims_without_either += 1
 
-        # Print results
-        print("Sims with results:", sims_with_results)
-        print("Sims with log:", sims_with_log)
-        print("Sims with both:", sims_with_both)
-        print("Sims without either:", sims_without_either)
-        print("Total:", len(data))
+    # Print results
+    print("Sims with results:", sims_with_results)
+    print("Sims with log:", sims_with_log)
+    print("Sims with both:", sims_with_both)
+    print("Sims without either:", sims_without_either)
+    print("Total:", len(data))
 
-    import numpy as np
 
 def plotFourierSurface(file: str, module: str, parameter: str, variable: str):
     """ Plots the fourier surface of the variable in the parameter of the module in the file """
@@ -223,19 +223,34 @@ def plotFourierSurface(file: str, module: str, parameter: str, variable: str):
 
 
 if __name__ == "__main__":
+    checkFaulty("./Modular/results_v4.npy")
+    quit()
     
     #convertJSONtoNPY("results_v1.npy", ".")
     #combineAllNPY("results_v4.npy", ".", "results_v1.npy", "results_v4.npy")
     
-    # plt.rcParams.update({'font.size': 16})
-    # plt.figure(1)
-    # plotAll("results.npy")
-    # plt.title("AC Common mode-ström för alla simuleringar")
+    plt.rcParams.update({'font.size': 16})
 
-    # plt.figure(2)
-    # plotAll("results.npy", variable="i(VAC_A)")
-    # plt.title("Fasström för alla simuleringar")
-    # plt.show()
+    
+    plt.figure(1)
+    plotAll("./Modular/results_v1.npy", color="blue")
+    plotAll("./Modular/results_v4.npy", color="red")
+    plt.title("AC Common mode-ström för alla simuleringar")
+    plt.xlabel("Frekvens [Hz]")
+    plt.ylabel("Amplitud")
+    plt.legend(loc="lower left")
+    makePrediction("i(VAC_A)+i(VAC_B)+i(VAC_C)")
+
+
+    plt.figure(2)
+    plotAll("./Modular/results_v1.npy", variable="i(VAC_A)", color="blue")
+    plotAll("./Modular/results_v4.npy", variable="i(VAC_A)", color="red")
+    plt.title("Fasström för alla simuleringar")
+    plt.xlabel("Frekvens [Hz]")
+    plt.ylabel("Amplitud")
+    makePrediction("i(VAC_A)")
+
+    plt.show()
 
 
     #checkFaulty(sys.argv[1])

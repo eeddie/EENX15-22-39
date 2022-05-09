@@ -250,12 +250,10 @@ def plotSideBySideFFTOf(names: list, filenames: list):
         fig.set_size_inches(18, 5)
         
 
-        (time, (pwm, ids)) = readVariables(fn, "V(PWM)", "I(V1)")
-        gc.collect()
+        time, (pwm, ids) = readVariables(fn, "V(PWM)", "I(V1)")
         ids = -ids
 
-        _, pwm = uniformResample(time, pwm, 10**-9) 
-        time, ids = uniformResample(time, ids, 10**-9)
+        time, (pwm, ids) = uniformResample(time, pwm, ids, timeStep=10**-9) 
 
         N = len(time)
         xf = fftfreq(N, time[1]-time[0])[:N//2]
@@ -346,13 +344,30 @@ if __name__ == "__main__":
     # plt.show()
 
     # plt.title(r"Fouriertransform av $I_{ds}$")
-    plt.xlabel("Frekvens (Hz)")
-    plt.ylabel("Amplitud")
-    plotOnTopFFTOf(
-        names =     ["IGBT", "Strömbrytare", "Varistor"],
-        filenames=  ["bss_igbt_1000.0.raw", "bss_switch_1000.0.raw", "bss_varistor_1000.0.raw"])
-    plt.show()
+    # plt.xlabel("Frekvens (Hz)")
+    # plt.ylabel("Amplitud")
+    # plotOnTopFFTOf(
+    #     names =     ["IGBT", "Strömbrytare", "Varistor"],
+    #     filenames=  ["bss_igbt_1000.0.raw", "bss_switch_1000.0.raw", "bss_varistor_1000.0.raw"])
+    # plt.show()
 
+    
+    # Rita upp styrsignalen med referenssignal
+    # #Create a time vector from 0 mss to 10 ms
+    # time = np.linspace(0, 10e-3, num=1000)
+    # # Create a sine wave with period 10 ms and amplitude 15 V
+    # signal = 15*np.sin(time*2*np.pi/(10e-3))
+    # # Plot the signal
+    # plt.plot(time, signal, label="Referenssignal")
+    # plotVars("bss_igbt_1000.0.raw", "V(PWM)", label="Styrsignal")
+    # plt.ylabel("Spänning (V)")
+    # plt.xlabel("Tid (s)")
+    # plt.legend(loc="lower left")
+    # plt.show()
+
+    plotSideBySideFFTOf(
+         names =     ["Strömbrytare",    "Varistor",         "Inb. MOSFET",          "Sub. MOSFET",                      "IGBT"],
+         filenames = ["bss_switch_1000.0.raw",  "bss_varistor_1000.0.raw", "bss_mosfet_1000.0.raw",   "bss_mosfet_infineon_1000.0_L0.raw",   "bss_igbt_1000.0.raw"])
 
     # plotSideBySideStepOf(
     #     [f"$R_d={i}$" for i in [1,5,10]],

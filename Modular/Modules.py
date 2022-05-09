@@ -19,7 +19,7 @@ class InverterControlModule(Module):
 
     def __init__(self,
                  name="InverterControlModule",
-                 Fs=1000,  # Switchfrekvens
+                 Fs=10000,  # Switchfrekvens
                  Rg=1.5,
                  # Gateresistans                                      NOTE: Tagen från extern källa med AN-1001 IGBT:er
                  Gain=1000,
